@@ -1,0 +1,131 @@
+import { openDB } from 'idb';
+
+const DB_NAME = 'bacc-portal';
+const DB_VERSION = 1;
+
+function db() {
+  return openDB(DB_NAME, DB_VERSION, {
+    upgrade(database) {
+      if (!database.objectStoreNames.contains('queue')) {
+        const store = database.createObjectStore('queue', { keyPath: 'id' });
+        store.createIndex('createdAt', 'createdAt');
+        store.createIndex('type', 'type');
+      }
+      if (!database.objectStoreNames.contains('photos')) {
+        database.createObjectStore('photos', { keyPath: 'id' });
+      }
+      if (!database.objectStoreNames.contains('submissions')) {
+        const store = database.createObjectStore('submissions', { keyPath: 'id' });
+        store.createIndex('status', 'status');
+        store.createIndex('updatedAt', 'updatedAt');
+      }
+    },
+  });
+}
+
+export async function saveLocalSubmission(record) {
+  const next = { ...record, updatedAt: record.updatedAt ?? new Date().toISOString() };
+  await (await db()).put('submissions', next);
+  return next;
+}
+
+export async function getLocalSubmission(id) {
+  return (await db()).get('submissions', id);
+}
+
+export async function listLocalSubmissions() {
+  const rows = await (await db()).getAll('submissions');
+  return rows.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+}
+
+export async function putPhotoBlob(id, blob, meta = {}) {
+  await (await db()).put('photos', { id, blob, ...meta, createdAt: new Date().toISOString() });
+}
+
+export async function getPhotoRecord(id) {
+  return (await db()).get('photos', id);
+}
+
+export async function enqueue(job) {
+  const record = {
+    id: job.id ?? crypto.randomUUID(),
+    type: job.type,
+    payload: job.payload,
+    attempts: 0,
+    createdAt: new Date().toISOString(),
+    lastError: null,
+  };
+  await (await db()).put('queue', record);
+  return record;
+}
+
+export async function listQueue() {
+  const rows = await (await db()).getAll('queue');
+  return rows.sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+}
+
+export async function removeQueueItem(id) {
+  await (await db()).delete('queue', id);
+}
+
+export async function bumpQueueAttempt(id, lastError) {
+  const database = await db();
+  const row = await database.get('queue', id);
+  if (!row) return;
+  await database.put('queue', {
+    ...row,
+    attempts: (row.attempts ?? 0) + 1,
+    lastError: lastError ?? null,
+  });
+}
+
+let flushing = false;
+const listeners = new Set();
+
+export function onQueueChange(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+function notify() {
+  for (const fn of listeners) fn();
+}
+
+/**
+ * Flush pending checklist writes and photo uploads to Supabase.
+ * Call on boot and on the window `online` event.
+ */
+export async function flushQueue(handlers) {
+  if (flushing || typeof navigator !== 'undefined' && !navigator.onLine) return { flushed: 0, failed: 0 };
+  flushing = true;
+  let flushed = 0;
+  let failed = 0;
+  try {
+    const jobs = await listQueue();
+    for (const job of jobs) {
+      try {
+        const handler = handlers[job.type];
+        if (!handler) throw new Error(`No handler for queue type ${job.type}`);
+        await handler(job.payload);
+        await removeQueueItem(job.id);
+        flushed += 1;
+      } catch (err) {
+        failed += 1;
+        await bumpQueueAttempt(job.id, err?.message ?? String(err));
+      }
+    }
+  } finally {
+    flushing = false;
+    notify();
+  }
+  return { flushed, failed };
+}
+
+export function startOnlineFlush(handlers) {
+  const run = () => {
+    flushQueue(handlers).catch(() => {});
+  };
+  window.addEventListener('online', run);
+  if (navigator.onLine) run();
+  return () => window.removeEventListener('online', run);
+}

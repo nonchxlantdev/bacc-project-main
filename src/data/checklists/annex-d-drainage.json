@@ -1,0 +1,100 @@
+{
+  "code": "PGIA-PMM-F04",
+  "annexLabel": "Annex D",
+  "title": "Drainage System Inspection Checklist",
+  "description": "Used for monthly routine drainage inspections and semi-annual CEC structural assessments. Completed form submitted to OM.",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual.",
+    "pages": [110, 111, 112]
+  },
+  "headerFields": [
+    { "key": "date", "label": "Date", "type": "date", "required": true },
+    {
+      "key": "inspectionType",
+      "label": "Inspection Type",
+      "type": "radio",
+      "required": true,
+      "options": [
+        { "value": "monthly_routine", "label": "Monthly Routine" },
+        { "value": "semi_annual_cec", "label": "Semi-Annual Structural (CEC)" },
+        { "value": "post_storm_emergency", "label": "Post-Storm Emergency" }
+      ]
+    },
+    { "key": "conductedBy", "label": "Conducted by (Name / Position)", "type": "text", "required": true },
+    { "key": "rainfallMm", "label": "Rainfall lasts 24 hrs. (mm, if applicable)", "type": "text", "required": false }
+  ],
+  "sections": [
+    {
+      "title": "SECTION 1 — RUNWAY DRAINAGE",
+      "items": [
+        { "code": "DR-01", "text": "Runway 07 end drainage swale clear of sediment, vegetation, and debris" },
+        { "code": "DR-02", "text": "Runway 25 end drainage swales clear of sediment, vegetation, and debris" },
+        { "code": "DR-03", "text": "Runway east edge drainage channel (full length) free of blockage" },
+        { "code": "DR-04", "text": "Runway west edge drainage channel (full length) free of blockage" },
+        { "code": "DR-05", "text": "Runway drainage outlets water discharging freely to aerodrome drainage network" },
+        { "code": "DR-06", "text": "No ponding adjacent to runway edges 1 hour after end of rainfall" },
+        { "code": "DR-07", "text": "No erosion channels created by surface water at runway edges" }
+      ]
+    },
+    {
+      "title": "SECTION 2 — TAXIWAY DRAINAGE",
+      "items": [
+        { "code": "DR-08", "text": "Taxiway Alpha drainage channels (east and west) clear, flowing" },
+        { "code": "DR-09", "text": "Taxiway Bravo drainage gutters clear" },
+        { "code": "DR-10", "text": "Taxiway Charlie drainage gutters clear" },
+        { "code": "DR-12", "text": "No standing water on any taxiway surface 30 min after end of rainfall" }
+      ]
+    },
+    {
+      "title": "SECTION 3 — APRON DRAINAGE",
+      "items": [
+        { "code": "DR-13", "text": "All apron drainage channels clear and unobstructed" },
+        { "code": "DR-14", "text": "All apron drainage sumps clear and flowing" },
+        { "code": "DR-15", "text": "Apron drainage outlets to aerodrome storm network functioning" },
+        { "code": "DR-16", "text": "No standing water on apron 30 min after end of rainfall" }
+      ]
+    },
+    {
+      "title": "SECTION 4 — CULVERTS AND CROSS-DRAINAGE STRUCTURES",
+      "items": [
+        { "code": "DR-17", "text": "Culvert at [Location 1] invert clear, headwalls intact, no structural cracking" },
+        { "code": "DR-18", "text": "Culvert at [Location 2] invert clear, headwalls intact, no structural cracking" },
+        { "code": "DR-19", "text": "Culvert at [Location 3] invert clear, headwalls intact, no structural cracking" },
+        { "code": "DR-20", "text": "All identified culverts no sedimentation reducing flow area > 25%" },
+        { "code": "DR-21", "text": "All culvert headwalls and wingwalls structurally intact, no separation from embankment" }
+      ]
+    },
+    {
+      "title": "SECTION 5 — UNPAVED AREA DRAINAGE (CHANNELS AND SWALES)",
+      "items": [
+        { "code": "DR-22", "text": "All open channels in runway strips free of vegetation blockage and sediment" },
+        { "code": "DR-23", "text": "All open channels in infield areas free of blockage" },
+        { "code": "DR-24", "text": "All swale slopes at minimum 1% longitudinal gradient to outlet" },
+        { "code": "DR-25", "text": "No channel bank erosion creating structural failure of channel" },
+        { "code": "DR-26", "text": "No channel blockage causing overflow onto adjacent safety areas" },
+        { "code": "DR-27", "text": "Saturated Zone 7 areas no expansion of flooded zone beyond mapped boundaries" }
+      ]
+    }
+  ],
+  "deficienciesField": {
+    "label": "DRAINAGE DEFICIENCIES FOUND (describe location, type, severity, and recommended action):",
+    "type": "textarea"
+  },
+  "signoffs": [
+    { "role": "inspector", "label": "Conducted by (Name / Position / Signature)", "dateLabel": "Date:" },
+    { "role": "om_acknowledgment", "label": "OM Acknowledgment (Name / Signature / Date)", "dateLabel": "Date:" }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "DR-11 is intentionally absent — the source form's numbering skips from DR-10 to DR-12. Preserve this gap exactly; do not renumber.",
+    "DR-17/18/19 contain literal '[Location N]' placeholder text in the source document. Confirm with BACC whether these should be replaced with actual named culvert locations before go-live, or left as fill-in text per submission."
+  ]
+}
