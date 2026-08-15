@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'bacc-portal';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function db() {
   return openDB(DB_NAME, DB_VERSION, {
@@ -19,6 +19,18 @@ function db() {
         store.createIndex('status', 'status');
         store.createIndex('updatedAt', 'updatedAt');
       }
+      if (!database.objectStoreNames.contains('incidents')) {
+        const store = database.createObjectStore('incidents', { keyPath: 'id' });
+        store.createIndex('updatedAt', 'updatedAt');
+        store.createIndex('status', 'status');
+      }
+      if (!database.objectStoreNames.contains('work_orders')) {
+        const store = database.createObjectStore('work_orders', { keyPath: 'id' });
+        store.createIndex('incident_id', 'incident_id');
+      }
+      if (!database.objectStoreNames.contains('incident_updates')) {
+        database.createObjectStore('incident_updates', { keyPath: 'id' });
+      }
     },
   });
 }
@@ -33,9 +45,68 @@ export async function getLocalSubmission(id) {
   return (await db()).get('submissions', id);
 }
 
+export async function deleteLocalSubmission(id) {
+  const database = await db();
+  const photos = await database.getAll('photos');
+  for (const photo of photos) {
+    if (photo.submissionId === id) await database.delete('photos', photo.id);
+  }
+  const jobs = await database.getAll('queue');
+  for (const job of jobs) {
+    const payload = job.payload ?? {};
+    if (payload.id === id || payload.submissionId === id) {
+      await database.delete('queue', job.id);
+    }
+  }
+  await database.delete('submissions', id);
+}
+
 export async function listLocalSubmissions() {
   const rows = await (await db()).getAll('submissions');
   return rows.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+}
+
+export async function saveLocalIncident(record) {
+  const next = { ...record, updatedAt: record.updatedAt ?? new Date().toISOString() };
+  await (await db()).put('incidents', next);
+  return next;
+}
+
+export async function getLocalIncident(id) {
+  return (await db()).get('incidents', id);
+}
+
+export async function listLocalIncidents() {
+  const rows = await (await db()).getAll('incidents');
+  return rows.sort((a, b) => String(b.updatedAt || b.reported_at).localeCompare(String(a.updatedAt || a.reported_at)));
+}
+
+export async function saveLocalWorkOrder(record) {
+  const next = { ...record, updatedAt: record.updatedAt ?? new Date().toISOString() };
+  await (await db()).put('work_orders', next);
+  return next;
+}
+
+export async function getLocalWorkOrder(id) {
+  return (await db()).get('work_orders', id);
+}
+
+export async function listLocalWorkOrders(incidentId) {
+  const rows = await (await db()).getAll('work_orders');
+  const filtered = incidentId ? rows.filter((row) => row.incident_id === incidentId) : rows;
+  return filtered.sort((a, b) => String(b.date_issued || '').localeCompare(String(a.date_issued || '')));
+}
+
+export async function saveLocalIncidentUpdate(record) {
+  await (await db()).put('incident_updates', record);
+  return record;
+}
+
+export async function listLocalIncidentUpdates(incidentId) {
+  const rows = await (await db()).getAll('incident_updates');
+  return rows
+    .filter((row) => row.incident_id === incidentId)
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
 
 export async function putPhotoBlob(id, blob, meta = {}) {

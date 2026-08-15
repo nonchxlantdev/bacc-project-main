@@ -1,0 +1,52 @@
+{
+  "templateKey": "annex-h-work-order",
+  "templateVersion": "ed01",
+  "basePdf": "annex-h-work-order-ed01.pdf",
+  "mode": "fixed",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "Coordinates are PDF points with a bottom-left origin (pdf-lib). Values sit after each approved label; fields are not moved.",
+  "mapping": {
+    "method": "pdf.js text positions from approved Ed.01 PDF",
+    "durationMinutes": 18
+  },
+  "pageSize": { "width": 612.12, "height": 792.12 },
+  "fields": {
+    "work_order_number": { "page": 0, "x": 160, "y": 595.8, "size": 9, "width": 360 },
+    "date_issued": { "page": 0, "x": 128, "y": 576.2, "size": 9, "width": 200 },
+    "issued_by_name": { "page": 0, "x": 202, "y": 556.7, "size": 9, "width": 330 },
+    "assigned_to_name": { "page": 0, "x": 128, "y": 537, "size": 9, "width": 400 },
+    "noc_reference_no": { "page": 0, "x": 160, "y": 517.4, "size": 9, "width": 360 },
+    "deficiency_level": { "page": 0, "x": 148, "y": 497.9, "size": 9, "width": 80 },
+    "description_of_work": {
+      "page": 0, "x": 198, "y": 478.2, "size": 8, "width": 334, "wrap": true, "maxLines": 1, "overflow": "continuation"
+    },
+    "location_text": { "page": 0, "x": 114, "y": 458.6, "size": 9, "width": 416 },
+    "target_completion_date": { "page": 0, "x": 176, "y": 439.1, "size": 9, "width": 200 },
+    "notam_required.yes": { "page": 0, "x": 230, "y": 418.2, "type": "mark", "size": 9 },
+    "notam_required.no": { "page": 0, "x": 259.4, "y": 418.2, "type": "mark", "size": 9 },
+    "notam_ref": { "page": 0, "x": 332, "y": 418.2, "size": 9, "width": 180 },
+    "date_works_completed": { "page": 0, "x": 174, "y": 364.3, "size": 9, "width": 200 },
+    "completed_by": { "page": 0, "x": 136, "y": 344.6, "size": 9, "width": 390 },
+    "description_of_work_performed": {
+      "page": 0, "x": 204, "y": 325.1, "size": 8, "width": 328, "wrap": true, "maxLines": 1, "overflow": "continuation"
+    },
+    "materials_used": {
+      "page": 0, "x": 202, "y": 305.5, "size": 8, "width": 330, "wrap": true, "maxLines": 1, "overflow": "continuation"
+    },
+    "test_verification_results": {
+      "page": 0, "x": 124, "y": 275.5, "size": 8, "width": 408, "wrap": true, "maxLines": 1, "overflow": "continuation"
+    },
+    "area_cleared.yes": { "page": 0, "x": 230, "y": 255.8, "type": "mark", "size": 9 },
+    "area_cleared.no": { "page": 0, "x": 296, "y": 255.8, "type": "mark", "size": 9 },
+    "area_not_cleared_explanation": { "page": 0, "x": 300, "y": 255.8, "size": 8, "width": 220 },
+    "cec_clearance.yes": { "page": 0, "x": 230, "y": 235.8, "type": "mark", "size": 9 },
+    "cec_clearance.no": { "page": 0, "x": 313.4, "y": 235.8, "type": "mark", "size": 9 },
+    "cec_clearance_date": { "page": 0, "x": 270, "y": 235.8, "size": 9, "width": 40 },
+    "om_signature": { "page": 0, "x": 72, "y": 204, "type": "image", "width": 150, "height": 28 },
+    "om_name": { "page": 0, "x": 72, "y": 204, "size": 8, "width": 150 },
+    "om_date": { "page": 0, "x": 100, "y": 180.6, "size": 8, "width": 80 },
+    "cec_signature": { "page": 0, "x": 306, "y": 204, "type": "image", "width": 150, "height": 28 },
+    "cec_name": { "page": 0, "x": 306, "y": 204, "size": 8, "width": 180 },
+    "cec_date": { "page": 0, "x": 334, "y": 180.6, "size": 8, "width": 80 }
+  }
+}

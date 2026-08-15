@@ -1,29 +1,37 @@
-import { AlertTriangle, Download, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, Download, Eye, Save } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import ChecklistForm, { validateChecklist } from '../components/checklist/ChecklistForm.jsx';
-import AnnexDDrainagePrint from '../components/checklist/print-templates/AnnexDDrainagePrint.jsx';
+import PdfPreview from '../components/checklist/PdfPreview.jsx';
+import CreateIncidentModal from '../components/incidents/CreateIncidentModal.jsx';
+import SignaturePad from '../components/checklist/SignaturePad.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import {
   emptyHeaderState,
   emptyItemState,
+  flattenItems,
 } from '../lib/checklistSchema.js';
-import { buildChecklistPrintHtml } from '../lib/printHtml.js';
 import {
   buildDraftRecord,
+  createCorrection,
   getSubmission,
   persistSubmission,
   uploadPhoto,
+  acknowledgeSubmission,
 } from '../lib/submissions.js';
+import { listIncidents } from '../lib/incidents.js';
 import { getTemplate } from '../lib/templates.js';
-import { enqueue, putPhotoBlob } from '../utils/offlineQueue.js';
+import { airportYmd } from '../lib/belizeTime.js';
+import { getRepos } from '../data/repositories/index.js';
+import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
+import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { online } = useOutletContext() ?? { online: navigator.onLine };
-  const { user, displayName, position } = useAuth();
+  const { user, displayName, position, profile } = useAuth();
 
   const [record, setRecord] = useState(null);
   const [selectedCode, setSelectedCode] = useState(null);
@@ -31,8 +39,21 @@ export default function ChecklistDetailPage() {
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [showPrint, setShowPrint] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewError, setPreviewError] = useState(null);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
   const [loadError, setLoadError] = useState(null);
+  const [incidentModal, setIncidentModal] = useState(null);
+  const [itemIncidents, setItemIncidents] = useState({});
+  const [omSignature, setOmSignature] = useState('');
+  const previewUrlRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,8 +61,9 @@ export default function ChecklistDetailPage() {
     async function load() {
       if (id === 'new') {
         const template = await getTemplate(searchParams.get('template'));
+        const clock = await getRepos().instances.getClock();
         const header = emptyHeaderState(template.schema, {
-          date: new Date().toISOString().slice(0, 10),
+          date: airportYmd(clock.nowMs),
           inspectionType: 'monthly_routine',
           conductedBy: `${displayName} / ${position}`,
         });
@@ -61,7 +83,17 @@ export default function ChecklistDetailPage() {
         if (!cancelled) setLoadError('Checklist not found.');
         return;
       }
-      if (!cancelled) setRecord(existing);
+      if (!cancelled) {
+        setRecord(existing);
+        const linked = {};
+        const incidents = await listIncidents();
+        for (const inc of incidents) {
+          if (inc.submission_id === existing.id && inc.source_item_code) {
+            linked[inc.source_item_code] = inc.id;
+          }
+        }
+        setItemIncidents(linked);
+      }
     }
 
     load().catch((err) => {
@@ -73,13 +105,20 @@ export default function ChecklistDetailPage() {
   }, [id, searchParams, user, displayName, position, navigate]);
 
   const schema = record?.schema;
-  const readOnly = record?.status === 'submitted';
+  const readOnly = record?.status === 'submitted' || record?.locked;
+
+  useEffect(() => {
+    if (!record || readOnly) return undefined;
+    const handle = setTimeout(() => {
+      persistSubmission(record)
+        .then(() => setLastSavedAt(new Date()))
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [record, readOnly]);
 
   async function patchRecord(updater) {
-    setRecord((prev) => {
-      const next = updater(prev);
-      return next;
-    });
+    setRecord((prev) => updater(prev));
   }
 
   async function save(nextRecord = record) {
@@ -94,6 +133,7 @@ export default function ChecklistDetailPage() {
       };
       const saved = await persistSubmission(merged);
       setRecord(saved);
+      setLastSavedAt(new Date());
       return saved;
     } finally {
       setSaving(false);
@@ -106,7 +146,7 @@ export default function ChecklistDetailPage() {
       setBanner({
         type: 'error',
         text: unresolved.length
-          ? `NO-SAT items need remarks before submission: ${unresolved.join(', ')}`
+          ? `NO SAT items need remarks before submission: ${unresolved.join(', ')}`
           : `Required header fields are empty: ${missingHeader.join(', ')}`,
       });
       if (unresolved[0]) setSelectedCode(unresolved[0]);
@@ -118,6 +158,7 @@ export default function ChecklistDetailPage() {
       role: 'inspector',
       name: displayName,
       position,
+      signature_data_uri: record.signoffs?.find((s) => s.role === 'inspector')?.signature_data_uri,
       signed_at: signedAt,
     };
     const om = record.signoffs?.find((s) => s.role === 'om_acknowledgment');
@@ -132,15 +173,17 @@ export default function ChecklistDetailPage() {
         conductedBy: `${displayName} / ${position}`,
       },
       signoffs: [inspectorSignoff, om].filter(Boolean),
+      locked: true,
     };
     await save(next);
     setBanner({ type: 'ok', text: 'Submitted. You can export the official PDF when online.' });
   }
 
   async function handlePhotoSelect(code, file) {
+    const compressed = await compressImageFile(file);
     const localId = crypto.randomUUID();
-    await putPhotoBlob(localId, file, { itemCode: code, submissionId: record.id });
-    const preview = URL.createObjectURL(file);
+    await putPhotoBlob(localId, compressed, { itemCode: code, submissionId: record.id });
+    const preview = URL.createObjectURL(compressed);
     setPhotoPreview((prev) => ({ ...prev, [code]: preview }));
 
     let photoUrl = null;
@@ -150,8 +193,8 @@ export default function ChecklistDetailPage() {
           userId: user.id,
           submissionId: record.id,
           itemCode: code,
-          blob: file,
-          contentType: file.type,
+          blob: compressed,
+          contentType: compressed.type,
         });
         photoUrl = uploaded.url;
       } catch {
@@ -191,6 +234,81 @@ export default function ChecklistDetailPage() {
     await save(next);
   }
 
+  async function buildOverlayBlob(current = record) {
+    const images = {};
+    for (const sign of current.signoffs ?? []) {
+      if (sign.role === 'inspector' && sign.signature_data_uri) images.inspector_signature = sign.signature_data_uri;
+      if (sign.role === 'om_acknowledgment' && sign.signature_data_uri) images.om_signature = sign.signature_data_uri;
+    }
+    const photos = [];
+    for (const item of flattenItems(schema)) {
+      const row = current.items[item.code];
+      if (!row?.photo_local_id && !row?.photo_url) continue;
+      let dataUri = photoPreview[item.code];
+      if (!dataUri && row.photo_local_id) {
+        const rec = await getPhotoRecord(row.photo_local_id);
+        if (rec?.blob) dataUri = await blobToDataUri(rec.blob);
+      }
+      if (dataUri) photos.push({ label: item.code, dataUri, contentType: 'image/jpeg' });
+    }
+    const res = await fetch('/api/export-checklist-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        templateKey: current.print_template_key || 'annex-d-drainage',
+        templateVersion: current.template_version || 'ed01',
+        fieldMap: current.field_map,
+        submission: current,
+        images,
+        photos,
+      }),
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('pdf')) {
+      let message = `Export failed (${res.status})`;
+      try {
+        const payload = await res.clone().json();
+        if (payload?.error) message = payload.error;
+      } catch {
+        const text = await res.text();
+        if (text) message = text.slice(0, 280);
+      }
+      throw new Error(message);
+    }
+    return res.blob();
+  }
+
+  function setPreviewBlobUrl(blob) {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const url = URL.createObjectURL(blob);
+    previewUrlRef.current = url;
+    setPreviewUrl(url);
+  }
+
+  function scrollToPreview() {
+    document.getElementById('pdf-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function handleShowPreview() {
+    scrollToPreview();
+    if (!online) {
+      setPreviewError('Preview is available once you are back online. Your checklist is saved.');
+      return;
+    }
+    setPreviewing(true);
+    setPreviewError(null);
+    try {
+      const current = (await save(record)) || record;
+      const blob = await buildOverlayBlob(current);
+      setPreviewBlobUrl(blob);
+      requestAnimationFrame(scrollToPreview);
+    } catch (err) {
+      setPreviewError(err.message);
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
   async function handleExport() {
     if (!online) {
       setBanner({
@@ -203,30 +321,8 @@ export default function ChecklistDetailPage() {
     setBanner(null);
     try {
       await save(record);
-      const html = await buildChecklistPrintHtml({
-        schema,
-        submission: record,
-        printTemplateKey: record.print_template_key,
-      });
-      const filename = `${schema.code}-${record.inspection_date || 'draft'}.pdf`;
-      const res = await fetch('/api/export-checklist-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html, filename }),
-      });
-      const contentType = res.headers.get('content-type') || '';
-      if (!res.ok || !contentType.includes('pdf')) {
-        let message = `Export failed (${res.status})`;
-        try {
-          const payload = await res.clone().json();
-          if (payload?.error) message = payload.error;
-        } catch {
-          const text = await res.text();
-          if (text) message = text.slice(0, 280);
-        }
-        throw new Error(message);
-      }
-      const blob = await res.blob();
+      const blob = await buildOverlayBlob(record);
+      const filename = `${schema.code}-${record.template_version || 'ed01'}-${record.inspection_date || 'draft'}.pdf`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -249,7 +345,10 @@ export default function ChecklistDetailPage() {
   if (loadError) {
     return (
       <div className="rounded-md border border-alert bg-alert-soft p-4 text-alert">
-        {loadError} <Link to="/checklists/mine" className="underline">Back to my checklists</Link>
+        {loadError}{' '}
+        <Link to="/checklists/mine" className="underline">
+          Back to my checklists
+        </Link>
       </div>
     );
   }
@@ -258,13 +357,27 @@ export default function ChecklistDetailPage() {
     return <p className="text-muted">Loading checklist…</p>;
   }
 
+  const inProgress = !readOnly;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{schema.annexLabel}</p>
-          <h1 className="text-2xl font-bold text-navy">{schema.title}</h1>
-          <p className="text-sm text-muted">Form {schema.code}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[1.65rem] font-bold leading-tight text-navy">{schema.title}</h1>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                inProgress ? 'bg-success-soft text-success' : 'bg-navy text-white'
+              }`}
+            >
+              {inProgress ? 'In Progress' : record.status === 'acknowledged' ? 'Acknowledged' : 'Submitted'}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-muted">
+            Form: {schema.code}
+            {record.locked ? ' · locked' : ''}
+            {record.supersedes_id ? ' · correction' : ''}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {!readOnly && (
@@ -272,44 +385,61 @@ export default function ChecklistDetailPage() {
               type="button"
               onClick={() => save()}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-primary/40 bg-white px-3 py-2 text-sm font-medium text-primary"
             >
               <Save className="h-4 w-4" />
-              {saving ? 'Saving…' : record.pending_sync ? 'Save locally' : 'Save draft'}
+              {saving ? 'Saving…' : 'Save Draft'}
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleShowPreview}
+            disabled={previewing}
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
+          >
+            <Eye className="h-4 w-4" />
+            {previewing ? 'Rendering…' : 'Show preview'}
+          </button>
           {!readOnly && (
             <button
               type="button"
               onClick={handleSubmit}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
+              className="inline-flex min-h-10 items-center rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
             >
-              Submit
+              Submit Checklist
             </button>
           )}
           <button
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex items-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white"
           >
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export PDF'}
           </button>
-          <button
-            type="button"
-            onClick={() => setShowPrint((v) => !v)}
-            className="rounded-md border border-navy/20 bg-white px-3 py-2 text-sm"
-          >
-            {showPrint ? 'Hide preview' : 'Print preview'}
-          </button>
+          {readOnly && (
+            <button
+              type="button"
+              onClick={async () => {
+                const next = createCorrection(record, user);
+                await persistSubmission(next);
+                navigate(`/checklists/${next.id}`);
+              }}
+              className="rounded-md border border-navy/20 bg-white px-3 py-2 text-sm"
+            >
+              Create correction
+            </button>
+          )}
         </div>
       </div>
 
       {banner && (
         <div
           className={`flex gap-2 rounded-md px-4 py-3 text-sm ${
-            banner.type === 'error' ? 'border border-alert bg-alert-soft text-alert' : 'border border-success bg-success-soft text-success'
+            banner.type === 'error'
+              ? 'border border-alert bg-alert-soft text-alert'
+              : 'border border-success bg-success-soft text-success'
           }`}
         >
           {banner.type === 'error' && <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
@@ -319,8 +449,42 @@ export default function ChecklistDetailPage() {
 
       {!online && (
         <p className="rounded-md bg-navy px-4 py-2 text-sm text-white">
-          You are offline. Saves stay on this device and sync when you reconnect. PDF export requires connectivity.
+          You are offline. Saves stay on this device and sync when you reconnect. PDF preview and export require
+          connectivity.
         </p>
+      )}
+
+      {record.status === 'submitted' && ['om', 'coo'].includes(profile?.role) && (
+        <section className="rounded-md border border-navy/15 bg-white p-4">
+          <h2 className="text-sm font-semibold text-navy">OM acknowledgment</h2>
+          <p className="mt-1 text-sm text-muted">
+            The submitted answers stay frozen. Acknowledgment appends your signature and regenerates the overlay PDF.
+          </p>
+          <div className="mt-3 max-w-md">
+            <SignaturePad value={omSignature} onChange={setOmSignature} />
+          </div>
+          <button
+            type="button"
+            className="mt-3 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
+            onClick={async () => {
+              try {
+                const next = await acknowledgeSubmission({
+                  id: record.id,
+                  name: displayName,
+                  position,
+                  signature_data_uri: omSignature,
+                  actorId: user?.id,
+                });
+                setRecord(next);
+                setBanner({ type: 'ok', text: 'Acknowledged. Export PDF to stamp the OM block on the approved form.' });
+              } catch (err) {
+                setBanner({ type: 'error', text: err.message });
+              }
+            }}
+          >
+            Acknowledge
+          </button>
+        </section>
       )}
 
       <ChecklistForm
@@ -332,6 +496,8 @@ export default function ChecklistDetailPage() {
         readOnly={readOnly}
         selectedCode={selectedCode}
         photoPreviewByCode={photoPreview}
+        lastSavedAt={lastSavedAt}
+        linkedIncidentByCode={itemIncidents}
         onHeaderChange={(patch) =>
           patchRecord((prev) => ({
             ...prev,
@@ -346,9 +512,7 @@ export default function ChecklistDetailPage() {
             items: { ...prev.items, [code]: { ...prev.items[code], ...patch } },
           }))
         }
-        onDeficienciesChange={(value) =>
-          patchRecord((prev) => ({ ...prev, deficiencies_summary: value }))
-        }
+        onDeficienciesChange={(value) => patchRecord((prev) => ({ ...prev, deficiencies_summary: value }))}
         onSelectItem={setSelectedCode}
         onPhotoSelect={handlePhotoSelect}
         onPhotoClear={(code) =>
@@ -357,18 +521,26 @@ export default function ChecklistDetailPage() {
             items: { ...prev.items, [code]: { ...prev.items[code], photo_url: null, photo_local_id: null } },
           }))
         }
-        onOmSignoffChange={(patch) =>
+        onCreateIncident={(item, row) => {
+          if (itemIncidents[item.code]) {
+            navigate(`/incidents/${itemIncidents[item.code]}`);
+            return;
+          }
+          setIncidentModal({ item, row });
+        }}
+        onSignoffChange={(role, patch) =>
           patchRecord((prev) => {
-            const rest = (prev.signoffs ?? []).filter((s) => s.role !== 'om_acknowledgment');
+            const rest = (prev.signoffs ?? []).filter((s) => s.role !== role);
+            const current = (prev.signoffs ?? []).find((s) => s.role === role) ?? { role };
             return {
               ...prev,
               signoffs: [
                 ...rest,
                 {
-                  role: 'om_acknowledgment',
-                  name: patch.name ?? '',
-                  position: patch.position ?? '',
-                  signed_at: patch.name ? new Date().toISOString() : null,
+                  ...current,
+                  ...patch,
+                  role,
+                  signed_at: new Date().toISOString(),
                 },
               ],
             };
@@ -376,11 +548,29 @@ export default function ChecklistDetailPage() {
         }
       />
 
-      {showPrint && (
-        <section className="rounded-lg border border-navy/10 bg-white p-4">
-          <h2 className="mb-3 font-semibold text-navy">Print preview</h2>
-          <AnnexDDrainagePrint schema={schema} submission={record} />
-        </section>
+      <PdfPreview url={previewUrl} loading={previewing} error={previewError} onRefresh={handleShowPreview} />
+
+      {incidentModal && (
+        <CreateIncidentModal
+          open
+          onClose={() => setIncidentModal(null)}
+          item={incidentModal.item}
+          row={incidentModal.row}
+          record={record}
+          schema={schema}
+          user={user}
+          profile={profile}
+          displayName={displayName}
+          photoPreview={photoPreview[incidentModal.item.code]}
+          onCreated={({ incident, proceed }) => {
+            setItemIncidents((prev) => ({ ...prev, [incident.source_item_code]: incident.id }));
+            setBanner({
+              type: 'ok',
+              text: `${incident.incident_ref} created. The NO SAT response was not changed.`,
+            });
+            if (proceed) navigate(`/incidents/${incident.id}`);
+          }}
+        />
       )}
     </div>
   );

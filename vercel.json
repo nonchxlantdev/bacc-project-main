@@ -4,8 +4,22 @@
   ],
   "functions": {
     "api/export-checklist-pdf.js": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 30,
+      "includeFiles": "{src/assets/forms/**,src/data/field-maps/**}"
+    },
+    "api/export-noc-register.js": {
+      "maxDuration": 30,
+      "includeFiles": "{src/assets/forms/**,src/data/field-maps/**}"
+    },
+    "api/export-work-order.js": {
+      "maxDuration": 30,
+      "includeFiles": "{src/assets/forms/**,src/data/field-maps/**}"
+    },
+    "api/export-report-pdf.js": {
+      "maxDuration": 30
+    },
+    "api/generate-checklist-instances.js": {
+      "maxDuration": 30
     }
   }
 }

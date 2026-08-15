@@ -1,16 +1,35 @@
-export default function SectionHeader({ title }) {
+import { ChevronDown } from 'lucide-react';
+import { CHECKLIST_GRID } from './checklistGrid.js';
+
+export default function SectionHeader({ title, itemCount, open, onToggle }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_minmax(8rem,14rem)] items-stretch bg-navy text-white sm:grid-cols-[minmax(0,1fr)_6rem_6rem_minmax(10rem,16rem)]">
-      <div className="px-3 py-2 text-xs font-bold tracking-wide uppercase">{title}</div>
-      <div className="flex items-center justify-center border-l border-white/20 text-center text-[10px] font-semibold uppercase tracking-wide">
-        SAT
-      </div>
-      <div className="flex items-center justify-center border-l border-white/20 text-center text-[10px] font-semibold uppercase tracking-wide">
-        NO-SAT
-      </div>
-      <div className="flex items-center justify-center border-l border-white/20 px-1 text-center text-[10px] font-semibold uppercase tracking-wide">
-        Remarks / Location
-      </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex min-h-11 w-full items-center gap-3 bg-navy px-4 text-left text-white"
+    >
+      <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? '' : '-rotate-90'}`} />
+      <span className="flex-1 text-[13px] font-semibold uppercase tracking-wide">{title}</span>
+      {!open && (
+        <span className="text-xs font-medium text-white/80">
+          {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
+        </span>
+      )}
+    </button>
+  );
+}
+
+export function ColumnHead() {
+  return (
+    <div
+      className={`${CHECKLIST_GRID} border-b border-navy/10 bg-stripe text-[11px] font-semibold uppercase tracking-wide text-navy`}
+    >
+      <div className="px-3 py-2">Item</div>
+      <div className="px-3 py-2">Description</div>
+      <div className="px-1 py-2 text-center">SAT</div>
+      <div className="px-1 py-2 text-center">NO SAT</div>
+      <div className="px-3 py-2">Remarks / Location</div>
     </div>
   );
 }

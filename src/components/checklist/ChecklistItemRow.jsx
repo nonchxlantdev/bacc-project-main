@@ -1,4 +1,5 @@
-import StatusPill from './StatusPill.jsx';
+import { Camera, Check } from 'lucide-react';
+import { CHECKLIST_GRID } from './checklistGrid.js';
 
 export default function ChecklistItemRow({
   item,
@@ -7,71 +8,97 @@ export default function ChecklistItemRow({
   striped,
   disabled,
   remarksError,
+  hasPhoto,
   onSelect,
   onChange,
+  onPhotoClick,
 }) {
   const result = row?.result ?? null;
+  const noSat = result === 'no_sat';
 
   return (
     <div
-      className={`grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_minmax(8rem,14rem)] items-stretch border-b border-navy/10 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_minmax(10rem,16rem)] ${
-        striped ? 'bg-stripe' : 'bg-white'
-      } ${selected ? 'ring-2 ring-inset ring-primary' : ''} ${
-        remarksError ? 'bg-alert-soft' : ''
+      className={`${CHECKLIST_GRID} min-h-12 items-stretch border-b border-navy/10 ${
+        noSat ? 'border-l-4 border-l-alert bg-alert-soft' : selected ? 'bg-primary/5' : striped ? 'bg-stripe' : 'bg-white'
       }`}
     >
       <button
         type="button"
         onClick={() => onSelect(item.code)}
-        className="px-3 py-2 text-left"
+        className="px-3 py-2.5 text-left text-[13px] font-bold text-navy"
       >
-        <span className="mr-2 font-bold text-navy">{item.code}</span>
-        <span className="text-sm text-ink">{item.text}</span>
+        {item.code}
       </button>
 
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-1 border-l border-navy/10 text-[10px] font-semibold">
+      <button
+        type="button"
+        onClick={() => onSelect(item.code)}
+        className="px-3 py-2.5 text-left text-[13px] leading-snug text-ink"
+      >
+        {item.text}
+      </button>
+
+      <label className="flex cursor-pointer items-center justify-center border-l border-navy/10">
         <input
           type="radio"
           name={`${item.code}-result`}
-          className="accent-success"
+          className="sr-only"
           disabled={disabled}
           checked={result === 'sat'}
           onChange={() => onChange({ result: 'sat' })}
         />
-        <span className={result === 'sat' ? 'text-success' : 'text-muted'}>SAT</span>
+        <span
+          className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+            result === 'sat' ? 'border-success bg-success-soft' : 'border-navy/25 bg-white'
+          }`}
+        >
+          {result === 'sat' && <Check className="h-3.5 w-3.5 text-success" strokeWidth={3} />}
+        </span>
       </label>
 
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-1 border-l border-navy/10 text-[10px] font-semibold">
+      <label className="flex cursor-pointer items-center justify-center border-l border-navy/10">
         <input
           type="radio"
           name={`${item.code}-result`}
-          className="accent-alert"
+          className="sr-only"
           disabled={disabled}
-          checked={result === 'no_sat'}
+          checked={noSat}
           onChange={() => {
             onChange({ result: 'no_sat' });
             onSelect(item.code);
           }}
         />
-        <span className={result === 'no_sat' ? 'text-alert' : 'text-muted'}>NO-SAT</span>
+        <span
+          className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+            noSat ? 'border-alert bg-white' : 'border-navy/25 bg-white'
+          }`}
+        >
+          {noSat && <span className="h-2.5 w-2.5 rounded-full bg-alert" />}
+        </span>
       </label>
 
-      <div className="border-l border-navy/10 p-2">
+      <div className="flex items-center gap-1 border-l border-navy/10 p-1.5">
         <input
           value={row?.remarks ?? ''}
           disabled={disabled}
-          placeholder={result === 'no_sat' ? 'Required for NO-SAT' : 'Remarks / location'}
+          placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
           onChange={(e) => onChange({ remarks: e.target.value })}
           onFocus={() => onSelect(item.code)}
-          className={`w-full rounded border px-2 py-1 text-sm ${
+          className={`min-h-9 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] ${
             remarksError ? 'border-alert bg-white' : 'border-navy/15 bg-white'
           }`}
         />
-        {result === 'no_sat' && (
-          <div className="mt-1">
-            <StatusPill status="no_sat" />
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            onSelect(item.code);
+            onPhotoClick?.(item.code);
+          }}
+          className={`rounded p-1.5 ${hasPhoto ? 'text-primary' : 'text-muted hover:text-navy'}`}
+          aria-label={`Photo for ${item.code}`}
+        >
+          <Camera className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

@@ -1,0 +1,631 @@
+import { CATEGORICAL, DEPARTMENT_COLORS, INCIDENT_STATUS_COLORS, TEMPLATE_COLORS } from '../../../config/chartPalette.js';
+import { DEFICIENCY_LEVELS, slaState } from '../../../config/deficiencyLevels.js';
+import { isQualifyingReinspection, workOrderVerifiedBlockers } from '../../../lib/incidentLifecycle.js';
+import { generatePendingInstances, linkSubmissionToInstance, refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
+import { daysUntilDue, airportYmd } from '../../../lib/belizeTime.js';
+import { dispatchNotification } from '../../../lib/notificationTransport.js';
+import { advanceClock, getStore, mutateStore, nowMs, resetStore } from './store.js';
+
+function notWired() {
+  throw new Error('not wired');
+}
+
+export function createMockRepositories() {
+  return {
+    users: {
+      async list() {
+        return getStore().users;
+      },
+      async getById(id) {
+        return getStore().users.find((row) => row.id === id) ?? null;
+      },
+      async getByEmail(email) {
+        const key = String(email || '').toLowerCase();
+        return getStore().users.find((row) => row.email.toLowerCase() === key) ?? getStore().users[3];
+      },
+    },
+    templates: {
+      async list(profile) {
+        const templates = getStore().templates.map((tpl) => ({
+          ...tpl,
+          assignment_rules: getStore().assignment_rules.filter((r) => r.template_id === tpl.id),
+        }));
+        if (!profile || ['om', 'coo', 'admin'].includes(profile.role)) return templates;
+        return templates.filter((tpl) =>
+          tpl.assignment_rules.some(
+            (rule) =>
+              (!rule.department || rule.department === profile.department) &&
+              (!rule.role || rule.role === profile.role),
+          ),
+        );
+      },
+      async get(idOrCode) {
+        const templates = getStore().templates;
+        const hit =
+          templates.find((row) => row.id === idOrCode || row.code === idOrCode) ?? templates[0];
+        return {
+          ...hit,
+          assignment_rules: getStore().assignment_rules.filter((r) => r.template_id === hit.id),
+        };
+      },
+    },
+    checklists: {
+      async listMine(userId) {
+        const rows = getStore().submissions;
+        if (!userId) return rows;
+        const user = getStore().users.find((u) => u.id === userId);
+        if (user && ['om', 'coo', 'admin'].includes(user.role)) return rows;
+        return rows.filter((row) => row.inspector_id === userId);
+      },
+      async listAll() {
+        return getStore().submissions;
+      },
+      async get(id) {
+        return getStore().submissions.find((row) => row.id === id) ?? null;
+      },
+      async persist(record) {
+        let saved = record;
+        mutateStore((s) => {
+          const idx = s.submissions.findIndex((row) => row.id === record.id);
+          const existing = idx >= 0 ? s.submissions[idx] : null;
+          if (existing?.locked && existing.status !== 'draft') {
+            saved = {
+              ...existing,
+              exported_pdf_path: record.exported_pdf_path ?? existing.exported_pdf_path,
+            };
+          } else {
+            saved = { ...record, pending_sync: false, updatedAt: new Date(nowMs()).toISOString() };
+            if (saved.status === 'submitted' && !saved.locked) saved.locked = true;
+          }
+          if (idx >= 0) s.submissions[idx] = saved;
+          else s.submissions.unshift(saved);
+          if (saved.status === 'submitted' || saved.status === 'acknowledged') {
+            s.instances = linkSubmissionToInstance(s.instances, saved);
+          }
+          if (saved.status === 'submitted' && existing?.status !== 'submitted') {
+            ensureApproval(s, {
+              entity_type: 'checklist_submission',
+              entity_id: saved.id,
+              approval_role: 'om_acknowledgment',
+              assigned_to: s.users.find((u) => u.role === 'om')?.id,
+            });
+          }
+          return s;
+        });
+        return saved;
+      },
+      async deleteDraft(record) {
+        if (record?.status !== 'draft' || record?.locked) {
+          throw new Error('Only unlocked drafts can be deleted. Submitted records stay on file.');
+        }
+        mutateStore((s) => {
+          s.submissions = s.submissions.filter((row) => row.id !== record.id);
+          return s;
+        });
+      },
+      async acknowledge({ id, name, position, signature_data_uri, actorId }) {
+        let saved = null;
+        mutateStore((s) => {
+          const rec = s.submissions.find((row) => row.id === id);
+          if (!rec) throw new Error('Checklist not found');
+          if (rec.status === 'draft') throw new Error('Drafts cannot be acknowledged');
+          const items = rec.items;
+          rec.signoffs = [
+            ...(rec.signoffs ?? []).filter((sg) => sg.role !== 'om_acknowledgment'),
+            {
+              role: 'om_acknowledgment',
+              name,
+              position,
+              signature_data_uri,
+              signed_at: new Date(nowMs()).toISOString(),
+            },
+          ];
+          rec.status = 'acknowledged';
+          rec.items = items;
+          saved = rec;
+          const appr = s.approvals.find(
+            (a) => a.entity_id === id && a.approval_role === 'om_acknowledgment' && a.status === 'pending',
+          );
+          if (appr) {
+            appr.status = 'approved';
+            appr.decided_by = actorId;
+            appr.decided_at = new Date(nowMs()).toISOString();
+            appr.signature_image_path = signature_data_uri ? 'local-signature' : null;
+          }
+          return s;
+        });
+        return saved;
+      },
+      async listQualifyingReinspections(incident) {
+        return getStore().submissions.filter((row) => isQualifyingReinspection(row, incident));
+      },
+    },
+    incidents: {
+      async list() {
+        return getStore().incidents;
+      },
+      async get(id) {
+        const inc = getStore().incidents.find((row) => row.id === id);
+        if (!inc) return null;
+        const updates = inc.updates ?? [];
+        return { ...inc, updates };
+      },
+      async persist(record) {
+        let saved = record;
+        mutateStore((s) => {
+          const idx = s.incidents.findIndex((row) => row.id === record.id);
+          saved = { ...record, pending_sync: false };
+          if (idx >= 0) s.incidents[idx] = { ...s.incidents[idx], ...saved };
+          else s.incidents.unshift(saved);
+          return s;
+        });
+        return saved;
+      },
+      async addUpdate(incident, update) {
+        const row = {
+          id: crypto.randomUUID(),
+          incident_id: incident.id,
+          created_at: new Date(nowMs()).toISOString(),
+          ...update,
+        };
+        mutateStore((s) => {
+          const inc = s.incidents.find((i) => i.id === incident.id);
+          if (inc) inc.updates = [row, ...(inc.updates ?? [])];
+          return s;
+        });
+        return row;
+      },
+    },
+    workOrders: {
+      async listByIncident(incidentId) {
+        return getStore().work_orders.filter((row) => row.incident_id === incidentId);
+      },
+      async get(id) {
+        return getStore().work_orders.find((row) => row.id === id) ?? null;
+      },
+      async persist(record) {
+        if (record.status === 'verified') {
+          const blockers = workOrderVerifiedBlockers(record);
+          if (blockers.length) throw new Error(blockers[0]);
+        }
+        let saved = record;
+        mutateStore((s) => {
+          const existing = s.work_orders.find((row) => row.id === record.id);
+          if (existing?.locked) {
+            saved = {
+              ...existing,
+              exported_pdf_path: record.exported_pdf_path ?? existing.exported_pdf_path,
+            };
+            return s;
+          }
+          saved = { ...record, pending_sync: false };
+          if (String(saved.work_order_number || '').includes('TEMP')) {
+            const year = new Date(nowMs()).getFullYear();
+            const seq = s.work_orders.filter((w) => String(w.work_order_number).startsWith(`WO-${year}-`)).length + 1;
+            saved.work_order_number = `WO-${year}-${String(seq).padStart(4, '0')}`;
+          }
+          const idx = s.work_orders.findIndex((row) => row.id === saved.id);
+          if (idx >= 0) s.work_orders[idx] = saved;
+          else s.work_orders.unshift(saved);
+          if (saved.status === 'completed') {
+            ensureApproval(s, {
+              entity_type: 'work_order',
+              entity_id: saved.id,
+              approval_role: 'om_coo_verification',
+              assigned_to: s.users.find((u) => u.role === 'om')?.id,
+            });
+          }
+          return s;
+        });
+        return saved;
+      },
+    },
+    approvals: {
+      async listInbox(user) {
+        const s = getStore();
+        return s.approvals
+          .filter((row) => row.status === 'pending' && isApprovalForUser(row, user, s))
+          .map((row) => hydrateApproval(row, s))
+          .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      },
+      async get(id) {
+        const s = getStore();
+        const row = s.approvals.find((a) => a.id === id);
+        return row ? hydrateApproval(row, s) : null;
+      },
+      async decide({ id, decision, notes, signature_data_uri, actor, name, position }) {
+        if (decision === 'rejected') {
+          mutateStore((s) => {
+            const row = s.approvals.find((a) => a.id === id);
+            if (!row) throw new Error('Approval not found');
+            row.status = 'rejected';
+            row.notes = notes ?? '';
+            row.decided_by = actor.id;
+            row.decided_at = new Date(nowMs()).toISOString();
+            return s;
+          });
+          await dispatchNotification({
+            event_type: 'approval_required',
+            title: 'Approval rejected',
+            body: notes || 'The approver rejected this item. Whether rejection of a regulatory record is permitted is pending BACC.',
+            recipientIds: [actor.id],
+            href: '/approvals',
+          });
+          return getStore().approvals.find((a) => a.id === id);
+        }
+
+        const s = getStore();
+        const row = s.approvals.find((a) => a.id === id);
+        if (!row) throw new Error('Approval not found');
+        if (row.entity_type === 'checklist_submission') {
+          const repos = createMockRepositories();
+          await repos.checklists.acknowledge({
+            id: row.entity_id,
+            name: name || actor.full_name,
+            position: position || actor.position,
+            signature_data_uri,
+            actorId: actor.id,
+          });
+        } else {
+          const wo = s.work_orders.find((w) => w.id === row.entity_id);
+          if (!wo) throw new Error('Work order not found');
+          const blockers = workOrderVerifiedBlockers({
+            ...wo,
+            status: 'verified',
+            cec_clearance_issued:
+              row.approval_role === 'cec_clearance' ? true : wo.cec_clearance_issued,
+          });
+          if (blockers.length) throw new Error(blockers.join(' '));
+          const repos = createMockRepositories();
+          const signRole = row.approval_role === 'cec_clearance' ? 'cec_clearance' : 'om_coo_verification';
+          const signoffs = [
+            ...(wo.signoffs ?? []).filter((sg) => sg.role !== signRole),
+            {
+              role: signRole,
+              name: name || actor.full_name,
+              signature_data_uri,
+              signed_at: new Date(nowMs()).toISOString(),
+            },
+          ];
+          const next = {
+            ...wo,
+            signoffs,
+            status: 'verified',
+            locked: true,
+            cec_clearance_issued: row.approval_role === 'cec_clearance' ? true : wo.cec_clearance_issued,
+          };
+          await repos.workOrders.persist(next);
+          mutateStore((st) => {
+            const ap = st.approvals.find((a) => a.id === id);
+            if (ap) {
+              ap.status = 'approved';
+              ap.decided_by = actor.id;
+              ap.decided_at = new Date(nowMs()).toISOString();
+              ap.signature_image_path = signature_data_uri ? 'local-signature' : null;
+              ap.notes = notes ?? null;
+            }
+            return st;
+          });
+        }
+        return hydrateApproval(
+          getStore().approvals.find((a) => a.id === id),
+          getStore(),
+        );
+      },
+    },
+    instances: {
+      async list() {
+        return refreshInstanceStatuses(getStore().instances, nowMs());
+      },
+      async generate() {
+        let created = [];
+        mutateStore((s) => {
+          created = generatePendingInstances({
+            rules: s.assignment_rules,
+            existing: s.instances,
+            fromYmd: '2026-02-01',
+            toYmd: airportYmd(nowMs()),
+            nowMs: nowMs(),
+            idFactory: () => crypto.randomUUID(),
+          });
+          s.instances = refreshInstanceStatuses([...s.instances, ...created], nowMs());
+          return s;
+        });
+        return { created: created.length, total: getStore().instances.length };
+      },
+      async advanceClock(days) {
+        advanceClock(days);
+        return { demoNow: getStore().demoNow, instances: getStore().instances.length };
+      },
+      async getClock() {
+        return { demoNow: getStore().demoNow, nowMs: nowMs() };
+      },
+      async resetDemo() {
+        resetStore();
+        return { demoNow: getStore().demoNow };
+      },
+    },
+    notifications: {
+      async listForUser(userId) {
+        return getStore()
+          .notifications.filter((row) => row.recipient_id === userId)
+          .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      },
+      async unreadCount(userId) {
+        return getStore().notifications.filter((row) => row.recipient_id === userId && !row.read_at).length;
+      },
+      async markRead(id) {
+        mutateStore((s) => {
+          const row = s.notifications.find((n) => n.id === id);
+          if (row && !row.read_at) row.read_at = new Date(nowMs()).toISOString();
+          return s;
+        });
+      },
+      async markAllRead(userId) {
+        const at = new Date(nowMs()).toISOString();
+        mutateStore((s) => {
+          for (const row of s.notifications) {
+            if (row.recipient_id === userId && !row.read_at) row.read_at = at;
+          }
+          return s;
+        });
+      },
+    },
+    projects: {
+      async listActive() {
+        return getStore().projects;
+      },
+    },
+    reports: createReportAggregations(),
+  };
+}
+
+function ensureApproval(s, spec) {
+  const exists = s.approvals.some(
+    (a) => a.entity_id === spec.entity_id && a.approval_role === spec.approval_role && a.status === 'pending',
+  );
+  if (exists) return;
+  s.approvals.unshift({
+    id: crypto.randomUUID(),
+    status: 'pending',
+    decided_by: null,
+    decided_at: null,
+    signature_image_path: null,
+    notes: null,
+    created_at: new Date(nowMs()).toISOString(),
+    ...spec,
+  });
+}
+
+function isApprovalForUser(row, user) {
+  if (!user) return false;
+  if (row.assigned_to && row.assigned_to === user.id) return true;
+  if (row.approval_role === 'om_acknowledgment' && (user.role === 'om' || user.role === 'coo')) return true;
+  if (row.approval_role === 'om_coo_verification' && (user.role === 'om' || user.role === 'coo')) return true;
+  if (row.approval_role === 'cec_clearance' && user.role === 'cec') return true;
+  return false;
+}
+
+function hydrateApproval(row, s) {
+  if (row.entity_type === 'checklist_submission') {
+    const sub = s.submissions.find((x) => x.id === row.entity_id);
+    return {
+      ...row,
+      entity: sub
+        ? {
+            title: sub.schema?.title || sub.template_code,
+            date: sub.inspection_date,
+            href: `/checklists/${sub.id}`,
+            status: sub.status,
+          }
+        : null,
+    };
+  }
+  const wo = s.work_orders.find((x) => x.id === row.entity_id);
+  const inc = wo ? s.incidents.find((i) => i.id === wo.incident_id) : null;
+  return {
+    ...row,
+    entity: wo
+      ? {
+          title: wo.work_order_number,
+          date: wo.date_issued,
+          href: `/incidents/${wo.incident_id}?tab=work-orders&wo=${wo.id}`,
+          status: wo.status,
+          incident_ref: inc?.incident_ref,
+        }
+      : null,
+  };
+}
+
+function createReportAggregations() {
+  return {
+    async kpis() {
+      const s = getStore();
+      const t = nowMs();
+      const prior = t - 30 * 86400000;
+      const openInc = s.incidents.filter((i) => i.status !== 'closed').length;
+      const due = s.instances.filter((i) => i.status === 'pending' || i.status === 'overdue' || i.status === 'in_progress').length;
+      const appr = s.approvals.filter((a) => a.status === 'pending').length;
+      return {
+        projectsActive: s.projects.length,
+        incidentsOpen: openInc,
+        checklistsDue: due,
+        approvalsPending: appr,
+        prior: {
+          projectsActive: 0,
+          incidentsOpen: Math.max(0, openInc - 1),
+          checklistsDue: Math.max(0, due - 1),
+          approvalsPending: Math.max(0, appr - 1),
+        },
+      };
+    },
+    async completionRate({ from = '2026-02-01', to = '2026-08-31' } = {}) {
+      const s = getStore();
+      const monthly = s.instances.filter(
+        (row) =>
+          row.assignment_rule_id &&
+          row.period_start >= from &&
+          row.period_start <= to &&
+          row.period_start.endsWith('-01'),
+      );
+      const byPeriod = new Map();
+      for (const row of monthly) {
+        const period = row.period_start.slice(0, 7);
+        const cur = byPeriod.get(period) ?? { due: 0, submitted: 0 };
+        cur.due += 1;
+        if (row.status === 'submitted' || row.status === 'in_progress') cur.submitted += 1;
+        byPeriod.set(period, cur);
+      }
+      const templateCode = s.templates[0]?.code || 'PGIA-PMM-F04';
+      const points = [...byPeriod.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([period, cur]) => ({
+          period,
+          templateCode,
+          due: cur.due,
+          submitted: cur.submitted,
+          rate: cur.due ? cur.submitted / cur.due : 0,
+        }));
+      return {
+        points,
+        series: [{ templateCode, color: TEMPLATE_COLORS[templateCode] || CATEGORICAL.blue }],
+      };
+    },
+    async overdueInspections() {
+      const s = getStore();
+      const t = nowMs();
+      return s.instances
+        .filter((row) => row.status === 'overdue' || row.status === 'missed')
+        .map((row) => {
+          const user = s.users.find((u) => u.id === row.assigned_user);
+          const tpl = s.templates.find((t0) => t0.id === row.template_id);
+          return {
+            id: row.id,
+            templateCode: tpl?.code,
+            assignee: user?.full_name || row.assigned_role,
+            due_at: row.due_at,
+            status: row.status,
+            daysOverdue: Math.max(0, -daysUntilDue(row.due_at, t)),
+          };
+        });
+    },
+    async openDeficienciesByLevel() {
+      const open = getStore().incidents.filter((i) => i.status !== 'closed');
+      return DEFICIENCY_LEVELS.map((lvl) => ({
+        key: String(lvl.level),
+        label: lvl.label,
+        count: open.filter((i) => i.deficiency_level === lvl.level).length,
+        color: lvl.color,
+      }));
+    },
+    async incidentsByStatus() {
+      const counts = {};
+      for (const inc of getStore().incidents) {
+        counts[inc.status] = (counts[inc.status] || 0) + 1;
+      }
+      return Object.entries(INCIDENT_STATUS_COLORS).map(([key, color]) => ({
+        key,
+        label: key.replace('_', ' '),
+        count: counts[key] || 0,
+        color,
+      }));
+    },
+    async deficiencyAgeing() {
+      const s = getStore();
+      const t = nowMs();
+      const closed = s.incidents.filter((i) => i.status === 'closed' && i.closed_at);
+      const days = closed.map((i) => (Date.parse(i.closed_at) - Date.parse(i.reported_at)) / 86400000);
+      const meanDays = days.length ? days.reduce((a, b) => a + b, 0) / days.length : null;
+      const buckets = [
+        { bucket: '0-7', label: '0–7 days', lo: 0, hi: 7 },
+        { bucket: '8-30', label: '8–30 days', lo: 8, hi: 30 },
+        { bucket: '31-90', label: '31–90 days', lo: 31, hi: 90 },
+        { bucket: '90+', label: '90+ days', lo: 91, hi: Infinity },
+      ];
+      const open = s.incidents.filter((i) => i.status !== 'closed');
+      const openAgeing = buckets.map((b) => ({
+        bucket: b.bucket,
+        label: b.label,
+        count: open.filter((i) => {
+          const age = (t - Date.parse(i.reported_at)) / 86400000;
+          return age >= b.lo && age <= b.hi;
+        }).length,
+        color: CATEGORICAL.blue,
+      }));
+      return { meanDays, closedCount: closed.length, openAgeing };
+    },
+    async departmentOverview() {
+      const s = getStore();
+      const counts = {};
+      for (const sub of s.submissions) {
+        const user = s.users.find((u) => u.id === sub.inspector_id);
+        const dept = user?.department || 'Maintenance';
+        counts[dept] = (counts[dept] || 0) + 1;
+      }
+      return Object.entries(DEPARTMENT_COLORS).map(([key, color]) => ({
+        key,
+        label: key,
+        count: counts[key] || 0,
+        color,
+      }));
+    },
+    async slaAdherence() {
+      const s = getStore();
+      const t = nowMs();
+      const rows = s.incidents.map((inc) => {
+        const sla = slaState(inc.target_date, t);
+        const closedOnTime =
+          inc.status === 'closed' && inc.closed_at && inc.target_date
+            ? inc.closed_at.slice(0, 10) <= inc.target_date
+            : null;
+        return {
+          id: inc.id,
+          ref: inc.incident_ref,
+          status: inc.status,
+          target_date: inc.target_date,
+          sla: sla.kind,
+          remainingDays: sla.remainingDays,
+          closedOnTime,
+          href: `/incidents/${inc.id}`,
+        };
+      });
+      const open = rows.filter((r) => r.status !== 'closed');
+      return {
+        onTrack: open.filter((r) => r.sla === 'ok').length,
+        warning: open.filter((r) => r.sla === 'warning').length,
+        breached: open.filter((r) => r.sla === 'overdue').length,
+        closedOnTime: rows.filter((r) => r.closedOnTime === true).length,
+        closedLate: rows.filter((r) => r.closedOnTime === false).length,
+        rows,
+      };
+    },
+    async nocRegisterStatus() {
+      const s = getStore();
+      const byStatus = Object.entries(INCIDENT_STATUS_COLORS).map(([key, color]) => ({
+        key,
+        label: key.replace('_', ' '),
+        count: s.incidents.filter((i) => i.status === key).length,
+        color,
+      }));
+      return {
+        open: s.incidents.filter((i) => i.status !== 'closed').length,
+        closed: s.incidents.filter((i) => i.status === 'closed').length,
+        byStatus,
+      };
+    },
+    async reinspectionRate() {
+      const closed = getStore().incidents.filter((i) => i.status === 'closed');
+      const withSat = closed.filter((i) => i.reinspection_submission_id);
+      return {
+        closed: closed.length,
+        withSatReinspection: withSat.length,
+        rate: closed.length ? withSat.length / closed.length : 0,
+      };
+    },
+    async activityFeed({ limit = 8 } = {}) {
+      return getStore().activity.slice(0, limit);
+    },
+  };
+}
+
+void notWired;

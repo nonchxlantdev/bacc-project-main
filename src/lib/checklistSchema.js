@@ -1,10 +1,9 @@
 /**
  * Checklist template JSON shape.
  *
- * Annex D (`src/data/checklists/annex-d-drainage.json`) is the first template,
- * not the only one. Future annexes add a new JSON file + a matching print
- * template keyed by `print_template_key`. The form renderer must not assume
- * drainage-specific fields beyond what this schema describes.
+ * Content schema drives the interactive UI; a separate field map drives overlay export.
+ * Annex D lives at `src/data/checklists/annex-d-drainage.json`. Future forms add JSON +
+ * a field map + a base PDF — no engine changes, no hardcoded questions.
  *
  * @typedef {Object} HeaderFieldOption
  * @property {string} value
@@ -67,7 +66,7 @@ export function flattenItems(schema) {
 export function emptyItemState(schema) {
   const items = {};
   for (const item of flattenItems(schema)) {
-    items[item.code] = { result: null, remarks: '', photo_url: null, photo_local_id: null };
+    items[item.code] = { result: 'sat', remarks: '', photo_url: null, photo_local_id: null };
   }
   return items;
 }

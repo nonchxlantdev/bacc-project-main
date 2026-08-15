@@ -1,9 +1,12 @@
+import SignaturePad from './SignaturePad.jsx';
+
 export default function SignoffBlock({
   label,
   name,
   position,
   dateLabel = 'Date:',
   signedAt,
+  signatureDataUri,
   readOnly,
   onChange,
 }) {
@@ -15,16 +18,22 @@ export default function SignoffBlock({
         value={name ?? ''}
         readOnly={readOnly}
         onChange={(e) => onChange?.({ name: e.target.value })}
-        className="mb-3 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
+        className="mb-3 min-h-11 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
       />
       <label className="mb-2 block text-xs text-muted">Position</label>
       <input
         value={position ?? ''}
         readOnly={readOnly}
         onChange={(e) => onChange?.({ position: e.target.value })}
-        className="mb-3 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
+        className="mb-3 min-h-11 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
       />
-      <p className="text-sm text-muted">
+      <p className="mb-2 text-xs text-muted">Drawn signature</p>
+      <SignaturePad
+        value={signatureDataUri}
+        disabled={readOnly}
+        onChange={(signature_data_uri) => onChange?.({ signature_data_uri })}
+      />
+      <p className="mt-2 text-sm text-muted">
         {dateLabel} {signedAt ? new Date(signedAt).toLocaleString() : '—'}
       </p>
     </div>

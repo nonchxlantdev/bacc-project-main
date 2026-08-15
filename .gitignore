@@ -30,3 +30,7 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# PDF fidelity harness output
+tmp-pdf-diff/
+tmp-annex-*-coords.json

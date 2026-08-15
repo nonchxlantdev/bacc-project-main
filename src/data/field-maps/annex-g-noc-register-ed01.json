@@ -1,0 +1,32 @@
+{
+  "templateKey": "annex-g-noc-register",
+  "templateVersion": "ed01",
+  "basePdf": "annex-g-noc-register-ed01.pdf",
+  "mode": "register",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "Coordinates are PDF points with a bottom-left origin (pdf-lib). Register rows step down by rowHeight from firstRowY. overflow: repeat-base-page copies the approved blank page — never synthesise a continuation sheet.",
+  "mapping": {
+    "method": "pdf.js header text positions on approved Ed.01 PDF",
+    "durationMinutes": 12,
+    "note": "Column x taken from Annex G header labels. firstRowY sits below the header band. Confirm NOC No. prefix with BACC — noc_no is currently a padded sequence with no prefix."
+  },
+  "pageSize": { "width": 612.12, "height": 792.12 },
+  "table": {
+    "page": 0,
+    "firstRowY": 560,
+    "rowHeight": 22,
+    "rowsPerPage": 18,
+    "overflow": "repeat-base-page",
+    "size": 8,
+    "columns": {
+      "noc_no": { "x": 72, "width": 32 },
+      "date": { "x": 106.2, "width": 36 },
+      "source_inspection": { "x": 144.2, "width": 54 },
+      "level": { "x": 200.6, "width": 36, "align": "center" },
+      "description": { "x": 239.2, "width": 86, "wrap": true, "maxLines": 2 },
+      "assigned_to": { "x": 327.8, "width": 64 },
+      "target_date": { "x": 395.2, "width": 62 },
+      "closed_date_notes": { "x": 460.9, "width": 79, "wrap": true, "maxLines": 2 }
+    }
+  }
+}

@@ -1,39 +1,91 @@
-import { ClipboardCheck, CloudOff, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import StatusPill from '../components/checklist/StatusPill.jsx';
+import { ClipboardCheck, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { listMineSubmissions } from '../lib/submissions.js';
-import { listTemplates } from '../lib/templates.js';
+import { useReports, useTemplates } from '../hooks/useRepos.js';
+import { StatTile } from '../components/reports/StatTile.jsx';
+import { HorizontalBarChart } from '../components/reports/Charts.jsx';
+import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
+import { getRepos } from '../data/repositories/index.js';
 
 export default function DashboardPage() {
-  const { displayName } = useAuth();
-  const [templates, setTemplates] = useState([]);
-  const [rows, setRows] = useState([]);
+  const { displayName, profile } = useAuth();
+  const { rows: templates } = useTemplates(profile);
+  const reports = useReports();
+  const [kpis, setKpis] = useState(null);
+  const [dept, setDept] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [clock, setClock] = useState(null);
 
   useEffect(() => {
-    listTemplates().then(setTemplates);
-    listMineSubmissions().then(setRows);
-  }, []);
+    reports.kpis().then(setKpis);
+    reports.departmentOverview().then(setDept);
+    reports.activityFeed({ limit: 8 }).then(setActivity);
+    getRepos().instances.getClock().then(setClock);
+  }, [reports]);
 
-  const drafts = rows.filter((r) => r.status === 'draft').length;
-  const submitted = rows.filter((r) => r.status === 'submitted').length;
-  const pending = rows.filter((r) => r.pending_sync).length;
+  const delta = (key) => (kpis ? kpis[key] - kpis.prior[key] : null);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-navy">Dashboard</h1>
-        <p className="text-sm text-muted">Welcome back, {displayName}.</p>
+        <p className="text-sm text-muted">
+          Welcome back, {displayName}
+          {clock ? ` · airport date ${clock.demoNow.slice(0, 10)} (America/Belize)` : ''}.
+        </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Drafts" value={drafts} />
-        <Stat label="Submitted" value={submitted} />
-        <Stat label="Pending sync" value={pending} />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="Active Projects"
+          value={kpis?.projectsActive ?? 0}
+          delta={delta('projectsActive')}
+          href="/projects"
+          note="Projects is contracted separately and has no design yet."
+        />
+        <StatTile label="Incidents" value={kpis?.incidentsOpen ?? '—'} delta={delta('incidentsOpen')} href="/incidents" />
+        <StatTile label="Checklists" value={kpis?.checklistsDue ?? '—'} delta={delta('checklistsDue')} href="/checklists/mine" />
+        <StatTile label="Approvals" value={kpis?.approvalsPending ?? '—'} delta={delta('approvalsPending')} href="/approvals" />
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
+          title="Department overview"
+          subtitle="Inspection submissions in the seeded window"
+          table={
+            <SimpleTable
+              columns={[
+                { key: 'label', label: 'Department' },
+                { key: 'count', label: 'Submissions' },
+              ]}
+              rows={dept}
+            />
+          }
+        >
+          <HorizontalBarChart items={dept} />
+        </ChartCard>
+
+        <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-sm font-semibold text-navy">Recent activity</h2>
+          <ul className="space-y-2 text-sm">
+            {activity.map((row) => (
+              <li key={row.id} className="border-b border-navy/5 pb-2 last:border-0">
+                <Link to={row.href || '/dashboard'} className="font-medium text-primary hover:underline">
+                  {row.summary}
+                </Link>
+                <p className="text-xs text-muted">
+                  {row.actor_name} · {String(row.at).slice(0, 16).replace('T', ' ')}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
       <section className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-navy">Start an inspection</h2>
+          <h2 className="font-semibold text-navy">Quick actions</h2>
           <Link to="/checklists/mine" className="text-sm font-medium text-primary hover:underline">
             View mine
           </Link>
@@ -54,38 +106,13 @@ export default function DashboardPage() {
               <Plus className="ml-auto h-4 w-4 text-primary" />
             </Link>
           ))}
+          <Link to="/approvals" className="rounded-md border border-navy/10 p-4 hover:border-primary">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">Inbox</p>
+            <p className="font-semibold text-navy">Open approvals</p>
+            <p className="text-xs text-muted">Items waiting on {profile?.role || 'you'}</p>
+          </Link>
         </div>
       </section>
-      {pending > 0 && (
-        <p className="flex items-center gap-2 text-sm text-muted">
-          <CloudOff className="h-4 w-4" />
-          {pending} submission{pending === 1 ? '' : 's'} will sync when you are back online.
-        </p>
-      )}
-      {rows.slice(0, 5).length > 0 && (
-        <section className="rounded-lg border border-navy/10 bg-white shadow-sm">
-          <h2 className="border-b border-navy/10 px-5 py-3 font-semibold text-navy">Recent</h2>
-          <ul>
-            {rows.slice(0, 5).map((row) => (
-              <li key={row.id} className="flex items-center justify-between border-b border-navy/5 px-5 py-3 last:border-0">
-                <Link to={`/checklists/${row.id}`} className="font-medium text-primary hover:underline">
-                  {row.schema?.title || row.template_code} — {row.inspection_date}
-                </Link>
-                <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value }) {
-  return (
-    <div className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-navy">{value}</p>
     </div>
   );
 }

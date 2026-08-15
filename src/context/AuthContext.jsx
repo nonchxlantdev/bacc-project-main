@@ -1,33 +1,41 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { getRepos } from '../data/repositories/index.js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
+const AUTH_KEY = 'bacc-local-auth';
 
-const LOCAL_DEV_USER = {
-  id: 'local-dev-inspector',
-  email: 'inspector@pgia.local',
-  profile: {
-    full_name: 'Local Inspector',
-    position: 'Airside Inspector',
-    role: 'inspector',
-  },
-};
+function toSessionUser(profile) {
+  return {
+    id: profile.id,
+    email: profile.email,
+    profile,
+  };
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [demoUsers, setDemoUsers] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
+      const repos = getRepos();
+      const users = await repos.users.list().catch(() => []);
+      if (!cancelled) setDemoUsers(users);
+
       if (!isSupabaseConfigured || !supabase) {
-        const cached = sessionStorage.getItem('bacc-local-auth');
-        if (cached === '1') {
-          setSession({ user: LOCAL_DEV_USER });
-          setProfile(LOCAL_DEV_USER.profile);
+        const cached = sessionStorage.getItem(AUTH_KEY);
+        if (cached) {
+          const found = users.find((u) => u.id === cached || u.email === cached) ?? users[3] ?? users[0];
+          if (found) {
+            setSession({ user: toSessionUser(found) });
+            setProfile(found);
+          }
         }
         setLoading(false);
         return;
@@ -44,13 +52,9 @@ export function AuthProvider({ children }) {
 
       const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
         setSession(nextSession);
-        if (nextSession?.user) {
-          setProfile(await fetchProfile(nextSession.user));
-        } else {
-          setProfile(null);
-        }
+        if (nextSession?.user) setProfile(await fetchProfile(nextSession.user));
+        else setProfile(null);
       });
-
       return () => listener.subscription.unsubscribe();
     }
 
@@ -67,10 +71,14 @@ export function AuthProvider({ children }) {
     async function signIn(email, password) {
       setError(null);
       if (!isSupabaseConfigured || !supabase) {
-        sessionStorage.setItem('bacc-local-auth', '1');
-        setSession({ user: LOCAL_DEV_USER });
-        setProfile(LOCAL_DEV_USER.profile);
-        return { user: LOCAL_DEV_USER };
+        const repos = getRepos();
+        const found = await repos.users.getByEmail(email);
+        const profileRow = found ?? demoUsers[3] ?? demoUsers[0];
+        if (!profileRow) throw new Error('No demo users in seed');
+        sessionStorage.setItem(AUTH_KEY, profileRow.id);
+        setSession({ user: toSessionUser(profileRow) });
+        setProfile(profileRow);
+        return { user: toSessionUser(profileRow) };
       }
       const { data, error: signError } = await supabase.auth.signInWithPassword({ email, password });
       if (signError) {
@@ -82,7 +90,7 @@ export function AuthProvider({ children }) {
 
     async function signOut() {
       if (!isSupabaseConfigured || !supabase) {
-        sessionStorage.removeItem('bacc-local-auth');
+        sessionStorage.removeItem(AUTH_KEY);
         setSession(null);
         setProfile(null);
         return;
@@ -114,13 +122,14 @@ export function AuthProvider({ children }) {
       loading,
       error,
       configured: isSupabaseConfigured,
+      demoUsers,
       signIn,
       signOut,
       updateProfile,
       displayName: profile?.full_name || user?.email || 'Inspector',
       position: profile?.position || 'Inspector',
     };
-  }, [session, profile, loading, error]);
+  }, [session, profile, loading, error, demoUsers]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -129,7 +138,8 @@ async function fetchProfile(user) {
   const fallback = {
     full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Inspector',
     position: user.user_metadata?.position || 'Inspector',
-    role: 'inspector',
+    role: user.user_metadata?.role || 'inspector',
+    department: user.user_metadata?.department || 'Maintenance',
   };
   if (!supabase) return fallback;
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();

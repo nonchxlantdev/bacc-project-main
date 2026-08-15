@@ -1,123 +1,241 @@
-# BACC Airport Portal Revamp — Phase 1 Design
-**Checklist Engine + Pixel-Exact PDF Export + App Foundation**
+# BACC Operations Management Portal — Annex D Slice, Phase 1 Design (v2)
+**Checklist Engine + Approved-Format PDF Export + App Foundation**
 
-Date: 2026-08-14
-Status: Approved (pending final spec review)
-Project: Belize Airport Concession Company (BACC) — Philip S.W. Goldson International Airport (PGIA) operations portal
-Repo: `airportauthorityproj-main` (currently on GitHub Pages, moving to Vercel + custom domain)
+Date: 2026-08-14 (v2 supersedes v1 of the same date)
+Status: Approved
+Project: Belize Airport Concession Company (BACC) — Philip S.W. Goldson International Airport (PGIA)
+Repo: `bacc-project-main` → GitHub → Vercel + custom domain
 
-## 1. Background & Goal
+> **v2 changes from v1.** PDF export switched from HTML + headless Chromium to **overlay onto the approved form as a base PDF template**, per BACC's technical requirements §8. Sign-off switched from typed name to **drawn signature capture**. Added template versioning, record immutability, assignment rules, and geo-location. Delivery model changed to **per-annex vertical slices**. Reason: discovery of `BACC Docs`, containing BACC's own technical requirements document, a functional requirements spreadsheet, and 31 approved forms.
 
-The existing repo is an early trial/demo (`air-authority-project`) — a generic job/task management dashboard with mocked login, built as a single 95KB `src/main.jsx` file. It does not yet contain any of the checklist/inspection functionality this project actually needs.
+## 1. Governing Documents
 
-The real goal: a portal where airport maintenance inspectors complete regulatory checklists (drawn from the *Aerodrome Operations Manual*, e.g. Annex D — Drainage System Inspection Checklist, form PGIA-PMM-F04) on web/mobile, and export completed checklists to PDF that **matches the source manual's layout exactly** — same header/logo placement, same navy section bars, same table structure, same footer/page numbering — because the exported PDF must be acceptable as an official compliance record alongside (or in place of) the paper/Word original.
+This spec is subordinate to two client-authored documents. Where they conflict with anything here, **they win**:
 
-This is a large system (design system, checklist engine, PDF export, incidents, reports, documents, locations, users). It is being built in phases. **This spec covers Phase 1 only.**
+- `BACC Docs/BACC_Digital_Checklist_Technical_Requirements_v1.docx` — Technical Requirements, Digital Checklist Engine & Approved-Format Export, v1.0
+- `BACC Docs/BACC_Requirement Checklist_OMP_2026.xlsx` — Functional Requirements Checklist v1.0/v1.1
 
-## 2. Phase 1 Scope
+**BACC's non-negotiable rule (§14), reproduced verbatim in spirit:** checklist content and the printable record are controlled business documents. Do not modify wording, item numbering, section order, form identifiers, revision information, signatures, or layout for convenience. Any change to an approved form is a controlled configuration change requiring BACC validation.
 
-**In scope:**
-- App foundation: proper routing (React Router) and component structure, replacing the monolithic `main.jsx`
-- A reusable, data-driven checklist template engine
-- Annex D (Drainage System Inspection Checklist) built as the first template, using real content from the supplied source PDF
-- Pixel-exact PDF export for any checklist built on the template engine
-- Core pages: Dashboard, My Checklists, All Checklists (list + fill/detail view), Locations (extends existing GPS/offline work), Users (basic), Settings
-- Photo evidence upload on NO-SAT items, embedded in the exported PDF
-- Sign-off as typed name/position + server timestamp (no drawn signature)
-- Offline-first submission (existing PWA/IndexedDB queue pattern extended to checklists)
+## 2. Delivery Model — Per-Annex Vertical Slices
 
-**Explicitly out of scope for Phase 1 (later phases):**
-- Incidents module, including "Create Incident from NO-SAT item" (Phase 2)
-- Reports, Documents modules, and full Users/Locations/Settings build-out (Phase 3)
-- Additional Annex checklists beyond Annex D (added as data once source PDFs are supplied)
-- Drawn/captured e-signatures
-- SSO / advanced RBAC beyond Supabase Auth email+password
+Each annex is delivered as a self-contained slice running its own phases:
 
-## 3. Tech Stack Decision
+- **Slice phase 1** — the checklist: configuration, interactive fill UI, validation, approved-format export
+- **Slice phase 2** — incidents: NOC creation from NO SAT items, geo-location, work orders
+- **Slice phase 3** — reporting, approvals, notifications for that annex
 
-**Keep Vite + React 19 + Supabase.** Considered migrating to Next.js for built-in routing/API routes, but rejected: this app is 100% behind Supabase auth (no SEO/SSR need), and the existing offline-first PWA work (Workbox service worker via `vite-plugin-pwa`, hand-rolled IndexedDB queue/sync in `src/utils/offline*.js`) is real, working investment that a Next.js SSR model would fight against — offline support is fundamentally a static-shell problem, and Next's server-rendering default undermines it unless mostly disabled (at which point you've rebuilt a Vite-like SPA inside a heavier toolchain). Vercel serverless functions (needed for PDF rendering) work identically under a plain Vite + `/api` setup — Next.js is not required to get them.
+**Annex D (Duty Manager, `PGIA-PMM-F04`) is slice one** and is in progress.
 
-**Additions:** React Router (client-side routing/pages), Tailwind CSS (replacing ad-hoc `styles.css` growth, faster to hit the target brand look than adopting a full component library mid-revamp).
+Slice one is disproportionately heavy because it builds all shared infrastructure — auth, the template engine, the overlay export pipeline, the incident module, the coordinate-mapping tool. Every subsequent slice reuses that infrastructure and is predominantly configuration: a base PDF, a field map, a content schema, and a proofing pass.
 
-## 4. Data Model (Supabase / Postgres)
+## 3. Form Inventory — 31 Approved Forms, Two Families
 
-- **`checklist_templates`** — `id`, `code` (e.g. `PGIA-PMM-F04`), `title`, `annex_label` (e.g. `Annex D`), `schema` (jsonb — see §5), `print_template_key` (which HTML print-template to use), `active`
-- **`checklist_submissions`** — `id`, `template_id` (fk), `location_id` (fk), `inspector_id` (fk, Supabase auth user), `inspection_type` (`monthly_routine` / `semi_annual_cec` / `post_storm_emergency`), `inspection_date`, `rainfall_mm` (nullable), `status` (`draft` / `submitted`), `deficiencies_summary` (text), `submitted_at`
-- **`checklist_items`** — `id`, `submission_id` (fk), `item_code` (e.g. `DR-04`), `result` (`sat` / `no_sat` / `null`), `remarks` (text), `photo_url` (nullable, Supabase Storage)
-- **`checklist_signoffs`** — `id`, `submission_id` (fk), `role` (`inspector` / `om_acknowledgment`), `name`, `position`, `signed_at`
+**Family 1 — Annex 1-1 / PGIA 16-14** (Maintenance Paved & Unpaved Manual). Annexes A–K, forms `PGIA-PMM-F01`–`F11`. Annex L is a reference document, not a form.
 
-Photos land in a Supabase Storage bucket (reuse/extend the existing `job-attachments` bucket pattern and RLS policies already in `supabase/rls_policies.sql`).
+A/F01 Daily Routine Inspection (5p, CFR) · B/F02 Operational Control Inspection (5p, Apron Sup) · C/F03 Technical Oversight Field Record (6p, Civil Eng) · **D/F04 Drainage System Inspection (3p, Duty Manager)** · E/F05 Aerodrome Sign Inspection (3p, Apron Sup) · F/F06 Unpaved Area Routine (3p, Apron Sup) · **G/F07 Deficiency & NOC Register (1p, OM)** · **H/F08 Maintenance Work Order & Completion Record (1p, OM)** · I/F09 Grass-Cutting Activity Log (1p, OM) · J/F10 Construction Area Daily Safety (3p, Apron Sup) · K/F11 Construction Safety Plan Template (6p, General)
 
-## 5. Checklist Template Engine
+**Family 2 — Annex 1-2 / PGIA 16-15** (Visual Aids & Electrical Systems). Appendices C-1 to C-20, documents `PGIA-CL-VAES-01`–`20`. Distinct header and a Document No. / Frequency control block absent from Family 1. Frequencies run daily through annual.
 
-Each annex is defined as JSON, not a hand-coded form component:
+The engine must handle both families. Validate the overlay approach against one form from each before committing to all 31.
+
+## 4. Tech Stack
+
+Vite + React 19 + React Router + Tailwind, Supabase (Auth/Postgres/Storage/Realtime), `vite-plugin-pwa` + Workbox for offline, deployed to Vercel with serverless functions under `/api`. Leaflet for maps (reusing the prior project's offline map-tile work).
+
+**No headless Chromium.** The overlay approach removes that dependency entirely, along with its bundle-size limits, cold starts, and font-matching risk.
+
+## 5. Approved-Format Export — Overlay Pipeline
+
+Per BACC §8: *"Use the approved form as the controlled base template/background or fixed-layout PDF template. Overlay captured values, SAT/NO SAT marks, remarks, signatures and dates into predefined positions."*
+
+Each form comprises three artifacts:
+
+1. **Base PDF** — the blank approved form, stored as an immutable versioned asset (`annex-d-drainage-ed01.pdf`)
+2. **Field map** — coordinates for every dynamic value
+3. **Content schema** — sections and items driving the interactive UI
+
+Export loads the base PDF with **`pdf-lib`**, stamps values at mapped coordinates, appends continuation/attachment pages where required, and returns the result. Because the base document *is* the approved artifact, fidelity is guaranteed by construction rather than achieved by imitation.
+
+### Field map format
 
 ```json
 {
-  "code": "PGIA-PMM-F04",
-  "title": "Drainage System Inspection Checklist",
-  "annexLabel": "Annex D",
-  "sections": [
-    {
-      "title": "SECTION 1 — RUNWAY DRAINAGE",
-      "items": [
-        { "code": "DR-01", "text": "Runway 07 end drainage swale clear of sediment, vegetation, and debris" },
-        { "code": "DR-04", "text": "Runway west edge drainage channel (full length) free of blockage" }
-      ]
-    }
-  ],
-  "headerFields": ["date", "inspectionType", "conductedBy", "rainfallMm"],
-  "footerNote": "Review: Ed. 01 Annex 2-1 | Date: March 12, 2026. Maintenance Paved and Unpaved Manual.",
-  "pageRef": "ANNEX 1-1 / PGIA 16-14"
+  "templateKey": "annex-d-drainage",
+  "templateVersion": "ed01",
+  "basePdf": "annex-d-drainage-ed01.pdf",
+  "fields": {
+    "inspection_date":  { "page": 0, "x": 210, "y": 646, "size": 9 },
+    "inspection_type.monthly_routine": { "page": 0, "x": 331, "y": 619, "type": "mark" },
+    "conducted_by":     { "page": 0, "x": 210, "y": 590, "size": 9, "lines": 2 },
+    "DR-04.sat":        { "page": 0, "x": 402, "y": 385, "type": "mark" },
+    "DR-04.no_sat":     { "page": 0, "x": 447, "y": 385, "type": "mark" },
+    "DR-04.remarks":    { "page": 0, "x": 500, "y": 392, "width": 150, "height": 24,
+                          "wrap": true, "maxLines": 2, "overflow": "continuation" },
+    "inspector_signature": { "page": 2, "x": 105, "y": 355, "type": "image", "width": 160, "height": 34 },
+    "om_signature":        { "page": 2, "x": 470, "y": 355, "type": "image", "width": 160, "height": 34 }
+  }
 }
 ```
 
-One generic renderer reads this to draw both the on-screen fill-in form and (merged with submission data) the print-template HTML used for PDF export. Item codes (DR-01 … DR-27) and section text are transcribed from the supplied Annex D PDF. Validation rule carried over from the source form: any item marked NO-SAT requires non-empty remarks before submission.
+Coordinates are PDF points with a **bottom-left origin** (`pdf-lib` convention), not top-left. This is the most common source of misplacement bugs.
 
-Adding a future annex = a new JSON file + a new print-template HTML file following this pattern. No engine changes required.
+### Overflow handling (BACC §10)
 
-## 6. PDF Export Pipeline
+Remarks wrap inside the approved field without overlapping neighbours. Fields must never be resized and fixed sections must never be moved to accommodate longer text. When content exceeds its box, truncate visibly in place with a continuation marker (e.g. `— see continuation p.4`) and render the full text on an appended continuation page.
 
-1. On export, the client (or a server call) merges a submission's data with its template's JSON into the matching print-template HTML — built to reproduce the source PDF's exact structure: BACC logo top-left, "AERODROME OPERATIONS MANUAL / PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT" centered, "ANNEX 1-1 / PGIA 16-14" + PGIA watermark logo top-right, navy `SECTION N` bars, striped table rows, checkbox glyphs for SAT/NO-SAT, footer with review/date/manual name and page numbers.
-2. That HTML is POSTed to a Vercel serverless function (`/api/export-checklist-pdf`) running headless Chromium (`playwright-core` + `@sparticuz/chromium`, the standard combo for Puppeteer/Playwright on Vercel's Node runtime).
-3. The function prints the HTML to PDF and streams it back for download. CSS-driven rendering via a real browser engine is far more reliable for exact reproduction (fonts, spacing, borders) than an `html2canvas` screenshot approach.
-4. PDF export requires connectivity (server call) — offline users can save/queue a submission and export once back online.
+### Generation and retention
 
-## 7. Brand Assets (supplied)
+Generate server-side in a Vercel function (`/api/export-checklist-pdf`) on submission. Store the resulting PDF in Supabase Storage keyed to submission ID plus template version; downloads serve the stored artifact so a submitted record's PDF is fixed permanently. `pdf-lib` is pure JavaScript with a small footprint — no special runtime configuration required.
 
-- `PGIA_logo.png` — 3999×1676 RGBA PNG, transparent background, white/teal-gradient PGIA wordmark with silhouette treatment. Use for header watermark and dark-background contexts.
-- `BACC.jpeg` — 350×87 JPEG, Belize Airport Concession Company Limited logo (full color). Usable at header size but low resolution for anything scaled larger — **flagged as a follow-up: request a higher-res or vector (SVG/EPS) version if BACC logo needs to appear larger than ~350px wide anywhere** (e.g. a login screen or large-format print).
+*Note for a later slice:* because `pdf-lib` also runs in the browser and the base PDF can be precached by the service worker, offline export becomes technically feasible. Not in scope now — the server-generated artifact remains the canonical record.
 
-Both saved for reference alongside this spec; to be placed in `src/assets/brand/` during implementation.
+## 6. Coordinate-Mapping Tool (build before mapping form #2)
 
-## 8. App Structure / Design System
+A dev-only route that loads a base PDF, renders it via `pdf.js`, lets a developer click to place fields and assign field keys, previews sample values in position, and exports the field-map JSON. Mapping 31 forms by hand versus through a tool is the difference between a week and a month. Decision taken: **build the tooling first, measure real per-form time on Annex D plus one VAES form, then scope the remaining templates from actual numbers.**
 
-Pages (React Router): `/dashboard`, `/checklists/mine`, `/checklists/all`, `/checklists/:id` (fill/detail view), `/locations`, `/users`, `/settings`. Incidents/Reports/Documents nav items exist but route to a "coming soon" placeholder until Phase 2/3.
+## 7. Data Model (Supabase)
 
-Shared components: `SectionHeader`, `ChecklistItemRow` (SAT/NO-SAT toggle + remarks + photo), `StatusPill`, `PhotoUpload`, `SignoffBlock`. Tailwind CSS for styling, matching the navy/blue palette and layout already established in the current header/sidebar screenshot the project is targeting.
+```sql
+-- Templates are versioned; submissions pin the version used.
+create table checklist_templates (
+  id uuid primary key default gen_random_uuid(),
+  code text not null,                       -- 'PGIA-PMM-F04'
+  version text not null,                    -- 'ed01'
+  title text not null,
+  annex_label text,                         -- 'Annex D'
+  document_family text not null,            -- 'PMM' | 'VAES'
+  department text,
+  content_schema jsonb not null,
+  field_map jsonb not null,
+  base_pdf_path text not null,
+  effective_date date,
+  status text not null default 'active'     -- active | retired
+    check (status in ('active','retired')),
+  unique (code, version)
+);
 
-## 9. Offline Behavior
+-- Assignment rules: who sees which checklist, when (BACC §3, §4).
+create table checklist_assignment_rules (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid not null references checklist_templates(id),
+  department text,
+  role text,
+  location_id uuid,
+  frequency text check (frequency in
+    ('daily','weekly','monthly','quarterly','semi_annual','annual','ad_hoc')),
+  inspection_type text,
+  due_time time
+);
 
-Checklist submissions and photo uploads queue in IndexedDB when offline (extending the existing `offlineQueue`/`offlineSync`/`offlineWrites` utilities) and sync to Supabase when connectivity returns, matching the current job-write queue pattern. The app shell continues to be precached via `vite-plugin-pwa`/Workbox so inspectors can open and fill a checklist with zero signal.
+create table checklist_submissions (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid not null references checklist_templates(id),
+  template_version text not null,           -- pinned; never follows template updates
+  location_id uuid,
+  inspector_id uuid not null references auth.users(id),
+  inspection_type text not null,
+  inspection_date date not null,
+  rainfall_mm numeric,
+  status text not null default 'draft'
+    check (status in ('draft','submitted','acknowledged')),
+  deficiencies_summary text,
+  exported_pdf_path text,
+  content_hash text,
+  created_at timestamptz not null default now(),
+  submitted_at timestamptz,
+  locked boolean not null default false
+);
 
-## 10. Auth & Sign-off
+create table checklist_items (
+  id uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references checklist_submissions(id) on delete cascade,
+  item_code text not null,                  -- 'DR-04'
+  result text check (result in ('sat','no_sat','na')),
+  remarks text,
+  photo_url text
+);
 
-Supabase Auth (email/password), unchanged. Sign-off captured as the authenticated user's name + position (from their profile) and a server-generated timestamp — no drawn signature in Phase 1.
+create table checklist_signoffs (
+  id uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references checklist_submissions(id) on delete cascade,
+  role text not null check (role in ('inspector','om_acknowledgment')),
+  name text not null,
+  position text,
+  signature_image_path text,                -- drawn signature PNG
+  signed_at timestamptz not null default now()
+);
 
-## 11. Error Handling
+create table audit_log (
+  id uuid primary key default gen_random_uuid(),
+  entity_type text not null,
+  entity_id uuid not null,
+  action text not null,
+  actor_id uuid references auth.users(id),
+  detail jsonb,
+  created_at timestamptz not null default now()
+);
+```
 
-- Required-field validation before submission (all NO-SAT items need remarks; header fields required per template's `headerFields`)
-- PDF export failures (serverless timeout, Chromium cold-start) surface a retry option; submission data itself is never lost (already saved to Supabase before export is attempted)
-- Offline write conflicts follow the existing queue/sync conflict handling already in `src/utils/offlineSync.js`
+**Immutability (BACC §11).** Submitted records are never overwritten. Set `locked = true` on submission; corrections create a new submission referencing the original. Every create, edit, submit, and acknowledgment writes to `audit_log`.
 
-## 12. Testing / QA
+**`result` includes `'na'`** because the requirements spreadsheet specifies Pass/Fail/N/A. Annex D has no N/A column — the engine supports it, the Annex D schema does not enable it.
 
-- Manual visual comparison of the generated Annex D PDF against the source PDF (side-by-side / overlay check for header, section bars, table structure, footer, page numbers)
-- Form validation tests (NO-SAT-requires-remarks rule, required header fields)
-- Offline queue tests: fill/submit a checklist with network disabled, confirm it syncs on reconnect
+## 8. Checklist Template Engine
 
-## 13. Open Follow-ups (not blocking Phase 1 start)
+Content schema drives the interactive UI; the field map drives the export. Annex D's schema lives at `src/data/checklists/annex-d-drainage.json` — sections, item codes DR-01 to DR-27, exact source wording, header fields, footer, signoff blocks.
 
-- Higher-resolution/vector BACC logo, if needed at larger display sizes
-- Additional Annex PDFs, to be supplied later and added as new template JSON + print-template files
-- Phase 2 (Incidents) and Phase 3 (Reports, Documents, full Users/Locations/Settings) specs to be brainstormed separately when Phase 1 is underway/complete
+Adding a form = base PDF + field map + content schema + proofing pass. **No engine changes.** BACC acceptance criterion #1: configure `PGIA-PMM-F04` without hard-coding individual questions.
+
+**Validation:** every item marked NO SAT requires non-empty remarks before submission (BACC §5, acceptance criterion #4).
+
+**NO SAT handling (BACC §5):** marking NO SAT surfaces the warning *"This item has been marked NO SAT. Please provide remarks and select an action."* and, where configured, offers **Create Incident**. Creating an incident must not alter or remove the original response; the checklist stays linked to the incident for traceability.
+
+## 9. Sign-off
+
+Drawn signature capture (signature pad) for both the inspector and OM acknowledgment, stored as PNG in Supabase Storage and stamped into the approved form's signature area via `pdf-lib`'s image embedding. Captured alongside name, position, and server timestamp.
+
+## 10. Offline / PWA
+
+App shell precached via `vite-plugin-pwa`. Submissions and photo uploads queue in IndexedDB (`idb`) and sync on reconnect. Compress photos client-side (~1600px, JPEG 0.8) before queueing and call `navigator.storage.persist()` — uncompressed camera images will otherwise exhaust quota and risk eviction of an inspector's queued work.
+
+Confirm inspector device types before finalising sync design: iOS PWAs have no Background Sync API and evict storage after roughly 7 days idle, so sync must be foreground-triggered on app open and `online` events.
+
+## 11. Incidents (slice phase 2 — designed separately)
+
+Confirmed direction: mirror the approved forms rather than inventing a model.
+
+- **Annex G / `PGIA-PMM-F07`** — Deficiency and Notice of Condition (NOC) Register. Maintained by OM, one row per deficiency from any inspection type. NOC No., Date, Source Inspection, **Level 1–4**, Description/Location.
+- **Annex H / `PGIA-PMM-F08`** — Maintenance Work Order and Completion Record. Issued by OM to CEC/EEC/Maintenance. Carries **NOC Reference No.**, Deficiency Level, Target Completion Date, NOTAM-required flag, and a completion record.
+
+Two entities: NOC is the deficiency record; work orders are raised against it. Lifecycle: Open → Assigned → In Progress → Resolved → Verified/Closed.
+
+Incident creation inherits checklist, section, item, user, department, date/time, remarks, and evidence (BACC §6), and retains a permanent relationship to the originating checklist response.
+
+**Geo-location (BACC §7):** capture current coordinates where permissions allow, and always allow the user to adjust the pin — the reporter may not be standing at the incident location. Store latitude/longitude, capture timestamp, capture method, and any user-adjusted position.
+
+## 12. Acceptance Criteria (BACC §12)
+
+1. Configure `PGIA-PMM-F04` without hard-coding individual questions
+2. Represent all five sections and DR-01 through DR-27
+3. Capture SAT/NO SAT for applicable items
+4. Require remarks when NO SAT is selected
+5. Allow linked incident creation from NO SAT
+6. Carry source checklist information into the incident
+7. Support incident map pin/location
+8. Generate an approved-format PDF
+9. Preserve source form structure, numbering, headers, sections, footer/revision information
+10. Retain template version with historical records
+11. **Complete page-by-page comparison of generated PDF against the approved source before production**
+
+Automate #11: rasterise generated and source PDFs at matching DPI (`pdftoppm`) and diff with `pixelmatch`. Turns fidelity into a number and gives regression protection on every template change.
+
+## 13. Open Items
+
+- `DR-17`/`18`/`19` carry literal `[Location 1..3]` placeholders — confirm with BACC whether these become named culverts or per-submission fill-in
+- **Severity scale conflict:** Annex G specifies Level 1–4; the requirements spreadsheet specifies Low/Medium/High/Critical. The approved form should govern — confirm
+- OM acknowledgment sits in contracted Phase III but Annex D's signature block needs it — decide whether a minimal acknowledgment ships in the Annex D slice
+- `BACC_logo.jpeg` is 350×87; request vector/high-res if needed above header size
+- Confirm inspector device types (iOS vs Android) before finalising offline sync
+- Validate overlay against one PMM form and one VAES form before committing to all 31
+- Commercial: 31 templates is the largest work item in the project — re-scope from measured per-form time once the mapping tool exists

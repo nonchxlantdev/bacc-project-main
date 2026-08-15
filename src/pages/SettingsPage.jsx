@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getRepos } from '../data/repositories/index.js';
 
 export default function SettingsPage() {
   const { displayName, position, updateProfile, configured } = useAuth();
   const [fullName, setFullName] = useState(displayName);
   const [job, setJob] = useState(position);
   const [saved, setSaved] = useState(false);
+  const [clock, setClock] = useState(null);
+
+  useEffect(() => {
+    getRepos().instances.getClock().then(setClock);
+  }, []);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -42,6 +48,53 @@ export default function SettingsPage() {
         </button>
         {saved && <p className="text-sm text-success">Saved.</p>}
       </form>
+
+      {import.meta.env.DEV && (
+        <section className="space-y-3 rounded-lg border border-dashed border-navy/30 bg-white p-5">
+          <h2 className="text-sm font-semibold text-navy">Demo clock (dev)</h2>
+          <p className="text-xs text-muted">
+            Due and overdue use America/Belize, not this device&apos;s timezone. Current airport now:{' '}
+            {clock?.demoNow}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-md border px-3 py-1.5 text-sm"
+              onClick={async () => setClock(await getRepos().instances.advanceClock(1))}
+            >
+              Advance 1 day
+            </button>
+            <button
+              type="button"
+              className="rounded-md border px-3 py-1.5 text-sm"
+              onClick={async () => setClock(await getRepos().instances.advanceClock(7))}
+            >
+              Advance 7 days
+            </button>
+            <button
+              type="button"
+              className="rounded-md border px-3 py-1.5 text-sm"
+              onClick={async () => {
+                const result = await getRepos().instances.generate();
+                setClock(await getRepos().instances.getClock());
+                window.alert(`Generated ${result.created} new instance(s). Total ${result.total}.`);
+              }}
+            >
+              Generate instances
+            </button>
+            <button
+              type="button"
+              className="rounded-md border border-alert px-3 py-1.5 text-sm text-alert"
+              onClick={async () => {
+                await getRepos().instances.resetDemo();
+                window.location.reload();
+              }}
+            >
+              Reset demo data
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

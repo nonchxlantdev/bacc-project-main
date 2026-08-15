@@ -1,6 +1,16 @@
-import { htmlToPdfBuffer } from './server/renderChecklistPdf.js';
+import { buildExport } from './api/export-checklist-pdf.js';
+import { buildNocRegisterExport } from './api/export-noc-register.js';
+import { buildWorkOrderExport } from './api/export-work-order.js';
+import { buildReportExport } from './api/export-report-pdf.js';
+import { buildGenerateInstances } from './api/generate-checklist-instances.js';
 
-const API_PATH = '/api/export-checklist-pdf';
+const ROUTES = {
+  '/api/export-checklist-pdf': { kind: 'pdf', builder: buildExport },
+  '/api/export-noc-register': { kind: 'pdf', builder: buildNocRegisterExport },
+  '/api/export-work-order': { kind: 'pdf', builder: buildWorkOrderExport },
+  '/api/export-report-pdf': { kind: 'pdf', builder: buildReportExport },
+  '/api/generate-checklist-instances': { kind: 'json', builder: buildGenerateInstances },
+};
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -8,8 +18,7 @@ function readJsonBody(req) {
     req.on('data', (chunk) => chunks.push(chunk));
     req.on('end', () => {
       try {
-        const raw = Buffer.concat(chunks).toString('utf8');
-        resolve(raw ? JSON.parse(raw) : {});
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'));
       } catch (err) {
         reject(err);
       }
@@ -18,51 +27,45 @@ function readJsonBody(req) {
   });
 }
 
-function attachPdfApi(server) {
+function attach(server) {
   server.middlewares.use(async (req, res, next) => {
-    const url = req.url?.split('?')[0];
-    if (url !== API_PATH) {
+    const pathName = req.url?.split('?')[0];
+    const route = ROUTES[pathName];
+    if (!route) {
       next();
       return;
     }
-
     if (req.method !== 'POST') {
       res.statusCode = 405;
-      res.setHeader('Allow', 'POST');
-      res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: 'Method not allowed' }));
       return;
     }
-
     try {
       const body = await readJsonBody(req);
-      const html = body?.html;
-      if (!html || typeof html !== 'string') {
-        res.statusCode = 400;
+      if (route.kind === 'json') {
+        const json = await route.builder(body);
+        res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'html string is required' }));
+        res.end(JSON.stringify(json));
         return;
       }
-
-      const pdf = await htmlToPdfBuffer(html);
-      const filename = String(body.filename || 'checklist.pdf').replace(/[^\w.\-]+/g, '_');
+      const { bytes, filename } = await route.builder(body);
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Cache-Control', 'no-store');
-      res.end(Buffer.from(pdf));
+      res.end(Buffer.from(bytes));
     } catch (err) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: err?.message ?? 'PDF export failed' }));
+      res.end(JSON.stringify({ error: err?.message ?? 'Request failed' }));
     }
   });
 }
 
 export function pdfExportApiPlugin() {
   return {
-    name: 'bacc-pdf-export-api',
-    configureServer: attachPdfApi,
-    configurePreviewServer: attachPdfApi,
+    name: 'bacc-pdf-overlay-api',
+    configureServer: attach,
+    configurePreviewServer: attach,
   };
 }

@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { baccLogoUrl, pgiaLogoUrl } from '../lib/brandAssets.js';
 
 export default function LoginPage() {
-  const { user, loading, signIn, error, configured } = useAuth();
-  const [email, setEmail] = useState('');
+  const { user, loading, signIn, error, configured, demoUsers } = useAuth();
+  const [email, setEmail] = useState(demoUsers[3]?.email || '');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
+
+  useEffect(() => {
+    if (!email && demoUsers[3]?.email) setEmail(demoUsers[3].email);
+  }, [demoUsers, email]);
 
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />;
@@ -38,8 +42,27 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-muted">BACC operations portal — PGIA inspections</p>
         {!configured && (
           <p className="mt-3 rounded bg-stripe px-3 py-2 text-xs text-muted">
-            Supabase is not configured. Use any email and password to enter local demo mode.
+            Demo mode. Pick a seeded role — Approvals and the inbox follow that user. Password is not checked.
           </p>
+        )}
+        {!configured && demoUsers.length > 0 && (
+          <div className="mt-4 grid gap-2">
+            {demoUsers.map((row) => (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => setEmail(row.email)}
+                className={`rounded-md border px-3 py-2 text-left text-sm ${
+                  email === row.email ? 'border-primary bg-primary/5' : 'border-navy/15 hover:border-primary'
+                }`}
+              >
+                <span className="font-medium text-navy">{row.full_name}</span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {row.position} · {row.department}
+                </span>
+              </button>
+            ))}
+          </div>
         )}
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">

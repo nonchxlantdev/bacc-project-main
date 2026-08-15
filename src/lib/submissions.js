@@ -1,12 +1,6 @@
+import { getRepos } from '../data/repositories/index.js';
 import { isSupabaseConfigured, supabase } from './supabase.js';
-import {
-  enqueue,
-  getLocalSubmission,
-  getPhotoRecord,
-  listLocalSubmissions,
-  saveLocalSubmission,
-} from '../utils/offlineQueue.js';
-import { flattenItems } from './checklistSchema.js';
+import { getPhotoRecord } from '../utils/offlineQueue.js';
 
 export function newSubmissionId() {
   return crypto.randomUUID();
@@ -18,8 +12,10 @@ export function buildDraftRecord({ template, user, header, items, deficiencies_s
     id: newSubmissionId(),
     template_id: template.id,
     template_code: template.code,
-    print_template_key: template.print_template_key,
-    schema: template.schema,
+    template_version: template.version || 'ed01',
+    print_template_key: template.print_template_key || template.field_map?.templateKey,
+    schema: template.schema || template.content_schema,
+    field_map: template.field_map,
     location_id: null,
     inspector_id: user?.id ?? 'local',
     inspection_type: header.inspectionType || 'monthly_routine',
@@ -30,161 +26,53 @@ export function buildDraftRecord({ template, user, header, items, deficiencies_s
     header,
     items,
     signoffs: [],
-    pending_sync: true,
+    locked: false,
+    supersedes_id: null,
+    pending_sync: false,
     created_at: now,
     submitted_at: null,
     updatedAt: now,
   };
 }
 
-export async function listMineSubmissions() {
-  const local = await listLocalSubmissions();
-  if (!isSupabaseConfigured || !supabase) return local;
-
-  const { data, error } = await supabase
-    .from('checklist_submissions')
-    .select('*, checklist_templates(code, title, annex_label, print_template_key, schema), checklist_items(*), checklist_signoffs(*)')
-    .order('created_at', { ascending: false });
-
-  if (error) return local;
-
-  const remote = (data ?? []).map(hydrateRemote);
-  const remoteIds = new Set(remote.map((row) => row.id));
-  const pendingLocal = local.filter((row) => row.pending_sync && !remoteIds.has(row.id));
-  return [...pendingLocal, ...remote];
+export async function listMineSubmissions(userId) {
+  return getRepos().checklists.listMine(userId);
 }
 
 export async function getSubmission(id) {
-  const local = await getLocalSubmission(id);
-  if (local) return local;
-  if (!isSupabaseConfigured || !supabase) return null;
-
-  const { data, error } = await supabase
-    .from('checklist_submissions')
-    .select('*, checklist_templates(code, title, annex_label, print_template_key, schema), checklist_items(*), checklist_signoffs(*)')
-    .eq('id', id)
-    .maybeSingle();
-  if (error || !data) return null;
-  const hydrated = hydrateRemote(data);
-  await saveLocalSubmission(hydrated);
-  return hydrated;
-}
-
-function hydrateRemote(row) {
-  const schema = row.checklist_templates?.schema;
-  const items = {};
-  for (const item of flattenItems(schema ?? { sections: [] })) {
-    items[item.code] = { result: null, remarks: '', photo_url: null, photo_local_id: null };
-  }
-  for (const item of row.checklist_items ?? []) {
-    items[item.item_code] = {
-      result: item.result,
-      remarks: item.remarks ?? '',
-      photo_url: item.photo_url,
-      photo_local_id: null,
-    };
-  }
-  return {
-    id: row.id,
-    template_id: row.template_id,
-    template_code: row.checklist_templates?.code,
-    print_template_key: row.checklist_templates?.print_template_key,
-    schema,
-    location_id: row.location_id,
-    inspector_id: row.inspector_id,
-    inspection_type: row.inspection_type,
-    inspection_date: row.inspection_date,
-    rainfall_mm: row.rainfall_mm,
-    status: row.status,
-    deficiencies_summary: row.deficiencies_summary ?? '',
-    header: {
-      date: row.inspection_date,
-      inspectionType: row.inspection_type,
-      conductedBy: row.checklist_signoffs?.find((s) => s.role === 'inspector')?.name ?? '',
-      rainfallMm: row.rainfall_mm ?? '',
-    },
-    items,
-    signoffs: row.checklist_signoffs ?? [],
-    pending_sync: false,
-    created_at: row.created_at,
-    submitted_at: row.submitted_at,
-    updatedAt: row.submitted_at ?? row.created_at,
-  };
+  return getRepos().checklists.get(id);
 }
 
 export async function persistSubmission(record) {
-  const canSyncRemote = Boolean(
-    isSupabaseConfigured && supabase && isUuid(record.template_id) && isUuid(record.inspector_id),
-  );
-  const saved = await saveLocalSubmission({ ...record, pending_sync: canSyncRemote });
-  if (!canSyncRemote) {
-    return { ...saved, pending_sync: false };
-  }
-  if (!navigator.onLine) {
-    await enqueue({ type: 'upsert_submission', payload: saved });
-    return saved;
-  }
-  try {
-    await upsertSubmissionRemote(saved);
-    return saveLocalSubmission({ ...saved, pending_sync: false });
-  } catch {
-    await enqueue({ type: 'upsert_submission', payload: saved });
-    return saved;
-  }
+  return getRepos().checklists.persist(record);
 }
 
-export async function upsertSubmissionRemote(record) {
-  if (!supabase) throw new Error('Supabase is not configured');
-
-  const isUuidTemplate = isUuid(record.template_id);
-  if (!isUuidTemplate) {
-    throw new Error('Remote sync requires a seeded checklist_templates row. Apply supabase/migrations first.');
-  }
-
-  const submissionRow = {
-    id: record.id,
-    template_id: record.template_id,
-    location_id: record.location_id,
-    inspector_id: record.inspector_id,
-    inspection_type: record.inspection_type || record.header?.inspectionType || 'monthly_routine',
-    inspection_date: record.inspection_date || record.header?.date,
-    rainfall_mm: parseRainfall(record.header?.rainfallMm ?? record.rainfall_mm),
-    status: record.status,
-    deficiencies_summary: record.deficiencies_summary ?? '',
-    submitted_at: record.submitted_at,
+export function createCorrection(original, user) {
+  if (!original?.locked) return null;
+  return {
+    ...original,
+    id: newSubmissionId(),
+    status: 'draft',
+    locked: false,
+    submitted_at: null,
+    exported_pdf_path: null,
+    supersedes_id: original.id,
+    inspector_id: user?.id ?? original.inspector_id,
+    created_at: new Date().toISOString(),
+    pending_sync: false,
   };
+}
 
-  const { error } = await supabase.from('checklist_submissions').upsert(submissionRow);
-  if (error) throw error;
+export function isDeletableDraft(record) {
+  return record?.status === 'draft' && !record?.locked;
+}
 
-  const itemRows = Object.entries(record.items ?? {}).map(([item_code, row]) => ({
-    submission_id: record.id,
-    item_code,
-    result: row.result,
-    remarks: row.remarks || null,
-    photo_url: row.photo_url || null,
-  }));
+export async function deleteDraft(record) {
+  return getRepos().checklists.deleteDraft(record);
+}
 
-  if (itemRows.length) {
-    const { error: itemError } = await supabase.from('checklist_items').upsert(itemRows, {
-      onConflict: 'submission_id,item_code',
-    });
-    if (itemError) throw itemError;
-  }
-
-  if (record.signoffs?.length) {
-    const { error: signError } = await supabase.from('checklist_signoffs').upsert(
-      record.signoffs.map((s) => ({
-        submission_id: record.id,
-        role: s.role,
-        name: s.name,
-        position: s.position ?? null,
-        signed_at: s.signed_at,
-      })),
-      { onConflict: 'submission_id,role' },
-    );
-    if (signError) throw signError;
-  }
+export async function acknowledgeSubmission(payload) {
+  return getRepos().checklists.acknowledge(payload);
 }
 
 export async function uploadPhoto({ userId, submissionId, itemCode, blob, contentType }) {
@@ -222,24 +110,26 @@ export async function syncQueuedPhoto(payload) {
     blob: photo.blob,
     contentType: photo.blob.type,
   });
-  const local = await getLocalSubmission(payload.submissionId);
+  const local = await getSubmission(payload.submissionId);
   if (local?.items?.[payload.itemCode]) {
     local.items[payload.itemCode].photo_url = result.url || result.path;
     await persistSubmission(local);
   }
 }
 
-function parseRainfall(value) {
-  if (value === '' || value == null) return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
+export async function upsertSubmissionRemote() {
+  throw new Error('Remote submission sync goes through the Supabase repository adapter.');
 }
 
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value));
+export async function deleteSubmissionRemote() {
+  throw new Error('Remote delete goes through the Supabase repository adapter.');
 }
 
 export const queueHandlers = {
-  upsert_submission: upsertSubmissionRemote,
+  upsert_submission: async (payload) => getRepos().checklists.persist(payload),
   upload_photo: syncQueuedPhoto,
+  delete_submission: async ({ id }) => {
+    const rec = await getSubmission(id);
+    if (rec) await deleteDraft(rec);
+  },
 };
