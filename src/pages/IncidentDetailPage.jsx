@@ -80,6 +80,17 @@ function fmtDate(value) {
   return Number.isNaN(ms) ? String(value) : dateFmt.format(ms);
 }
 
+/**
+ * Display precision for coordinates. 5 decimal places is ~1 m at this latitude —
+ * already finer than the ±5 m the device reports, so more digits are noise.
+ * Stored values keep their full precision; this only affects display.
+ */
+function fmtCoord(value) {
+  if (value == null || value === '') return '—';
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(5) : String(value);
+}
+
 export default function IncidentDetailPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
@@ -315,8 +326,8 @@ export default function IncidentDetailPage() {
   const geoBlock = (
     <>
       <div className="grid grid-cols-2 gap-y-3 border-t border-navy/10 px-4 py-3 text-sm sm:grid-cols-4">
-        <Metric label="Latitude" value={incident.latitude ?? '—'} />
-        <Metric label="Longitude" value={incident.longitude ?? '—'} />
+        <Metric label="Latitude" value={fmtCoord(incident.latitude)} />
+        <Metric label="Longitude" value={fmtCoord(incident.longitude)} />
         <Metric
           label="Accuracy"
           value={incident.location_accuracy_m != null ? `± ${Math.round(incident.location_accuracy_m)} m` : '—'}

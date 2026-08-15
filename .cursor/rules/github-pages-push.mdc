@@ -1,0 +1,19 @@
+---
+description: When the user says push, publish the Vite build to GitHub Pages (gh-pages).
+alwaysApply: true
+---
+
+# Push means GitHub Pages
+
+When the user asks to **push** (including “commit and push”):
+
+1. Commit source to `main` if they asked to commit and there are changes.
+2. Push `main` to `origin` if source changed.
+3. **Always publish GitHub Pages** from the latest `main`:
+   - `$env:GITHUB_PAGES='true'; npm run build`
+   - Commit the `dist/` output on the existing `gh-pages` history (fast-forward; do not force-push unless history is unrelated).
+   - `git push origin gh-pages`
+   - Confirm Pages source is branch `gh-pages`, path `/`.
+   - Live URL: https://nonchxlantdev.github.io/bacc-project-main/
+
+Do not treat a `main`-only push as finishing the request. Overlay PDF APIs will not run on static Pages; still publish the UI demo.
