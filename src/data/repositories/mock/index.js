@@ -562,11 +562,11 @@ function createReportAggregations() {
         const dept = user?.department || 'Maintenance';
         counts[dept] = (counts[dept] || 0) + 1;
       }
-      return Object.entries(DEPARTMENT_COLORS).map(([key, color]) => ({
+      return Object.entries(counts).map(([key, count]) => ({
         key,
         label: key,
-        count: counts[key] || 0,
-        color,
+        count,
+        color: DEPARTMENT_COLORS[key] || CATEGORICAL.grey,
       }));
     },
     async slaAdherence() {

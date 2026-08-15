@@ -49,7 +49,7 @@ export default function CreateIncidentModal({
       description: source.description,
       deficiency_level: '',
       category: 'drainage',
-      incident_type: 'infrastructure',
+      incident_type: 'drainage',
       location_label: source.location_label,
       latitude: PGIA_CENTER.lat,
       longitude: PGIA_CENTER.lng,

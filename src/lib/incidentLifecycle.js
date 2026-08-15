@@ -13,6 +13,14 @@ export const WORK_ORDER_STATUSES = [
   { value: 'verified', label: 'Verified' },
 ];
 
+/**
+ * Work orders (Annex H) are temporarily hidden from the incident UI.
+ * While false, Resolved must not require a completion record — otherwise every
+ * incident strands at In Progress and can never be closed. Flip back to true
+ * when the Work Orders tab returns.
+ */
+export const WORK_ORDERS_ENABLED = false;
+
 const INCIDENT_FLOW = ['open', 'assigned', 'in_progress', 'resolved', 'closed'];
 
 export function incidentStatusLabel(status) {
@@ -29,9 +37,25 @@ export function incidentStepIndex(status) {
 }
 
 /**
+ * True when the originating checklist item has been verified back to SAT —
+ * either by a linked re-inspection submission, or by a recorded in-app
+ * verification against the item. Either satisfies the closure gate; the
+ * original submitted checklist is never modified by either route.
+ */
+export function hasSatVerification(incident) {
+  if (!incident) return false;
+  if (incident.reinspection_submission_id) return true;
+  return incident.verification?.result === 'sat';
+}
+
+/**
  * Closure and assignment gates. Do not infer urgency from deficiency_level.
  */
-export function incidentTransitionBlockers(incident, toStatus, { workOrders = [], reinspection } = {}) {
+export function incidentTransitionBlockers(
+  incident,
+  toStatus,
+  { workOrders = [], reinspection, requireWorkOrder = WORK_ORDERS_ENABLED } = {},
+) {
   const blockers = [];
   if (toStatus === 'assigned' || (toStatus === 'in_progress' && incident.status === 'open')) {
     if (!incident.assigned_to && !incident.assigned_team && !incident.assigned_to_name) {
@@ -41,16 +65,16 @@ export function incidentTransitionBlockers(incident, toStatus, { workOrders = []
       blockers.push('Set a target date before leaving Open.');
     }
   }
-  if (toStatus === 'resolved') {
+  if (toStatus === 'resolved' && requireWorkOrder) {
     const done = workOrders.some((wo) => wo.status === 'completed' || wo.status === 'verified');
     if (!done) {
       blockers.push('Fill in a work-order completion record before marking Resolved.');
     }
   }
   if (toStatus === 'closed') {
-    if (!incident.reinspection_submission_id && !reinspection) {
+    if (!hasSatVerification(incident) && !reinspection) {
       blockers.push(
-        'Verified/Closed requires a linked re-inspection of the same template where this item came back SAT.',
+        'Verified/Closed requires the checklist item verified back to SAT — either mark it SAT on the Related Checklist Item row, or link a re-inspection where it came back SAT.',
       );
     }
   }

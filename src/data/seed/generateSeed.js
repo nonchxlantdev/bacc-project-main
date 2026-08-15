@@ -1,5 +1,7 @@
 /**
- * Deterministic six-month demo dataset. Fixed IDs so deep links never dangle.
+ * Deterministic six-month Annex D demo dataset. Fixed IDs so deep links never dangle.
+ * Checklists are PGIA-PMM-F04 only. Incidents / work orders exist only as the NOC and
+ * Annex H records raised from those drainage deficiencies — not other annex programmes.
  * Every incident traces to a real NO SAT item; every closure to a later SAT re-inspection.
  */
 import annexD from '../checklists/annex-d-drainage.json';
@@ -8,7 +10,7 @@ import { flattenItems, emptyItemState } from '../../lib/checklistSchema.js';
 import { airportIso } from '../../lib/belizeTime.js';
 import { generatePendingInstances, refreshInstanceStatuses } from '../../lib/instanceGeneration.js';
 
-export const SEED_VERSION = 1;
+export const SEED_VERSION = 2;
 export const SEED_AS_OF = '2026-08-15';
 export const SEED_FROM = '2026-02-01';
 
@@ -71,15 +73,12 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
     u(4, 'omar.mendez@pgia.local', 'Omar Mendez', 'Operations Manager', 'om', 'Operations'),
     u(5, 'patricia.gomez@pgia.local', 'Patricia Gomez', 'Chief Operations Officer', 'coo', 'Operations'),
     u(6, 'marcus.chi@pgia.local', 'Marcus Chi', 'Civil Engineering Consultant', 'cec', 'Engineering'),
-    u(7, 'aisha.rahman@pgia.local', 'Aisha Rahman', 'Electrical Engineering Consultant', 'eec', 'Engineering'),
-    u(8, 'devon.flowers@pgia.local', 'Devon Flowers', 'Apron Supervisor', 'apron_supervisor', 'Operations'),
   ];
   const byRole = (role) => users.find((row) => row.role === role);
   const inspector = byRole('inspector');
   const om = byRole('om');
   const coo = byRole('coo');
   const cec = byRole('cec');
-  const eec = byRole('eec');
 
   const templates = [
     {
@@ -116,8 +115,17 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       template_version: 'ed01',
       department: 'Operations',
       role: 'duty_manager',
-      frequency: 'monthly',
+      frequency: 'on_demand',
       assigned_user: byRole('duty_manager').id,
+    },
+    {
+      id: seedId('rule', 3),
+      template_id: template.id,
+      template_version: 'ed01',
+      department: 'Maintenance',
+      role: 'inspector',
+      frequency: 'on_demand',
+      assigned_user: inspector.id,
     },
   ];
 
@@ -414,7 +422,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       level: 2,
       status: 'resolved',
       title: 'Runway strip channel vegetated south of TWY B',
-      assigned: { id: eec.id, name: 'Maintenance Personnel', team: 'maintenance' },
+      assigned: { id: inspector.id, name: 'Maintenance Personnel', team: 'maintenance' },
       target: '2026-08-20',
     }),
   ];
@@ -617,7 +625,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       id: seedId('instance', 80),
       template_id: template.id,
       template_version: 'ed01',
-      assignment_rule_id: seedId('rule', 1),
+      assignment_rule_id: seedId('rule', 3),
       assigned_role: 'inspector',
       assigned_department: 'Maintenance',
       assigned_user: inspector.id,
@@ -633,7 +641,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       id: seedId('instance', 81),
       template_id: template.id,
       template_version: 'ed01',
-      assignment_rule_id: seedId('rule', 1),
+      assignment_rule_id: seedId('rule', 3),
       assigned_role: 'inspector',
       assigned_department: 'Maintenance',
       assigned_user: inspector.id,
@@ -654,9 +662,9 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       assigned_department: 'Maintenance',
       assigned_user: inspector.id,
       location_id: null,
-      period_start: '2026-01-15',
-      period_end: '2026-01-15',
-      due_at: airportIso('2026-01-15', '23:59:59.999'),
+      period_start: '2026-01-01',
+      period_end: '2026-01-31',
+      due_at: airportIso('2026-01-31', '23:59:59.999'),
       status: 'missed',
       submission_id: null,
       created_at: airportIso('2026-01-01', '06:00:00.000'),

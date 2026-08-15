@@ -39,7 +39,7 @@ export default function LoginPage() {
           <img src={pgiaLogoUrl} alt="PGIA" className="h-10 w-auto rounded bg-navy object-contain p-1" />
         </div>
         <h1 className="text-xl font-bold text-navy">Sign in</h1>
-        <p className="mt-1 text-sm text-muted">BACC operations portal — PGIA inspections</p>
+        <p className="mt-1 text-sm text-muted">BACC operations portal — Annex D drainage demo</p>
         {!configured && (
           <p className="mt-3 rounded bg-stripe px-3 py-2 text-xs text-muted">
             Demo mode. Pick a seeded role — Approvals and the inbox follow that user. Password is not checked.

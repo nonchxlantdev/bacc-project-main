@@ -6,7 +6,9 @@ export default function UsersPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-navy">Users</h1>
-      <p className="text-sm text-muted">Seeded directory across the real PGIA roles. Role management stays out of this slice.</p>
+      <p className="text-sm text-muted">
+        Directory for the Annex D slice — inspectors, Duty Manager, OM, COO, and CEC. Other annex roles are not seeded.
+      </p>
       <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-navy text-white">
