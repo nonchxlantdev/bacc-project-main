@@ -102,21 +102,29 @@ export default function CreateIncidentModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-navy/50 p-4 pt-10">
-      <form onSubmit={onSubmit} className="w-full max-w-5xl rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-navy/10 px-5 py-3">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center overflow-y-auto bg-navy/50 sm:items-start sm:p-4 sm:pt-10">
+      <form
+        onSubmit={onSubmit}
+        className="flex max-h-none w-full max-w-5xl flex-col bg-white shadow-xl sm:max-h-[90dvh] sm:rounded-lg"
+      >
+        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-navy/10 bg-white px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
           <h2 className="text-lg font-bold text-navy">Create Incident</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-muted hover:bg-stripe">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-mr-2 flex h-10 w-10 items-center justify-center rounded text-muted hover:bg-stripe"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mx-5 mt-4 flex gap-2 rounded-md border border-alert bg-alert-soft px-4 py-3 text-sm text-alert">
+        <div className="mx-4 mt-4 flex gap-2 rounded-md border border-alert bg-alert-soft px-4 py-3 text-sm text-alert sm:mx-5">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           {BANNER}
         </div>
 
-        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid min-h-0 flex-1 gap-5 overflow-y-auto p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-navy">Incident Information</h3>
             <Field label="Title" required>
@@ -284,19 +292,23 @@ export default function CreateIncidentModal({
 
         {error && <p className="px-5 pb-2 text-sm text-alert">{error}</p>}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-navy/10 px-5 py-4">
+        <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-navy/10 bg-white px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:pb-4">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={proceed} onChange={(e) => setProceed(e.target.checked)} className="h-4 w-4" />
             Proceed to Incident Management after creating this incident
           </label>
-          <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-navy/20 px-4 py-2 text-sm">
+          <div className="flex w-full gap-2 sm:w-auto">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-11 flex-1 rounded-md border border-navy/20 px-4 py-2 text-sm sm:flex-none"
+            >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              className="min-h-11 flex-1 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 sm:flex-none"
             >
               {saving ? 'Creating…' : 'Create Incident'}
             </button>

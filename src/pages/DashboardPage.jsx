@@ -29,7 +29,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-navy">Dashboard</h1>
+        <h1 className="text-xl font-bold text-navy sm:text-2xl">Dashboard</h1>
         <p className="text-sm text-muted">
           Welcome back, {displayName}
           {clock ? ` · airport date ${clock.demoNow.slice(0, 10)} (America/Belize)` : ''}.
@@ -68,15 +68,20 @@ export default function DashboardPage() {
 
         <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-navy">Recent activity</h2>
-          <ul className="space-y-2 text-sm">
+          <ul className="text-sm">
             {activity.map((row) => (
-              <li key={row.id} className="border-b border-navy/5 pb-2 last:border-0">
-                <Link to={row.href || '/dashboard'} className="font-medium text-primary hover:underline">
-                  {row.summary}
+              <li key={row.id} className="border-b border-navy/5 last:border-0">
+                {/* The whole entry is the target, not just the link text — a
+                    16px line of text is not a tappable thing on a phone. */}
+                <Link
+                  to={row.href || '/dashboard'}
+                  className="-mx-2 block rounded-md px-2 py-2.5 hover:bg-stripe"
+                >
+                  <span className="block font-medium text-primary">{row.summary}</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {row.actor_name} · {String(row.at).slice(0, 16).replace('T', ' ')}
+                  </span>
                 </Link>
-                <p className="text-xs text-muted">
-                  {row.actor_name} · {String(row.at).slice(0, 16).replace('T', ' ')}
-                </p>
               </li>
             ))}
           </ul>
@@ -86,7 +91,10 @@ export default function DashboardPage() {
       <section className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold text-navy">Quick actions</h2>
-          <Link to="/checklists/mine" className="text-sm font-medium text-primary hover:underline">
+          <Link
+            to="/checklists/mine"
+            className="-mr-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-primary hover:bg-stripe lg:mr-0 lg:min-h-0 lg:px-0 lg:hover:bg-transparent lg:hover:underline"
+          >
             View mine
           </Link>
         </div>

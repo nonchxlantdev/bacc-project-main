@@ -10,7 +10,7 @@ export default function NotificationsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Notifications</h1>
+          <h1 className="text-xl font-bold text-navy sm:text-2xl">Notifications</h1>
           <p className="text-sm text-muted">{unread} unread</p>
         </div>
         <button type="button" onClick={() => markAllRead()} className="rounded-md border border-navy/20 px-3 py-2 text-sm">

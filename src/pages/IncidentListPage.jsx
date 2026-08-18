@@ -23,12 +23,12 @@ export default function IncidentListPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Incidents</h1>
+          <h1 className="text-xl font-bold text-navy sm:text-2xl">Incidents</h1>
           <p className="text-sm text-muted">
             Each incident is one NOC register row (Annex G). Work orders (Annex H) are raised against an incident.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <button
             type="button"
             disabled={!online || exporting}
@@ -58,7 +58,7 @@ export default function IncidentListPage() {
                 setExporting(false);
               }
             }}
-            className="inline-flex items-center gap-2 rounded-md border border-navy/20 bg-white px-4 py-2 text-sm font-medium text-navy"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-4 py-2 text-sm font-medium text-navy"
           >
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export NOC register'}
@@ -66,7 +66,7 @@ export default function IncidentListPage() {
           <button
             type="button"
             onClick={() => navigate('/checklists/mine')}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white"
           >
             <Plus className="h-4 w-4" />
             From a NO SAT item
@@ -74,7 +74,7 @@ export default function IncidentListPage() {
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
+        <table className="table-stack w-full text-left text-sm">
           <thead className="bg-navy text-white">
             <tr>
               <th className="px-4 py-2 font-semibold">Incident ID</th>
@@ -104,20 +104,20 @@ export default function IncidentListPage() {
               const level = getDeficiencyLevel(row.deficiency_level);
               return (
                 <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
-                  <td className="px-4 py-2">
+                  <td data-label="Incident ID" className="px-4 py-2">
                     <Link to={`/incidents/${row.id}`} className="font-medium text-primary hover:underline">
                       {row.incident_ref}
                     </Link>
                   </td>
-                  <td className="px-4 py-2">{row.noc_no}</td>
-                  <td className="px-4 py-2">{row.title}</td>
-                  <td className="px-4 py-2">
-                    <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-white" style={{ background: level?.color }}>
+                  <td data-label="NOC No." className="px-4 py-2">{row.noc_no}</td>
+                  <td data-label="Title" className="px-4 py-2 font-medium text-navy">{row.title}</td>
+                  <td data-label="Level" className="px-4 py-2">
+                    <span className="inline-block w-fit rounded-full px-2 py-0.5 text-xs font-semibold text-white" style={{ background: level?.color }}>
                       {level?.label}
                     </span>
                   </td>
-                  <td className="px-4 py-2">{incidentStatusLabel(row.status)}</td>
-                  <td className="px-4 py-2">{row.target_date || '—'}</td>
+                  <td data-label="Status" className="px-4 py-2">{incidentStatusLabel(row.status)}</td>
+                  <td data-label="Target" className="px-4 py-2">{row.target_date || '—'}</td>
                 </tr>
               );
             })}

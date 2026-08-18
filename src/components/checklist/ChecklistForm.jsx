@@ -76,7 +76,11 @@ export default function ChecklistForm({
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem]">
+    <div
+      className={`grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] ${
+        selectedItem ? 'max-xl:pb-[52vh]' : ''
+      }`}
+    >
       <div className="space-y-4">
         {(unresolved.length > 0 || missingHeader.length > 0) && (
           <div className="flex gap-3 rounded-md border border-alert bg-alert-soft px-4 py-3 text-sm text-alert">
@@ -198,9 +202,30 @@ export default function ChecklistForm({
         </div>
       </div>
 
-      <aside className="h-fit rounded-md border border-navy/15 bg-white shadow-sm xl:sticky xl:top-4">
+      {/* Desktop: sticky evidence rail. Phone and tablet: a bottom sheet that
+          appears when an item is tapped, so the panel is next to the thumb
+          instead of below every section. Not modal — tapping another item
+          swaps the sheet's contents without closing it. */}
+      <aside
+        className={`border-navy/15 bg-white xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-sm max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[52vh] max-xl:overflow-y-auto max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
+          selectedItem ? '' : 'max-xl:hidden'
+        }`}
+      >
         {selectedItem ? (
           <div>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-navy/10 bg-white px-4 py-2 xl:hidden">
+              <span className="min-w-0 truncate text-sm font-semibold text-navy">
+                {selectedItem.code} · {selectedItem.sectionTitle}
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectItem(null)}
+                aria-label="Close item detail"
+                className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:bg-stripe"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
             {selectedRow?.result === 'no_sat' && (
               <div className="flex items-start justify-between gap-2 border-b border-alert bg-alert-soft px-4 py-3 text-sm text-alert">
                 <span className="flex items-start gap-2">
@@ -269,8 +294,8 @@ export default function ChecklistForm({
 function Detail({ label, value }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className="text-right font-medium text-navy">{value}</dd>
+      <dt className="shrink-0 text-muted">{label}</dt>
+      <dd className="min-w-0 break-words text-right font-medium text-navy">{value}</dd>
     </div>
   );
 }

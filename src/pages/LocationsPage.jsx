@@ -26,7 +26,7 @@ export default function LocationsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-navy">Locations</h1>
+      <h1 className="text-xl font-bold text-navy sm:text-2xl">Locations</h1>
       <p className="text-sm text-muted">
         PGIA is the Phase 1 location. Incident pin capture (BACC §7) ships with slice phase 2.
       </p>

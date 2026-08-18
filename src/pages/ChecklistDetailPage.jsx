@@ -364,7 +364,7 @@ export default function ChecklistDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[1.65rem] font-bold leading-tight text-navy">{schema.title}</h1>
+            <h1 className="text-xl font-bold leading-tight text-navy sm:text-[1.65rem]">{schema.title}</h1>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                 inProgress ? 'bg-success-soft text-success' : 'bg-navy text-white'
@@ -379,13 +379,13 @@ export default function ChecklistDetailPage() {
             {record.supersedes_id ? ' · correction' : ''}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           {!readOnly && (
             <button
               type="button"
               onClick={() => save()}
               disabled={saving}
-              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-primary/40 bg-white px-3 py-2 text-sm font-medium text-primary"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-primary/40 bg-white px-3 py-2 text-sm font-medium text-primary"
             >
               <Save className="h-4 w-4" />
               {saving ? 'Saving…' : 'Save Draft'}
@@ -395,7 +395,7 @@ export default function ChecklistDetailPage() {
             type="button"
             onClick={handleShowPreview}
             disabled={previewing}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
           >
             <Eye className="h-4 w-4" />
             {previewing ? 'Rendering…' : 'Show preview'}
@@ -404,7 +404,7 @@ export default function ChecklistDetailPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex min-h-10 items-center rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-md sm:min-h-10 sm:justify-start bg-navy px-4 py-2 text-sm font-semibold text-white"
             >
               Submit Checklist
             </button>
@@ -413,7 +413,7 @@ export default function ChecklistDetailPage() {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start bg-primary px-4 py-2 text-sm font-semibold text-white"
           >
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export PDF'}
@@ -426,7 +426,7 @@ export default function ChecklistDetailPage() {
                 await persistSubmission(next);
                 navigate(`/checklists/${next.id}`);
               }}
-              className="rounded-md border border-navy/20 bg-white px-3 py-2 text-sm"
+              className="min-h-11 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm sm:min-h-10"
             >
               Create correction
             </button>
@@ -465,7 +465,7 @@ export default function ChecklistDetailPage() {
           </div>
           <button
             type="button"
-            className="mt-3 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
+            className="mt-3 min-h-11 w-full rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white sm:w-auto"
             onClick={async () => {
               try {
                 const next = await acknowledgeSubmission({

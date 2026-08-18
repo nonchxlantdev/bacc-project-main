@@ -23,7 +23,7 @@ export default function SectionHeader({ title, itemCount, open, onToggle }) {
 export function ColumnHead() {
   return (
     <div
-      className={`${CHECKLIST_GRID} border-b border-navy/10 bg-stripe text-[11px] font-semibold uppercase tracking-wide text-navy`}
+      className={`${CHECKLIST_GRID} hidden border-b border-navy/10 bg-stripe text-[11px] font-semibold uppercase tracking-wide text-navy`}
     >
       <div className="px-3 py-2">Item</div>
       <div className="px-3 py-2">Description</div>

@@ -30,9 +30,9 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
   const total = grouped.reduce((n, [, list]) => n + list.length, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy/40 p-4 sm:p-8">
-      <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
-        <div className="flex items-start justify-between gap-3 border-b border-navy/10 px-5 py-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-navy/40 sm:items-start sm:p-8">
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-xl bg-white shadow-xl sm:max-h-[85dvh] sm:rounded-lg">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-navy/10 px-4 py-4 sm:px-5">
           <div>
             <h2 className="text-lg font-bold text-navy">New Inspection</h2>
             <p className="mt-0.5 text-sm text-muted">
@@ -63,7 +63,7 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
           </div>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto px-5 py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
           {total === 0 && (
             <p className="py-8 text-center text-sm text-muted">
               {templates.length === 0

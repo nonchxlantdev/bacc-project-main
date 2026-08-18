@@ -64,7 +64,7 @@ export default function ApprovalsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-navy">Approvals</h1>
+        <h1 className="text-xl font-bold text-navy sm:text-2xl">Approvals</h1>
         <p className="text-sm text-muted">
           Items waiting on {displayName}. Acknowledgment appends a signature; it does not edit the submitted record.
         </p>
@@ -80,23 +80,26 @@ export default function ApprovalsPage() {
           </h2>
           <ul>
             {list.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-navy/5 px-4 py-3 last:border-0">
-                <div>
+              <li key={row.id} className="flex flex-col gap-3 border-b border-navy/5 px-4 py-3 last:border-0 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
+                <div className="min-w-0">
                   <p className="font-medium text-navy">{row.entity?.title || row.entity_id}</p>
                   <p className="text-xs text-muted">
                     Age {ageDays(row.created_at)}d · {row.entity?.date || String(row.created_at).slice(0, 10)}
                     {row.entity?.incident_ref ? ` · ${row.entity.incident_ref}` : ''}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   {row.entity?.href && (
-                    <Link to={row.entity.href} className="text-sm text-primary hover:underline">
+                    <Link
+                      to={row.entity.href}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-navy/20 px-3 text-sm text-primary hover:underline sm:min-h-0 sm:flex-none sm:border-0 sm:px-0"
+                    >
                       Open
                     </Link>
                   )}
                   <button
                     type="button"
-                    className="rounded-md bg-navy px-3 py-1.5 text-sm font-semibold text-white"
+                    className="min-h-11 flex-1 rounded-md bg-navy px-3 py-1.5 text-sm font-semibold text-white sm:min-h-0 sm:flex-none"
                     onClick={() => {
                       setActive(row);
                       setError(null);
@@ -112,8 +115,8 @@ export default function ApprovalsPage() {
       ))}
 
       {active && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-navy/50 p-4 pt-10">
-          <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-navy/50 sm:items-start sm:p-4 sm:pt-10">
+          <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-lg sm:pb-5">
             <h3 className="text-lg font-bold text-navy">Review approval</h3>
             <p className="mt-1 text-sm text-muted">{active.entity?.title}</p>
             <p className="mt-2 text-sm">
@@ -136,17 +139,17 @@ export default function ApprovalsPage() {
             <p className="mt-3 text-xs font-semibold uppercase text-muted">Drawn signature</p>
             <SignaturePad value={signature} onChange={setSignature} />
             {error && <p className="mt-2 text-sm text-alert">{error}</p>}
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button type="button" className="rounded-md border px-3 py-2 text-sm" onClick={() => setActive(null)}>
+            <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
+              <button type="button" className="min-h-11 rounded-md border px-3 py-2 text-sm sm:order-1" onClick={() => setActive(null)}>
                 Cancel
               </button>
-              <button type="button" className="rounded-md border border-alert px-3 py-2 text-sm text-alert" onClick={() => onDecide('rejected')}>
+              <button type="button" className="min-h-11 rounded-md border border-alert px-3 py-2 text-sm text-alert sm:order-2" onClick={() => onDecide('rejected')}>
                 Reject
               </button>
               <button
                 type="button"
                 disabled={woGates.length > 0}
-                className="rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="min-h-11 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 sm:order-3"
                 onClick={() => onDecide('approved')}
               >
                 Approve

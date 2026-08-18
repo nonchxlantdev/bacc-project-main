@@ -353,7 +353,7 @@ export default function IncidentDetailPage() {
       {/* Page heading + actions */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Incident Management</h1>
+          <h1 className="text-xl font-bold text-navy sm:text-2xl">Incident Management</h1>
           <p className="mt-1 text-sm text-muted">
             <Link to="/incidents" className="hover:text-primary hover:underline">
               Incidents
@@ -362,13 +362,15 @@ export default function IncidentDetailPage() {
             <span>{incident.incident_ref}</span>
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <button
             type="button"
             onClick={() => navigate('/incidents')}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
           >
-            <ArrowLeft size={16} aria-hidden /> Back to Incidents
+            <ArrowLeft size={16} aria-hidden />
+            <span className="sm:hidden">Back</span>
+            <span className="hidden sm:inline">Back to Incidents</span>
           </button>
 
           {editing ? (
@@ -376,7 +378,7 @@ export default function IncidentDetailPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="inline-flex min-h-10 items-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
               >
                 <X size={16} aria-hidden /> Cancel
               </button>
@@ -384,7 +386,7 @@ export default function IncidentDetailPage() {
                 type="button"
                 onClick={saveEdit}
                 disabled={busy}
-                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 sm:min-h-10 sm:justify-start"
               >
                 <Check size={16} aria-hidden /> Save Changes
               </button>
@@ -393,7 +395,7 @@ export default function IncidentDetailPage() {
             <button
               type="button"
               onClick={startEdit}
-              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
             >
               <Pencil size={16} aria-hidden /> Edit Incident
             </button>
@@ -421,8 +423,8 @@ export default function IncidentDetailPage() {
 
       {/* Status strip */}
       <header className="rounded-md border border-navy/15 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-          <div className="pr-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:gap-x-6">
+          <div className="col-span-2 min-w-0 sm:col-span-3 lg:col-span-1 lg:pr-6">
             <span className="inline-block rounded bg-alert-soft px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-navy">
               {incidentStatusLabel(incident.status)}
             </span>
@@ -461,7 +463,7 @@ export default function IncidentDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 border-b border-navy/15">
+      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-navy/15 px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -471,7 +473,7 @@ export default function IncidentDetailPage() {
               type="button"
               onClick={() => setTab(t.id)}
               aria-current={active ? 'page' : undefined}
-              className={`inline-flex items-center gap-2 px-3.5 py-2.5 text-sm ${
+              className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3.5 py-2.5 text-sm ${
                 active
                   ? 'border-b-2 border-primary font-semibold text-navy'
                   : 'border-b-2 border-transparent text-muted hover:text-navy'
@@ -1189,9 +1191,9 @@ function Card({ title, children }) {
 
 function Row({ label, value }) {
   return (
-    <div className="grid grid-cols-[10rem_minmax(0,1fr)] gap-3 py-2 text-sm">
+    <div className="grid gap-0.5 py-2 text-sm sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-3">
       <dt className="text-muted">{label}</dt>
-      <dd className="text-ink">{value || '—'}</dd>
+      <dd className="break-words text-ink">{value || '—'}</dd>
     </div>
   );
 }
@@ -1207,7 +1209,7 @@ function Field({ label, children }) {
 
 function StripField({ label, value, sub, strong }) {
   return (
-    <div className="min-w-[8rem] border-l border-navy/10 pl-6 first:border-l-0 first:pl-0">
+    <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-navy/10 lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
       <p className="text-xs text-muted">{label}</p>
       <p className={`mt-0.5 text-sm ${strong ? 'font-semibold text-navy' : 'text-ink'}`}>{value || '—'}</p>
       {sub && <p className="text-xs text-muted">{sub}</p>}

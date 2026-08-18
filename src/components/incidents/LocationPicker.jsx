@@ -107,6 +107,20 @@ export default function LocationPicker({
     mapRef.current.setView([latitude, longitude]);
   }, [latitude, longitude]);
 
+  // Leaflet caches the container size. Rotating a tablet, opening the nav
+  // drawer or restacking a two-column card all resize this box, and without
+  // invalidateSize the tiles stay laid out for the old width — grey gaps and a
+  // marker that no longer sits on the pin.
+  useEffect(() => {
+    const node = document.getElementById(idRef.current);
+    if (!node || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize({ animate: false });
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="relative">
       <div
@@ -120,7 +134,7 @@ export default function LocationPicker({
           onClick={() => setLayer((v) => (v === 'satellite' ? 'street' : 'satellite'))}
           title={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
           aria-label={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
-          className="absolute bottom-3 right-3 z-[400] inline-flex min-h-9 items-center gap-1.5 rounded border border-navy/20 bg-white px-2.5 text-xs font-semibold text-navy shadow-sm hover:bg-stripe"
+          className="absolute bottom-3 right-3 z-[400] inline-flex min-h-11 items-center gap-1.5 rounded border border-navy/20 bg-white px-3 text-xs font-semibold text-navy shadow-sm hover:bg-stripe sm:min-h-9 sm:px-2.5"
         >
           <Layers size={14} aria-hidden />
           {LAYERS[layer]?.label}

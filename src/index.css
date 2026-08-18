@@ -28,6 +28,7 @@ body {
   color: var(--color-ink);
   background: var(--color-stripe);
   font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
 }
 
 button,
@@ -35,4 +36,83 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+/* iOS zooms the whole page when a focused field is under 16px. Inspectors fill
+   these forms one-handed on the apron, so hold text inputs at 16px on phones
+   and only shrink them once there is room for the dense desktop table. */
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Record tables restack into label/value cards below `md`.
+   The markup stays a real <table> — only the presentation changes — so the
+   desktop layout, column order and export logic are untouched. Each cell
+   carries data-label, which becomes the row label on a phone; without it a
+   stacked cell would be an unlabelled value once the header row is hidden. */
+@media (max-width: 767px) {
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-stack thead {
+    display: none;
+  }
+
+  .table-stack tr {
+    padding: 0.375rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-navy) 12%, transparent);
+  }
+
+  .table-stack tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table-stack td {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.375rem 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .table-stack td[data-label]:not([data-label=''])::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* An action cell has no label — it gets the full card width. */
+  .table-stack td[data-label=''] {
+    display: block;
+  }
+
+  /* Empty-state and loading rows span the table and have no label. */
+  .table-stack td[colspan] {
+    display: block;
+    text-align: center;
+  }
+}
+
+/* Grey flash on tap reads as a bug on a touch device; the components carry
+   their own :active and focus-visible states. */
+@media (hover: none) {
+  a,
+  button,
+  label,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+  }
 }

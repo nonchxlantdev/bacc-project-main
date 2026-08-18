@@ -131,7 +131,7 @@ export default function ChecklistListPage({ scope = 'mine' }) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-navy">
+          <h1 className="text-xl font-bold text-navy sm:text-2xl">
             {scope === 'all' ? 'All Checklists' : 'My Checklists'}
           </h1>
           <p className="text-sm text-muted">
@@ -144,7 +144,7 @@ export default function ChecklistListPage({ scope = 'mine' }) {
           type="button"
           onClick={() => setPickerOpen(true)}
           disabled={templates.length === 0}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           New Inspection
@@ -156,20 +156,20 @@ export default function ChecklistListPage({ scope = 'mine' }) {
       {scope === 'all' ? (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative min-w-[16rem] flex-1">
+            <div className="relative w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search forms…"
-                className="min-h-10 w-full rounded border border-navy/20 pl-9 pr-3 text-sm"
+                className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
               />
             </div>
             <select
               value={family}
               onChange={(e) => setFamily(e.target.value)}
-              className="min-h-10 rounded border border-navy/20 px-2 text-sm"
+              className="min-h-11 min-w-0 flex-1 rounded border border-navy/20 px-2 text-sm sm:min-h-10 sm:flex-none"
             >
               <option value="">All manuals</option>
               {Object.entries(FAMILY_LABELS).map(([k, label]) => (
@@ -181,7 +181,7 @@ export default function ChecklistListPage({ scope = 'mine' }) {
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="min-h-10 rounded border border-navy/20 px-2 text-sm"
+              className="min-h-11 min-w-0 flex-1 rounded border border-navy/20 px-2 text-sm sm:min-h-10 sm:flex-none"
             >
               <option value="">All departments</option>
               {departments.map((d) => (
@@ -193,7 +193,7 @@ export default function ChecklistListPage({ scope = 'mine' }) {
           </div>
 
           <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
+            <table className="table-stack w-full text-left text-sm">
               <thead className="bg-navy text-white">
                 <tr>
                   <th className="px-4 py-2 font-semibold">Form</th>
@@ -221,25 +221,25 @@ export default function ChecklistListPage({ scope = 'mine' }) {
                 )}
                 {catalogue.map((t, i) => (
                   <tr key={t.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
-                    <td className="px-4 py-2">
+                    <td data-label="Form" className="px-4 py-2">
                       <span className="flex items-center gap-2 font-medium text-navy">
                         <ClipboardCheck size={15} className="text-primary" aria-hidden />
                         {t.annex_label ? `${t.annex_label} — ` : ''}
                         {t.title}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-muted">{t.code}</td>
-                    <td className="px-4 py-2 text-muted">{t.department || '—'}</td>
-                    <td className="px-4 py-2 text-muted">
+                    <td data-label="Number" className="px-4 py-2 text-muted">{t.code}</td>
+                    <td data-label="Department" className="px-4 py-2 text-muted">{t.department || '—'}</td>
+                    <td data-label="Frequency" className="px-4 py-2 text-muted">
                       {FREQUENCY_LABELS[t.default_frequency] ?? t.default_frequency ?? '—'}
                     </td>
-                    <td className="px-4 py-2 text-muted">{lastCompleted.get(t.code) ?? 'Never'}</td>
-                    <td className="px-4 py-2 text-right">
+                    <td data-label="Last done" className="px-4 py-2 text-muted">{lastCompleted.get(t.code) ?? 'Never'}</td>
+                    <td data-label="" className="px-4 py-2 max-md:pb-3 md:text-right">
                       <button
                         type="button"
                         onClick={() => startNew(t.id)}
                         disabled={startingId === t.id}
-                        className="rounded-md px-2 py-1 text-sm font-medium text-primary hover:bg-stripe disabled:opacity-50"
+                        className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-stripe disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
                       >
                         {startingId === t.id ? 'Opening…' : 'Start'}
                       </button>
@@ -252,7 +252,7 @@ export default function ChecklistListPage({ scope = 'mine' }) {
         </>
       ) : (
         <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
+          <table className="table-stack w-full text-left text-sm">
             <thead className="bg-navy text-white">
               <tr>
                 <th className="px-4 py-2 font-semibold">Form</th>
@@ -279,27 +279,27 @@ export default function ChecklistListPage({ scope = 'mine' }) {
               )}
               {rows.map((row, i) => (
                 <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
-                  <td className="px-4 py-2">
+                  <td data-label="Form" className="px-4 py-2">
                     <Link to={`/checklists/${row.id}`} className="font-medium text-primary hover:underline">
                       {row.schema?.annexLabel || row.schema?.annex_label || row.template_code} — {row.schema?.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-2">{row.inspection_date || row.header?.date}</td>
-                  <td className="px-4 py-2">
+                  <td data-label="Date" className="px-4 py-2">{row.inspection_date || row.header?.date}</td>
+                  <td data-label="Type" className="px-4 py-2">
                     {TYPE_LABELS[row.inspection_type || row.header?.inspectionType] ||
                       row.inspection_type ||
                       row.header?.inspectionType}
                   </td>
-                  <td className="px-4 py-2">
+                  <td data-label="Status" className="px-4 py-2">
                     <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td data-label="" className="px-4 py-2 max-md:pb-3 md:text-right">
                     {isDeletableDraft(row) ? (
                       <button
                         type="button"
                         onClick={() => handleDelete(row)}
                         disabled={deletingId === row.id}
-                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50"
+                        className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
                       >
                         <Trash2 className="h-4 w-4" />
                         {deletingId === row.id ? 'Deleting…' : 'Delete'}

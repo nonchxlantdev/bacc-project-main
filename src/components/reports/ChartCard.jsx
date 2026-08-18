@@ -12,14 +12,14 @@ export default function ChartCard({ title, subtitle, table, children }) {
         <div className="flex rounded border border-navy/15 text-xs">
           <button
             type="button"
-            className={`px-2 py-1 ${mode === 'chart' ? 'bg-navy text-white' : 'text-navy'}`}
+            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'chart' ? 'bg-navy text-white' : 'text-navy'}`}
             onClick={() => setMode('chart')}
           >
             Chart
           </button>
           <button
             type="button"
-            className={`px-2 py-1 ${mode === 'table' ? 'bg-navy text-white' : 'text-navy'}`}
+            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'table' ? 'bg-navy text-white' : 'text-navy'}`}
             onClick={() => setMode('table')}
           >
             Table

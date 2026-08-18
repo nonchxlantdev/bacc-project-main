@@ -21,7 +21,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold text-navy">Settings</h1>
+      <h1 className="text-xl font-bold text-navy sm:text-2xl">Settings</h1>
       <p className="text-sm text-muted">
         Name and position are copied onto the inspector sign-off when you submit a checklist.
         {!configured && ' Local demo mode stores this only in this browser session.'}
