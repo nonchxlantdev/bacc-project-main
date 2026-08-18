@@ -1,0 +1,680 @@
+{
+  "templateKey": "appendix-c01-safety-board-and-equipment-inspection",
+  "templateVersion": "ed01",
+  "basePdf": "appendix-c01-safety-board-and-equipment-inspection-ed01.pdf",
+  "documentFamily": "VAES",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+  "mapping": {
+    "method": "automated: scripts/vaes-extract.mjs — glyph positions + raster rule detection",
+    "headerRules": [
+      63.6,
+      297.8,
+      531.3
+    ],
+    "generated": true
+  },
+  "pageSize": {
+    "width": 612.12,
+    "height": 792.12
+  },
+  "fields": {
+    "date_of_inspection": {
+      "page": 0,
+      "x": 303.5,
+      "y": 521.55,
+      "size": 9,
+      "width": 224.79999999999995
+    },
+    "time_commenced": {
+      "page": 0,
+      "x": 303.5,
+      "y": 500.79,
+      "size": 9,
+      "width": 224.79999999999995
+    },
+    "time_completed": {
+      "page": 0,
+      "x": 303.5,
+      "y": 480.03,
+      "size": 9,
+      "width": 224.79999999999995
+    },
+    "weather_visibility_conditions": {
+      "page": 0,
+      "x": 303.5,
+      "y": 459.27,
+      "size": 9,
+      "width": 224.79999999999995,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "aoc_impact.yes": {
+      "page": 0,
+      "x": 323.4,
+      "y": 439.52,
+      "type": "mark",
+      "size": 9
+    },
+    "aoc_impact.no": {
+      "page": 0,
+      "x": 356.5,
+      "y": 439.52,
+      "type": "mark",
+      "size": 9
+    },
+    "responsible_signature": {
+      "page": 0,
+      "x": 303.5,
+      "y": 403.23,
+      "type": "image",
+      "width": 118,
+      "height": 16
+    },
+    "responsible_name": {
+      "page": 0,
+      "x": 425.5,
+      "y": 403.23,
+      "size": 6.5,
+      "width": 102.79999999999995,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "supervisor_signature": {
+      "page": 0,
+      "x": 303.5,
+      "y": 382.47,
+      "type": "image",
+      "width": 118,
+      "height": 16
+    },
+    "supervisor_name": {
+      "page": 0,
+      "x": 425.5,
+      "y": 382.47,
+      "size": 6.5,
+      "width": 102.79999999999995,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "C01-01.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 303.3,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-01.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 303.3,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-01.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 303.3,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-01.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 304.3,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-02.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 269.94,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-02.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 269.94,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-02.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 269.94,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-02.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 270.94,
+      "width": 87,
+      "height": 33.48,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-03.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 236.46,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-03.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 236.46,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-03.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 236.46,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-03.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 237.46,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-04.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 203.1,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-04.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 203.1,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-04.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 203.1,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-04.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 204.1,
+      "width": 87,
+      "height": 33.39,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-05.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 169.71,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-05.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 169.71,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-05.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 169.71,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-05.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 170.71,
+      "width": 87,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "C01-06.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 148.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-06.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 148.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-06.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 148.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-06.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 149.95,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-07.sat": {
+      "page": 0,
+      "x": 329.1,
+      "y": 115.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-07.no_sat": {
+      "page": 0,
+      "x": 374.8,
+      "y": 115.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-07.na": {
+      "page": 0,
+      "x": 418.3,
+      "y": 115.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-07.remarks": {
+      "page": 0,
+      "x": 444.1,
+      "y": 116.59,
+      "width": 87,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "C01-08.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 681.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-08.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 681.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-08.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 681.95,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-08.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 682.95,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-09.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 648.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-09.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 648.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-09.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 648.59,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-09.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 649.59,
+      "width": 87,
+      "height": 33.48,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-10.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 615.11,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-10.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 615.11,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-10.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 615.11,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-10.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 616.11,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-11.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 581.75,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-11.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 581.75,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-11.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 581.75,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-11.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 582.75,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-12.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 548.39,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-12.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 548.39,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-12.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 548.39,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-12.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 549.39,
+      "width": 87,
+      "height": 33.39,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-13.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 515,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-13.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 515,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-13.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 515,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-13.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 516,
+      "width": 87,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "C01-14.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 494.24,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-14.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 494.24,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-14.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 494.24,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-14.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 495.24,
+      "width": 87,
+      "height": 33.48,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-15.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 460.76,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-15.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 460.76,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-15.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 460.76,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-15.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 461.76,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-16.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 427.4,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-16.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 427.4,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-16.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 427.4,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-16.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 428.4,
+      "width": 87,
+      "height": 33.36,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-17.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 394.04,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-17.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 394.04,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-17.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 394.04,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-17.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 395.04,
+      "width": 87,
+      "height": 33.5,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "C01-18.sat": {
+      "page": 1,
+      "x": 329.1,
+      "y": 360.54,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-18.no_sat": {
+      "page": 1,
+      "x": 374.8,
+      "y": 360.54,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-18.na": {
+      "page": 1,
+      "x": 418.3,
+      "y": 360.54,
+      "type": "mark",
+      "size": 9
+    },
+    "C01-18.remarks": {
+      "page": 1,
+      "x": 444.1,
+      "y": 361.54,
+      "width": 87,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    }
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "code": "PGIA-CL-VAES-03",
+  "checklistNo": "PGIA-MAN-VAES-03",
+  "annexLabel": "Appendix C-3",
+  "documentFamily": "VAES",
+  "title": "Monthly Runway and Taxiway Light Fixture PMI",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-2\nPGIA 16-15"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01",
+    "annexLine": "Annex 1-2",
+    "dateLine": "Date: March 14, 2026.",
+    "manualLine": "Visual Aid and Electrical System Maintenance Manual."
+  },
+  "documentControl": {
+    "documentNo": "PGIA-CL-VAES-03",
+    "frequency": "Monthly",
+    "responsible": "Electrical Maintenance Technicians",
+    "supervisorReviewer": "Electrical Maintenance Supervisor"
+  },
+  "frequency": "monthly",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat",
+      "na"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NOSAT",
+      "na": "N/A"
+    },
+    "remarksLabel": "Remarks / Corrective Action"
+  },
+  "headerFields": [
+    {
+      "key": "dateOfInspection",
+      "label": "Date of Inspection",
+      "type": "date",
+      "required": true,
+      "mapKey": "date_of_inspection"
+    },
+    {
+      "key": "timeCommenced",
+      "label": "Time Commenced",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_commenced"
+    },
+    {
+      "key": "timeCompleted",
+      "label": "Time Completed",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_completed"
+    },
+    {
+      "key": "weatherVisibilityConditions",
+      "label": "Weather / Visibility Conditions",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather_visibility_conditions"
+    },
+    {
+      "key": "systemsAffectedAocImpact",
+      "label": "Systems Affected / AOC Impact",
+      "type": "yes_no",
+      "required": true,
+      "note": "if yes — notify Operations",
+      "escalateOnYes": true,
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "markPrefix": "aoc_impact"
+    }
+  ],
+  "sections": [
+    {
+      "title": null,
+      "items": [
+        {
+          "code": "C03-01",
+          "text": "ATC authorization obtained; circuit de-energization coordinated with ATC"
+        },
+        {
+          "code": "C03-02",
+          "text": "LOTO applied at CCR and vault; de-energization verified with clamp-on ammeter"
+        },
+        {
+          "code": "C03-03",
+          "text": "Lens orientation check completed — all lenses correctly aimed"
+        },
+        {
+          "code": "C03-04",
+          "text": "Photometric measurements performed (record"
+        },
+        {
+          "code": "C03-05",
+          "text": "attached): Yes ☐ Not available ☐"
+        },
+        {
+          "code": "C03-06",
+          "text": "Any fixture below 70% minimum output identified"
+        },
+        {
+          "code": "C03-07",
+          "text": "and scheduled for immediate replacement: Yes ☐"
+        },
+        {
+          "code": "C03-08",
+          "text": "None found ☐"
+        },
+        {
+          "code": "C03-09",
+          "text": "All misaligned fixtures straightened, leveled, and realigned"
+        },
+        {
+          "code": "C03-10",
+          "text": "Lamp sockets clean; connections firm; no corrosion detected"
+        },
+        {
+          "code": "C03-11",
+          "text": "Gaskets in good condition; no moisture inside any fixture"
+        },
+        {
+          "code": "C03-12",
+          "text": "Weep holes in frangible couplings clear and unobstructed"
+        },
+        {
+          "code": "C03-13",
+          "text": "Circuit re-energized; all lamps verified operational; ATC notified"
+        },
+        {
+          "code": "C03-14",
+          "text": "Post-restoration circuit current: _______ A (within tolerance per Table 4B-2)"
+        },
+        {
+          "code": "C03-15",
+          "text": "Serviceability count after maintenance: Serviceable: ___ Unserviceable: ___ Percentage: ___%"
+        },
+        {
+          "code": "C03-16",
+          "text": "Minimum serviceability target of 85% is met: Yes ☐"
+        },
+        {
+          "code": "C03-17",
+          "text": "No ☐ (if No — notify OM immediately)"
+        }
+      ]
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "responsible",
+      "label": "Responsible Signature",
+      "inHeader": true
+    },
+    {
+      "role": "supervisor",
+      "label": "Supervisor Signature",
+      "inHeader": true
+    }
+  ],
+  "validationRules": [
+    "Every item marked NOSAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Item codes C03-01.. are SYNTHETIC. The approved form lists items without identifiers; codes exist only so responses, incidents and audit records can reference a row, and must never be printed on the exported form.",
+    "Generated by scripts/vaes-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph position.",
+    "Document control values are pre-printed constants on the approved form — not inputs, and never overlaid."
+  ]
+}

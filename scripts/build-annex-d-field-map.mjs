@@ -4,11 +4,22 @@
  */
 import { writeFileSync } from 'node:fs';
 
-const SAT_X = 392.2;
-const NO_SAT_X = 428.2;
-const REMARKS_X = 456.1;
-const REMARKS_WIDTH = 90;
+const SAT_X = 391.0;
+const NO_SAT_X = 427.0;
+const REMARKS_X = 453.0;
+const REMARKS_WIDTH = 77;
 const MARK_SIZE = 9;
+
+/**
+ * Measured from the approved base PDF (vertical rules detected at 130 dpi):
+ *   info grid  : 65.9 | 205.9 | 533.5   -> value cell is 205.9 .. 533.5
+ *   item table : 65.9 | 377.5 | 413.4 | 449.4 | 533.5
+ * Header values previously started at x=100..200, i.e. inside the LEFT label
+ * cell, so they printed over the label text. Remarks previously ran to 546.1,
+ * past the 533.5 table edge.
+ */
+const VALUE_X = 212;
+const VALUE_W = 316;
 
 /** Checkbox y from the approved PDF (pdf.js text positions). */
 const ITEMS = [
@@ -41,21 +52,21 @@ const ITEMS = [
 ];
 
 const fields = {
-  inspection_date: { page: 0, x: 100, y: 585.5, size: 9, width: 90 },
+  inspection_date: { page: 0, x: VALUE_X, y: 585.5, size: 9, width: 120 },
   'inspection_type.monthly_routine': { page: 0, x: 279.7, y: 564.7, type: 'mark' },
   'inspection_type.semi_annual_cec': { page: 0, x: 420.0, y: 564.7, type: 'mark' },
   'inspection_type.post_storm_emergency': { page: 0, x: 260.2, y: 552.7, type: 'mark' },
   conducted_by: {
     page: 0,
-    x: 168,
+    x: VALUE_X,
     y: 533.8,
     size: 9,
-    width: 360,
+    width: VALUE_W,
     wrap: true,
     maxLines: 2,
     overflow: 'continuation',
   },
-  rainfall_mm: { page: 0, x: 200, y: 505.0, size: 9, width: 80 },
+  rainfall_mm: { page: 0, x: VALUE_X, y: 505.0, size: 9, width: 90 },
 };
 
 for (const item of ITEMS) {

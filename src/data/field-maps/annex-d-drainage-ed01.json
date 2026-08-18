@@ -7,8 +7,7 @@
   "mapping": {
     "method": "pdf.js text positions from approved base PDF (same origin as field-mapper)",
     "durationMinutes": 22,
-    "note": "Measured from pdf.js text positions on the approved Ed.01 PDF (same bottom-left origin as /dev/field-mapper). Use this number to scope the remaining 30 forms.",
-    "measuredAt": "2026-08-15T15:55:10.183Z"
+    "measuredAt": "2026-08-16T23:30:22.144Z"
   },
   "pageSize": {
     "width": 612.12,
@@ -17,10 +16,10 @@
   "fields": {
     "inspection_date": {
       "page": 0,
-      "x": 100,
+      "x": 212,
       "y": 585.5,
       "size": 9,
-      "width": 90
+      "width": 120
     },
     "inspection_type.monthly_routine": {
       "page": 0,
@@ -42,40 +41,40 @@
     },
     "conducted_by": {
       "page": 0,
-      "x": 168,
+      "x": 212,
       "y": 533.8,
       "size": 9,
-      "width": 360,
+      "width": 316,
       "wrap": true,
       "maxLines": 2,
       "overflow": "continuation"
     },
     "rainfall_mm": {
       "page": 0,
-      "x": 200,
+      "x": 212,
       "y": 505,
       "size": 9,
-      "width": 80
+      "width": 90
     },
     "DR-01.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 430.6,
       "type": "mark",
       "size": 9
     },
     "DR-01.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 430.6,
       "type": "mark",
       "size": 9
     },
     "DR-01.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 430.6,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -84,23 +83,23 @@
     },
     "DR-02.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 401.8,
       "type": "mark",
       "size": 9
     },
     "DR-02.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 401.8,
       "type": "mark",
       "size": 9
     },
     "DR-02.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 401.8,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -109,23 +108,23 @@
     },
     "DR-03.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 373,
       "type": "mark",
       "size": 9
     },
     "DR-03.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 373,
       "type": "mark",
       "size": 9
     },
     "DR-03.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 373,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -134,23 +133,23 @@
     },
     "DR-04.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 352.9,
       "type": "mark",
       "size": 9
     },
     "DR-04.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 352.9,
       "type": "mark",
       "size": 9
     },
     "DR-04.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 352.9,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -159,23 +158,23 @@
     },
     "DR-05.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 332.8,
       "type": "mark",
       "size": 9
     },
     "DR-05.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 332.8,
       "type": "mark",
       "size": 9
     },
     "DR-05.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 332.8,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -184,23 +183,23 @@
     },
     "DR-06.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 304,
       "type": "mark",
       "size": 9
     },
     "DR-06.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 304,
       "type": "mark",
       "size": 9
     },
     "DR-06.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 304,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -209,23 +208,23 @@
     },
     "DR-07.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 284,
       "type": "mark",
       "size": 9
     },
     "DR-07.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 284,
       "type": "mark",
       "size": 9
     },
     "DR-07.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 284,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -234,23 +233,23 @@
     },
     "DR-08.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 219.5,
       "type": "mark",
       "size": 9
     },
     "DR-08.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 219.5,
       "type": "mark",
       "size": 9
     },
     "DR-08.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 219.5,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -259,23 +258,23 @@
     },
     "DR-09.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 199.4,
       "type": "mark",
       "size": 9
     },
     "DR-09.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 199.4,
       "type": "mark",
       "size": 9
     },
     "DR-09.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 199.4,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -284,23 +283,23 @@
     },
     "DR-10.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 179.3,
       "type": "mark",
       "size": 9
     },
     "DR-10.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 179.3,
       "type": "mark",
       "size": 9
     },
     "DR-10.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 179.3,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -309,23 +308,23 @@
     },
     "DR-12.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 159.3,
       "type": "mark",
       "size": 9
     },
     "DR-12.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 159.3,
       "type": "mark",
       "size": 9
     },
     "DR-12.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 159.3,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -334,23 +333,23 @@
     },
     "DR-13.sat": {
       "page": 0,
-      "x": 392.2,
+      "x": 391,
       "y": 86.1,
       "type": "mark",
       "size": 9
     },
     "DR-13.no_sat": {
       "page": 0,
-      "x": 428.2,
+      "x": 427,
       "y": 86.1,
       "type": "mark",
       "size": 9
     },
     "DR-13.remarks": {
       "page": 0,
-      "x": 456.1,
+      "x": 453,
       "y": 86.1,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -359,23 +358,23 @@
     },
     "DR-14.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 680.1,
       "type": "mark",
       "size": 9
     },
     "DR-14.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 680.1,
       "type": "mark",
       "size": 9
     },
     "DR-14.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 680.1,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -384,23 +383,23 @@
     },
     "DR-15.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 660.1,
       "type": "mark",
       "size": 9
     },
     "DR-15.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 660.1,
       "type": "mark",
       "size": 9
     },
     "DR-15.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 660.1,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -409,23 +408,23 @@
     },
     "DR-16.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 640.1,
       "type": "mark",
       "size": 9
     },
     "DR-16.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 640.1,
       "type": "mark",
       "size": 9
     },
     "DR-16.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 640.1,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -434,23 +433,23 @@
     },
     "DR-17.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 575.5,
       "type": "mark",
       "size": 9
     },
     "DR-17.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 575.5,
       "type": "mark",
       "size": 9
     },
     "DR-17.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 575.5,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -459,23 +458,23 @@
     },
     "DR-18.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 546.7,
       "type": "mark",
       "size": 9
     },
     "DR-18.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 546.7,
       "type": "mark",
       "size": 9
     },
     "DR-18.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 546.7,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -484,23 +483,23 @@
     },
     "DR-19.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 517.9,
       "type": "mark",
       "size": 9
     },
     "DR-19.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 517.9,
       "type": "mark",
       "size": 9
     },
     "DR-19.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 517.9,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -509,23 +508,23 @@
     },
     "DR-20.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 489.1,
       "type": "mark",
       "size": 9
     },
     "DR-20.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 489.1,
       "type": "mark",
       "size": 9
     },
     "DR-20.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 489.1,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -534,23 +533,23 @@
     },
     "DR-21.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 469,
       "type": "mark",
       "size": 9
     },
     "DR-21.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 469,
       "type": "mark",
       "size": 9
     },
     "DR-21.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 469,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -559,23 +558,23 @@
     },
     "DR-22.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 395.8,
       "type": "mark",
       "size": 9
     },
     "DR-22.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 395.8,
       "type": "mark",
       "size": 9
     },
     "DR-22.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 395.8,
-      "width": 90,
+      "width": 77,
       "height": 26,
       "size": 7,
       "wrap": true,
@@ -584,23 +583,23 @@
     },
     "DR-23.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 367,
       "type": "mark",
       "size": 9
     },
     "DR-23.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 367,
       "type": "mark",
       "size": 9
     },
     "DR-23.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 367,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -609,23 +608,23 @@
     },
     "DR-24.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 347,
       "type": "mark",
       "size": 9
     },
     "DR-24.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 347,
       "type": "mark",
       "size": 9
     },
     "DR-24.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 347,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -634,23 +633,23 @@
     },
     "DR-25.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 326.9,
       "type": "mark",
       "size": 9
     },
     "DR-25.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 326.9,
       "type": "mark",
       "size": 9
     },
     "DR-25.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 326.9,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -659,23 +658,23 @@
     },
     "DR-26.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 306.8,
       "type": "mark",
       "size": 9
     },
     "DR-26.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 306.8,
       "type": "mark",
       "size": 9
     },
     "DR-26.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 306.8,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,
@@ -684,23 +683,23 @@
     },
     "DR-27.sat": {
       "page": 1,
-      "x": 392.2,
+      "x": 391,
       "y": 286.7,
       "type": "mark",
       "size": 9
     },
     "DR-27.no_sat": {
       "page": 1,
-      "x": 428.2,
+      "x": 427,
       "y": 286.7,
       "type": "mark",
       "size": 9
     },
     "DR-27.remarks": {
       "page": 1,
-      "x": 456.1,
+      "x": 453,
       "y": 286.7,
-      "width": 90,
+      "width": 77,
       "height": 18,
       "size": 7,
       "wrap": true,

@@ -1,0 +1,178 @@
+{
+  "code": "PGIA-CL-VAES-20",
+  "checklistNo": "PGIA-MAN-VAES-020",
+  "annexLabel": "Appendix C-20",
+  "documentFamily": "VAES",
+  "title": "Construction Area — Signage, Lighting, and NAVAID Inspection",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-2\nPGIA 16-15"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01",
+    "annexLine": "Annex 1-2",
+    "dateLine": "Date: March 14, 2026.",
+    "manualLine": "Visual Aid and Electrical System Maintenance Manual."
+  },
+  "documentControl": {
+    "documentNo": "PGIA-CL-VAES-20",
+    "frequency": "Daily throughout construction activity",
+    "responsible": "Electrical Maintenance Supervisor / Apron",
+    "supervisorReviewer": "Operations Manager"
+  },
+  "frequency": "daily",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat",
+      "na"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NOSAT",
+      "na": "N/A"
+    },
+    "remarksLabel": "Remarks / Corrective Action"
+  },
+  "headerFields": [
+    {
+      "key": "dateOfInspection",
+      "label": "Date of Inspection",
+      "type": "date",
+      "required": true,
+      "mapKey": "date_of_inspection"
+    },
+    {
+      "key": "timeCommenced",
+      "label": "Time Commenced",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_commenced"
+    },
+    {
+      "key": "timeCompleted",
+      "label": "Time Completed",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_completed"
+    },
+    {
+      "key": "weatherVisibilityConditions",
+      "label": "Weather / Visibility Conditions",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather_visibility_conditions"
+    },
+    {
+      "key": "systemsAffectedAocImpact",
+      "label": "Systems Affected / AOC Impact",
+      "type": "yes_no",
+      "required": true,
+      "note": "if Yes — notify Operations",
+      "escalateOnYes": true,
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "markPrefix": "aoc_impact"
+    }
+  ],
+  "sections": [
+    {
+      "title": null,
+      "items": [
+        {
+          "code": "C20-01",
+          "text": "Construction Safety Plan and Phasing Plan approved by Operations Manager and BDCA"
+        },
+        {
+          "code": "C20-02",
+          "text": "All temporary signage: correctly positioned; BCAR- 14 compliant; no conflict with permanent signs"
+        },
+        {
+          "code": "C20-03",
+          "text": "Closed/restricted areas clearly identified by temporary signs"
+        },
+        {
+          "code": "C20-04",
+          "text": "All construction equipment in movement area: marked with high-visibility colors"
+        },
+        {
+          "code": "C20-05",
+          "text": "All construction equipment fitted with amber rotating/flashing beacons"
+        },
+        {
+          "code": "C20-06",
+          "text": "Red and white flags displayed on all airside equipment during daytime"
+        },
+        {
+          "code": "C20-07",
+          "text": "All obstacle lights on construction equipment and temporary structures — functional (verified at night)"
+        },
+        {
+          "code": "C20-08",
+          "text": "Obstacle lighting clearly defines: work limits, access routes, and obstacle locations"
+        },
+        {
+          "code": "C20-09",
+          "text": "No unauthorized equipment within ILS or other NAVAID critical areas"
+        },
+        {
+          "code": "C20-10",
+          "text": "CNS/ATM unit notified of all work near NAVAID critical areas"
+        },
+        {
+          "code": "C20-11",
+          "text": "All temporary lighting systems tested before use — satisfactory operation verified"
+        },
+        {
+          "code": "C20-12",
+          "text": "Temporary lighting: color, intensity, and spacing comply with BCAR-14 and ICAO Annex 14"
+        },
+        {
+          "code": "C20-13",
+          "text": "NOTAMs coordinated and issued for all affected systems — Reference: ___________"
+        },
+        {
+          "code": "C20-14",
+          "text": "Displaced permanent lights replaced by temporary lighting of equivalent function"
+        },
+        {
+          "code": "C20-15",
+          "text": "Construction area perimeter clearly marked and barricaded"
+        },
+        {
+          "code": "C20-16",
+          "text": "All deficiencies corrected prior to resumption of operations"
+        }
+      ]
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "responsible",
+      "label": "Responsible Signature",
+      "inHeader": true
+    },
+    {
+      "role": "supervisor",
+      "label": "Supervisor Signature",
+      "inHeader": true
+    }
+  ],
+  "validationRules": [
+    "Every item marked NOSAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Item codes C20-01.. are SYNTHETIC. The approved form lists items without identifiers; codes exist only so responses, incidents and audit records can reference a row, and must never be printed on the exported form.",
+    "Generated by scripts/vaes-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph position.",
+    "Document control values are pre-printed constants on the approved form — not inputs, and never overlaid."
+  ]
+}

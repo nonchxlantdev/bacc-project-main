@@ -5,13 +5,13 @@ import { baccLogoUrl, pgiaLogoUrl } from '../lib/brandAssets.js';
 
 export default function LoginPage() {
   const { user, loading, signIn, error, configured, demoUsers } = useAuth();
-  const [email, setEmail] = useState(demoUsers[3]?.email || '');
+  const [email, setEmail] = useState(demoUsers[0]?.email || '');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
 
   useEffect(() => {
-    if (!email && demoUsers[3]?.email) setEmail(demoUsers[3].email);
+    if (!email && demoUsers[0]?.email) setEmail(demoUsers[0].email);
   }, [demoUsers, email]);
 
   if (!loading && user) {
@@ -39,10 +39,11 @@ export default function LoginPage() {
           <img src={pgiaLogoUrl} alt="PGIA" className="h-10 w-auto rounded bg-navy object-contain p-1" />
         </div>
         <h1 className="text-xl font-bold text-navy">Sign in</h1>
-        <p className="mt-1 text-sm text-muted">BACC operations portal — Annex D drainage demo</p>
+        <p className="mt-1 text-sm text-muted">BACC operations portal — PMM and VAES checklist demo</p>
         {!configured && (
           <p className="mt-3 rounded bg-stripe px-3 py-2 text-xs text-muted">
-            Demo mode. Pick a seeded role — Approvals and the inbox follow that user. Password is not checked.
+            Demo mode. Two accounts, chosen to contrast permissions — the Operations Manager sees every form,
+            the Electrical Maintenance Technician sees only what is assigned to Engineering. Password is not checked.
           </p>
         )}
         {!configured && demoUsers.length > 0 && (

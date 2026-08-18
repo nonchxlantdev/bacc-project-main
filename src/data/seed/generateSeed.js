@@ -9,8 +9,12 @@ import annexDFieldMap from '../field-maps/annex-d-drainage-ed01.json';
 import { flattenItems, emptyItemState } from '../../lib/checklistSchema.js';
 import { airportIso } from '../../lib/belizeTime.js';
 import { generatePendingInstances, refreshInstanceStatuses } from '../../lib/instanceGeneration.js';
+import { TEMPLATE_REGISTRY } from '../templates/registry.js';
 
-export const SEED_VERSION = 2;
+// Bumped to 5: the sign-in roster changed (Shamira Young / Glenrick Spain, with
+// can_login), so saved demo stores must regenerate or the login screen would
+// still offer the old accounts.
+export const SEED_VERSION = 5;
 export const SEED_AS_OF = '2026-08-15';
 export const SEED_FROM = '2026-02-01';
 
@@ -66,13 +70,18 @@ function signoffs(inspector, date, om) {
 export function generateSeed({ asOf = SEED_AS_OF } = {}) {
   const asOfMs = Date.parse(airportIso(asOf, '12:00:00.000'));
 
+  // Exactly two accounts can sign in (can_login). The rest stay in the directory
+  // because the seeded six months of Annex D history — signoffs, approvals,
+  // incident assignments — reference them, and BACC §11 forbids rewriting a
+  // submitted record's attribution. Removing them would orphan those records.
   const users = [
     u(1, 'maya.castillo@pgia.local', 'Maya Castillo', 'Maintenance Inspector', 'inspector', 'Maintenance'),
     u(2, 'luis.pena@pgia.local', 'Luis Peña', 'Maintenance Inspector', 'inspector', 'Maintenance'),
     u(3, 'elena.vasquez@pgia.local', 'Elena Vasquez', 'Duty Manager', 'duty_manager', 'Operations'),
-    u(4, 'omar.mendez@pgia.local', 'Omar Mendez', 'Operations Manager', 'om', 'Operations'),
+    u(4, 'shamira.young@pgia.local', 'Shamira Young', 'Operations Manager', 'om', 'Operations', true),
     u(5, 'patricia.gomez@pgia.local', 'Patricia Gomez', 'Chief Operations Officer', 'coo', 'Operations'),
     u(6, 'marcus.chi@pgia.local', 'Marcus Chi', 'Civil Engineering Consultant', 'cec', 'Engineering'),
+    u(7, 'glenrick.spain@pgia.local', 'Glenrick Spain', 'Electrical Maintenance Technician', 'electrical_tech', 'Engineering', true),
   ];
   const byRole = (role) => users.find((row) => row.role === role);
   const inspector = byRole('inspector');
@@ -80,54 +89,48 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
   const coo = byRole('coo');
   const cec = byRole('cec');
 
-  const templates = [
-    {
-      id: seedId('template', 1),
-      code: annexD.code,
-      version: 'ed01',
-      title: annexD.title,
-      annex_label: annexD.annexLabel,
-      document_family: 'PMM',
-      department: 'Maintenance',
-      content_schema: annexD,
-      schema: annexD,
-      field_map: annexDFieldMap,
-      base_pdf_path: annexDFieldMap.basePdf,
-      print_template_key: annexDFieldMap.templateKey,
-      status: 'active',
-    },
-  ];
-  const template = templates[0];
+  // Templates come from the registry, not hardcoded here — adding a form is one
+  // registry entry. See src/data/templates/registry.js.
+  const templates = TEMPLATE_REGISTRY.map((entry, i) => ({
+    id: seedId('template', i + 1),
+    code: entry.code,
+    version: entry.version,
+    title: entry.title,
+    annex_label: entry.annexLabel,
+    document_family: entry.family,
+    manual: entry.manual,
+    department: entry.department,
+    default_frequency: entry.defaultFrequency,
+    content_schema: entry.schema,
+    schema: entry.schema,
+    field_map: entry.fieldMap,
+    base_pdf_path: entry.fieldMap.basePdf,
+    print_template_key: entry.fieldMap.templateKey,
+    registry_key: entry.key,
+    status: 'active',
+  }));
+  const templateByKey = (key) => templates.find((t) => t.registry_key === key);
+  // Seeded submissions are Annex D only; other templates exist as catalogue
+  // entries with assignment rules but no historical submissions yet.
+  const template = templateByKey('annex-d-drainage');
 
-  const assignment_rules = [
-    {
-      id: seedId('rule', 1),
-      template_id: template.id,
-      template_version: 'ed01',
-      department: 'Maintenance',
-      role: 'inspector',
-      frequency: 'monthly',
-      assigned_user: inspector.id,
-    },
-    {
-      id: seedId('rule', 2),
-      template_id: template.id,
-      template_version: 'ed01',
-      department: 'Operations',
-      role: 'duty_manager',
-      frequency: 'on_demand',
-      assigned_user: byRole('duty_manager').id,
-    },
-    {
-      id: seedId('rule', 3),
-      template_id: template.id,
-      template_version: 'ed01',
-      department: 'Maintenance',
-      role: 'inspector',
-      frequency: 'on_demand',
-      assigned_user: inspector.id,
-    },
-  ];
+  let ruleSeq = 0;
+  const assignment_rules = TEMPLATE_REGISTRY.flatMap((entry) => {
+    const tpl = templateByKey(entry.key);
+    return entry.assignments.map((a) => {
+      ruleSeq += 1;
+      const assignee = users.find((row) => row.role === a.role);
+      return {
+        id: seedId('rule', ruleSeq),
+        template_id: tpl.id,
+        template_version: entry.version,
+        department: a.department,
+        role: a.role,
+        frequency: a.frequency,
+        assigned_user: assignee?.id ?? null,
+      };
+    });
+  });
 
   function submission({ n, date, type, status, items, rainfall, deficiencies, acknowledged }) {
     const locked = status !== 'draft';
@@ -718,7 +721,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
   };
 }
 
-function u(n, email, full_name, position, role, department) {
+function u(n, email, full_name, position, role, department, can_login = false) {
   return {
     id: seedId('user', n),
     email,
@@ -726,6 +729,7 @@ function u(n, email, full_name, position, role, department) {
     position,
     role,
     department,
+    can_login,
   };
 }
 

@@ -21,7 +21,19 @@ export function createMockRepositories() {
       },
       async getByEmail(email) {
         const key = String(email || '').toLowerCase();
-        return getStore().users.find((row) => row.email.toLowerCase() === key) ?? getStore().users[3];
+        const users = getStore().users;
+        return (
+          users.find((row) => row.email.toLowerCase() === key) ??
+          users.find((row) => row.can_login) ??
+          users[0]
+        );
+      },
+      // Accounts that may sign in. The directory (list) is deliberately wider:
+      // historical records still point at the people who signed them.
+      async listLogins() {
+        const users = getStore().users;
+        const enabled = users.filter((row) => row.can_login);
+        return enabled.length ? enabled : users;
       },
     },
     templates: {

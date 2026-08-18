@@ -27,10 +27,23 @@ function drawWrapped(page, font, text, field) {
   const maxLines = field.maxLines ?? Math.max(1, Math.floor((field.height ?? lineHeight) / lineHeight));
   const lines = wrapLine(font, text, size, width);
   const overflow = lines.length > maxLines;
-  const visible = overflow ? lines.slice(0, Math.max(1, maxLines - 1)) : lines;
-  if (overflow) {
-    const marker = `${CONTINUATION_MARKER}${field._continuationPage ?? 'N'}`;
-    visible.push(marker);
+  const pageRef = field._continuationPage ?? 'N';
+  let visible;
+  if (!overflow) {
+    visible = lines;
+  } else if (maxLines <= 1) {
+    // Single-line cell: truncate to fit and append a compact reference so the
+    // total drawn lines never exceed maxLines. BACC §10 — an approved field is
+    // never resized and never spills into the row below.
+    const shortMarker = `…p.${pageRef}`;
+    let t = String(text);
+    while (t.length > 1 && font.widthOfTextAtSize(`${t} ${shortMarker}`, size) > width) {
+      t = t.slice(0, -1);
+    }
+    visible = [`${t.trimEnd()} ${shortMarker}`];
+  } else {
+    visible = lines.slice(0, maxLines - 1);
+    visible.push(`${CONTINUATION_MARKER}${pageRef}`);
   }
   // y is the first-line baseline (PDF bottom-left). Subsequent lines go down (smaller y).
   visible.forEach((line, i) => {
@@ -193,16 +206,38 @@ function drawContinuationHeader(page, bold, meta, pageNumber) {
   page.drawText(line, { x: 72, y: 714, size: 8, font: bold });
 }
 
+/** camelCase -> snake_case, the default header key -> field-map key mapping. */
+function snake(key) {
+  return String(key).replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
 export function submissionToOverlayValues(record) {
   const header = record.header ?? {};
-  const values = {
-    inspection_date: header.date || record.inspection_date || '',
-    conducted_by: header.conductedBy || '',
-    rainfall_mm: header.rainfallMm ?? record.rainfall_mm ?? '',
-    deficiencies_summary: record.deficiencies_summary ?? '',
-  };
-  const type = header.inspectionType || record.inspection_type;
-  if (type) values[`inspection_type.${type}`] = true;
+  const schema = record.schema ?? record.content_schema ?? null;
+  const values = { deficiencies_summary: record.deficiencies_summary ?? '' };
+
+  const headerFields = schema?.headerFields ?? [];
+  if (headerFields.length) {
+    // Schema-driven: every form declares its own header fields. A field with
+    // `markPrefix` becomes a checkbox mark (`<prefix>.<value>`); everything else
+    // is text at `mapKey`, defaulting to snake_case of the key.
+    for (const field of headerFields) {
+      const raw = header[field.key];
+      if (raw === undefined || raw === null || raw === '') continue;
+      if (field.markPrefix) {
+        values[`${field.markPrefix}.${raw}`] = true;
+      } else {
+        values[field.mapKey ?? snake(field.key)] = raw;
+      }
+    }
+  } else {
+    // Fallback for records saved before schemas carried mapKey/markPrefix.
+    values.inspection_date = header.date || record.inspection_date || '';
+    values.conducted_by = header.conductedBy || '';
+    values.rainfall_mm = header.rainfallMm ?? record.rainfall_mm ?? '';
+    const legacyType = header.inspectionType || record.inspection_type;
+    if (legacyType) values[`inspection_type.${legacyType}`] = true;
+  }
 
   for (const [code, row] of Object.entries(record.items ?? {})) {
     if (row?.result === 'sat') values[`${code}.sat`] = true;

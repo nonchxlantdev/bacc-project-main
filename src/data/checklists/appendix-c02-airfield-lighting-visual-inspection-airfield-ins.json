@@ -1,0 +1,190 @@
+{
+  "code": "PGIA-CL-VAES-02",
+  "checklistNo": "PGIA-MAN-VAES-002",
+  "annexLabel": "Appendix C-2",
+  "documentFamily": "VAES",
+  "title": "Daily Airfield Lighting Visual Inspection — Airfield Inspection",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-2\nPGIA 16-15"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01",
+    "annexLine": "Annex 1-2",
+    "dateLine": "Date: March 14, 2026.",
+    "manualLine": "Visual Aid and Electrical System Maintenance Manual."
+  },
+  "documentControl": {
+    "documentNo": "PGIA-CL-VAES-02",
+    "frequency": "Daily — 05:30 or after last flight",
+    "responsible": "Electrical Maintenance Technician",
+    "supervisorReviewer": "Electrical Maintenance Supervisor"
+  },
+  "frequency": "daily",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat",
+      "na"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NOSAT",
+      "na": "N/A"
+    },
+    "remarksLabel": "Remarks / Corrective Action"
+  },
+  "headerFields": [
+    {
+      "key": "dateOfInspection",
+      "label": "Date of Inspection",
+      "type": "date",
+      "required": true,
+      "mapKey": "date_of_inspection"
+    },
+    {
+      "key": "timeCommenced",
+      "label": "Time Commenced",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_commenced"
+    },
+    {
+      "key": "timeCompleted",
+      "label": "Time Completed",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_completed"
+    },
+    {
+      "key": "weatherVisibilityConditions",
+      "label": "Weather / Visibility Conditions",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather_visibility_conditions"
+    },
+    {
+      "key": "systemsAffectedAocImpact",
+      "label": "Systems Affected / AOC Impact",
+      "type": "yes_no",
+      "required": true,
+      "note": "if yes — notify Operations",
+      "escalateOnYes": true,
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "markPrefix": "aoc_impact"
+    }
+  ],
+  "sections": [
+    {
+      "title": null,
+      "items": [
+        {
+          "code": "C02-01",
+          "text": "ATC authorization obtained; two-way radio communication confirmed before entering movement area"
+        },
+        {
+          "code": "C02-02",
+          "text": "RUNWAY EDGE LIGHTS — RWY 07/25: No burned-out or dimly burning lamps observed"
+        },
+        {
+          "code": "C02-03",
+          "text": "RUNWAY EDGE LIGHTS — Amber section (last 600m): All amber lamps operational"
+        },
+        {
+          "code": "C02-04",
+          "text": "THRESHOLD LIGHTS — RWY 07: All green (approach side) and red (far side) lamps operational"
+        },
+        {
+          "code": "C02-05",
+          "text": "THRESHOLD LIGHTS — RWY 25: All green (approach side) and red (far side) lamps operational"
+        },
+        {
+          "code": "C02-06",
+          "text": "RUNWAY END LIGHTS: All red lamps operational both ends"
+        },
+        {
+          "code": "C02-07",
+          "text": "PAPI — RWY 07: All 4 units illuminated; signal correct from approach direction"
+        },
+        {
+          "code": "C02-08",
+          "text": "PAPI — RWY 25 (if installed): All 4 units illuminated; signal correct"
+        },
+        {
+          "code": "C02-09",
+          "text": "TAXIWAY EDGE LIGHTS — All blue taxiway edge lights operational; no two adjacent lights out"
+        },
+        {
+          "code": "C02-10",
+          "text": "MANDATORY INSTRUCTION SIGNS (red background): All fully illuminated and legible"
+        },
+        {
+          "code": "C02-11",
+          "text": "LOCATION / DIRECTION SIGNS (yellow/black): All fully illuminated and legible"
+        },
+        {
+          "code": "C02-12",
+          "text": "WIND CONE: Fabric inflated and freely rotating; all lamps operational"
+        },
+        {
+          "code": "C02-13",
+          "text": "OBSTRUCTION LIGHTS: All required lights flashing/burning at correct intensity"
+        },
+        {
+          "code": "C02-14",
+          "text": "No physically damaged fixtures, signs, or structures observed"
+        },
+        {
+          "code": "C02-15",
+          "text": "No dirty, cracked, or obscured lenses observed"
+        },
+        {
+          "code": "C02-16",
+          "text": "Current serviceability count: Serviceable: ___ Unserviceable: ___ Total: ___ Percentage: ___%"
+        },
+        {
+          "code": "C02-17",
+          "text": "Serviceability percentage meets minimum target of 85% (CAT I per Section 2.6):"
+        },
+        {
+          "code": "C02-18",
+          "text": "All deficiencies recorded with exact location notation (attach deficiency list)"
+        },
+        {
+          "code": "C02-19",
+          "text": "ATC notified of inspection completion"
+        }
+      ]
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "responsible",
+      "label": "Responsible Signature",
+      "inHeader": true
+    },
+    {
+      "role": "supervisor",
+      "label": "Supervisor Signature",
+      "inHeader": true
+    }
+  ],
+  "validationRules": [
+    "Every item marked NOSAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Item codes C02-01.. are SYNTHETIC. The approved form lists items without identifiers; codes exist only so responses, incidents and audit records can reference a row, and must never be printed on the exported form.",
+    "Generated by scripts/vaes-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph position.",
+    "Document control values are pre-printed constants on the approved form — not inputs, and never overlaid."
+  ]
+}

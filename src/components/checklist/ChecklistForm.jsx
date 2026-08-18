@@ -275,6 +275,11 @@ function Detail({ label, value }) {
   );
 }
 
+const YES_NO_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+];
+
 function HeaderFields({ schema, header, disabled, onChange }) {
   const fields = schema.headerFields ?? [];
   return (
@@ -286,7 +291,9 @@ function HeaderFields({ schema, header, disabled, onChange }) {
               {field.label}
               {field.required ? ' *' : ''}
             </span>
-            {field.type === 'radio' ? (
+            {field.type === 'yes_no' ? (
+              <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
+            ) : field.type === 'radio' ? (
               <div className="space-y-2">
                 {(field.options ?? []).map((opt) => (
                   <label key={opt.value} className="flex min-h-8 items-center gap-2 text-sm">
@@ -304,7 +311,7 @@ function HeaderFields({ schema, header, disabled, onChange }) {
               </div>
             ) : (
               <input
-                type={field.type === 'date' ? 'date' : 'text'}
+                type={INPUT_TYPES[field.type] ?? 'text'}
                 disabled={disabled || field.key === 'conductedBy'}
                 value={header[field.key] ?? ''}
                 onChange={(e) => onChange({ [field.key]: e.target.value })}
@@ -315,6 +322,51 @@ function HeaderFields({ schema, header, disabled, onChange }) {
         ))}
       </div>
     </section>
+  );
+}
+
+const INPUT_TYPES = { date: 'date', time: 'time', number: 'number' };
+
+/**
+ * Yes / No header field. Some approved forms attach an operational consequence
+ * to one answer — Appendix C-8's "Systems Affected / AOC Impact" prints
+ * "if Yes — notify Operations Manager immediately" on the form itself. When the
+ * schema sets `escalateOnYes`, choosing Yes surfaces that instruction rather
+ * than leaving it buried in the paper wording.
+ */
+function YesNoField({ field, value, disabled, onChange }) {
+  const options = field.options?.length ? field.options : YES_NO_OPTIONS;
+  const escalated = field.escalateOnYes && value === 'yes';
+  return (
+    <div>
+      <div className="flex gap-2">
+        {options.map((opt) => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              disabled={disabled}
+              aria-pressed={active}
+              onClick={() => onChange({ [field.key]: opt.value })}
+              className={`min-h-10 flex-1 rounded border px-3 text-sm font-semibold transition disabled:opacity-60 ${
+                active
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-navy/20 bg-white text-navy hover:border-primary hover:text-primary'
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      {escalated && (
+        <p className="mt-1.5 rounded border border-alert bg-alert-soft px-2 py-1.5 text-[11px] font-semibold text-alert">
+          {field.note || 'Notify the Operations Manager immediately.'}
+        </p>
+      )}
+      {!escalated && field.note && <p className="mt-1 text-[11px] text-muted">{field.note}</p>}
+    </div>
   );
 }
 

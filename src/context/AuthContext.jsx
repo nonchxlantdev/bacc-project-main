@@ -25,13 +25,15 @@ export function AuthProvider({ children }) {
 
     async function load() {
       const repos = getRepos();
-      const users = await repos.users.list().catch(() => []);
+      // Sign-in roster only. The full user directory is wider — seeded history
+      // references people who are not sign-in accounts.
+      const users = await (repos.users.listLogins?.() ?? repos.users.list()).catch(() => []);
       if (!cancelled) setDemoUsers(users);
 
       if (!isSupabaseConfigured || !supabase) {
         const cached = sessionStorage.getItem(AUTH_KEY);
         if (cached) {
-          const found = users.find((u) => u.id === cached || u.email === cached) ?? users[3] ?? users[0];
+          const found = users.find((u) => u.id === cached || u.email === cached) ?? users[0];
           if (found) {
             setSession({ user: toSessionUser(found) });
             setProfile(found);
@@ -72,8 +74,16 @@ export function AuthProvider({ children }) {
       setError(null);
       if (!isSupabaseConfigured || !supabase) {
         const repos = getRepos();
-        const found = await repos.users.getByEmail(email);
-        const profileRow = found ?? demoUsers[3] ?? demoUsers[0];
+        const key = String(email || '').trim().toLowerCase();
+        // Only the two demo accounts may sign in. Typing anyone else's address
+        // must not grant their permissions.
+        const allowed = demoUsers.find((row) => row.email.toLowerCase() === key);
+        if (key && demoUsers.length && !allowed) {
+          const message = 'That address is not a demo sign-in account. Pick one of the accounts above.';
+          setError(message);
+          throw new Error(message);
+        }
+        const profileRow = allowed ?? (await repos.users.getByEmail(email)) ?? demoUsers[0];
         if (!profileRow) throw new Error('No demo users in seed');
         sessionStorage.setItem(AUTH_KEY, profileRow.id);
         setSession({ user: toSessionUser(profileRow) });

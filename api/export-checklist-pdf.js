@@ -42,7 +42,18 @@ export async function buildExport(body) {
     : readFileSync(path.join(root, 'src/assets/forms', fieldMap.basePdf));
 
   const record = body.submission ?? body;
-  const values = body.values ?? submissionToOverlayValues(record);
+
+  // A submission carries a SNAPSHOT of its schema, pinned at creation. That is
+  // right for content (item wording and order must never shift under a record),
+  // but header->field-map mapping is a pipeline concern, and older snapshots
+  // predate `mapKey` / `markPrefix`. Without this, a draft created before those
+  // were added silently drops values that have nowhere to go — e.g. C-8's
+  // Systems Affected / AOC Impact never stamps its checkbox.
+  const schemaForMapping = hasMappingMetadata(record.schema ?? record.content_schema)
+    ? record.schema ?? record.content_schema
+    : loadSchema(fieldMap.templateKey) ?? record.schema ?? record.content_schema;
+
+  const values = body.values ?? submissionToOverlayValues({ ...record, schema: schemaForMapping });
   const images = {};
   for (const [key, uri] of Object.entries(body.images ?? {})) {
     const bytes = dataUriToBytes(uri);
@@ -78,4 +89,19 @@ export async function buildExport(body) {
 function loadFieldMap(templateKey, version) {
   const file = path.join(root, 'src/data/field-maps', `${templateKey}-${version}.json`);
   return JSON.parse(readFileSync(file, 'utf8'));
+}
+
+/** A schema knows how to map its header fields only if it declares mapKey/markPrefix. */
+function hasMappingMetadata(schema) {
+  return (schema?.headerFields ?? []).some((f) => f.markPrefix || f.mapKey);
+}
+
+/** Content schemas are named for their template key: src/data/checklists/<key>.json */
+function loadSchema(templateKey) {
+  if (!templateKey) return null;
+  try {
+    return JSON.parse(readFileSync(path.join(root, 'src/data/checklists', `${templateKey}.json`), 'utf8'));
+  } catch {
+    return null;
+  }
 }
