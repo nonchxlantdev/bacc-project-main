@@ -142,7 +142,10 @@ export function linkSubmissionToInstance(instances, submission) {
       return row;
     }
     if (date >= row.period_start && date <= row.period_end) {
-      return { ...row, submission_id: submission.id, status: 'submitted' };
+      // `completed_at` is what makes on-time vs late answerable later; the
+      // period alone cannot distinguish a checklist filed on day 2 from one
+      // filed three weeks after it was due.
+      return { ...row, submission_id: submission.id, status: 'submitted', completed_at: date };
     }
     return row;
   });

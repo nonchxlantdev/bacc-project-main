@@ -672,6 +672,17 @@ export function getRegistryEntry(key) {
 }
 
 /**
+ * The team that owns a form, by its form number.
+ *
+ * Incidents and approvals only carry the code of the form they came from, but
+ * the useful question on both screens is "whose is this?" — and that answer
+ * already exists here, in the folder the approved form arrived in.
+ */
+export function groupForCode(code) {
+  return TEMPLATE_REGISTRY.find((t) => t.code === code)?.group ?? null;
+}
+
+/**
  * Templates a given profile may open. An Electrical Maintenance Technician
  * should never be offered the drainage checklist, and vice versa — with 31
  * forms an unfiltered list is how a tool stops being used.

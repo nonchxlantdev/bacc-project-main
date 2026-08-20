@@ -2,8 +2,9 @@ import { CATEGORICAL, DEPARTMENT_COLORS, INCIDENT_STATUS_COLORS, TEMPLATE_COLORS
 import { DEFICIENCY_LEVELS, slaState } from '../../../config/deficiencyLevels.js';
 import { isQualifyingReinspection, workOrderVerifiedBlockers } from '../../../lib/incidentLifecycle.js';
 import { generatePendingInstances, linkSubmissionToInstance, refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
-import { daysUntilDue, airportYmd } from '../../../lib/belizeTime.js';
+import { addAirportDays, airportYmd, daysUntilDue, eachWeekStart } from '../../../lib/belizeTime.js';
 import { dispatchNotification } from '../../../lib/notificationTransport.js';
+import { groupForCode } from '../../templates/registry.js';
 import { advanceClock, getStore, mutateStore, nowMs, resetStore } from './store.js';
 
 function notWired() {
@@ -189,13 +190,12 @@ export function createMockRepositories() {
     },
     incidents: {
       async list() {
-        return getStore().incidents;
+        return getStore().incidents.map(withSourceTeam);
       },
       async get(id) {
         const inc = getStore().incidents.find((row) => row.id === id);
         if (!inc) return null;
-        const updates = inc.updates ?? [];
-        return { ...inc, updates };
+        return withSourceTeam({ ...inc, updates: inc.updates ?? [] });
       },
       async persist(record) {
         let saved = record;
@@ -272,6 +272,9 @@ export function createMockRepositories() {
         const s = getStore();
         return s.approvals
           .filter((row) => row.status === 'pending' && isApprovalForUser(row, user, s))
+          // Work orders (Annex H) are out of the incident UI, so an approval
+          // pointing at one has nowhere to go. See WORK_ORDERS_ENABLED.
+          .filter((row) => row.entity_type === 'checklist_submission')
           .map((row) => hydrateApproval(row, s))
           .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
       },
@@ -418,11 +421,6 @@ export function createMockRepositories() {
         });
       },
     },
-    projects: {
-      async listActive() {
-        return getStore().projects;
-      },
-    },
     reports: createReportAggregations(),
   };
 }
@@ -453,19 +451,51 @@ function isApprovalForUser(row, user) {
   return false;
 }
 
+/** Monday of the week containing `ymd` — matches eachWeekStart's anchoring. */
+function weekStartFor(ymd) {
+  const dow = new Date(Date.parse(`${ymd}T12:00:00-06:00`)).getUTCDay();
+  return addAirportDays(ymd, dow === 0 ? -6 : 1 - dow);
+}
+
+function shortDate(ymd) {
+  const [, m, d] = ymd.split('-');
+  return `${['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(m)]} ${Number(d)}`;
+}
+
+/**
+ * Attach the team that owns the form this incident came from.
+ *
+ * Derived rather than stored: the incident already records which approved form
+ * raised it, and the folder that form arrived in is the team. Storing a copy
+ * would let the two drift apart the first time a form is refiled.
+ */
+function withSourceTeam(inc) {
+  return { ...inc, source_group: groupForCode(inc.source_template_code) };
+}
+
 function hydrateApproval(row, s) {
   if (row.entity_type === 'checklist_submission') {
     const sub = s.submissions.find((x) => x.id === row.entity_id);
+    if (!sub) return { ...row, entity: null };
+    const tpl = s.templates.find((t) => t.id === sub.template_id || t.code === sub.template_code);
+    const filedBy = s.users.find((u) => u.id === sub.inspector_id);
+    const assignee = s.users.find((u) => u.id === row.assigned_to);
     return {
       ...row,
-      entity: sub
-        ? {
-            title: sub.schema?.title || sub.template_code,
-            date: sub.inspection_date,
-            href: `/checklists/${sub.id}`,
-            status: sub.status,
-          }
-        : null,
+      entity: {
+        title: sub.schema?.title || sub.template_code,
+        annex_label: sub.schema?.annexLabel || tpl?.annex_label || null,
+        code: sub.template_code,
+        // Whose form it is, and who filed it — the two things a reviewer needs
+        // before deciding whether to sign.
+        group: tpl?.group ?? groupForCode(sub.template_code),
+        department: tpl?.department ?? filedBy?.department ?? null,
+        filed_by: sub.inspector_name || filedBy?.full_name || null,
+        date: sub.inspection_date,
+        href: `/checklists/${sub.id}`,
+        status: sub.status,
+      },
+      assigned_to_name: assignee?.full_name ?? null,
     };
   }
   const wo = s.work_orders.find((x) => x.id === row.entity_id);
@@ -488,18 +518,14 @@ function createReportAggregations() {
   return {
     async kpis() {
       const s = getStore();
-      const t = nowMs();
-      const prior = t - 30 * 86400000;
       const openInc = s.incidents.filter((i) => i.status !== 'closed').length;
       const due = s.instances.filter((i) => i.status === 'pending' || i.status === 'overdue' || i.status === 'in_progress').length;
       const appr = s.approvals.filter((a) => a.status === 'pending').length;
       return {
-        projectsActive: s.projects.length,
         incidentsOpen: openInc,
         checklistsDue: due,
         approvalsPending: appr,
         prior: {
-          projectsActive: 0,
           incidentsOpen: Math.max(0, openInc - 1),
           checklistsDue: Math.max(0, due - 1),
           approvalsPending: Math.max(0, appr - 1),
@@ -601,6 +627,95 @@ function createReportAggregations() {
       }));
       return { meanDays, closedCount: closed.length, openAgeing };
     },
+    /**
+     * "Which teams still have work outstanding?"
+     *
+     * One row per owning team, counting scheduled occurrences rather than
+     * filed records — a team with nothing scheduled has nothing outstanding,
+     * which is different from a team that is behind. Sorted worst first so the
+     * teams that need attention are at the top without anyone sorting.
+     */
+    async teamCompliance() {
+      const s = getStore();
+      const teamOf = new Map(s.templates.map((t) => [t.id, t.group || 'Other']));
+      const rows = new Map();
+      for (const i of s.instances) {
+        const team = teamOf.get(i.template_id);
+        if (!team) continue;
+        const row =
+          rows.get(team) ??
+          { key: team, label: team, scheduled: 0, completed: 0, onTime: 0, late: 0, outstanding: 0, overdue: 0, missed: 0 };
+        row.scheduled += 1;
+        if (i.status === 'submitted') {
+          row.completed += 1;
+          if (i.completed_at && i.completed_at > i.period_end) row.late += 1;
+          else row.onTime += 1;
+        } else if (i.status === 'overdue') {
+          row.overdue += 1;
+          row.outstanding += 1;
+        } else if (i.status === 'missed') {
+          row.missed += 1;
+          row.outstanding += 1;
+        } else {
+          row.outstanding += 1;
+        }
+        rows.set(team, row);
+      }
+      return [...rows.values()]
+        // No colour here on purpose: "behind" is a status, and status hues are
+        // reserved for the design tokens (see config/chartPalette.js). The
+        // component picks alert / success from the counts.
+        .map((row) => ({ ...row, rate: row.scheduled ? row.completed / row.scheduled : 1 }))
+        .sort((a, b) => b.overdue + b.missed - (a.overdue + a.missed) || a.rate - b.rate);
+    },
+
+    /**
+     * "Are inspections being done on time?" — the last `weeks` weeks, bucketed
+     * by the week an occurrence was due, split on-time vs late.
+     */
+    async onTimeByWeek({ weeks = 8 } = {}) {
+      const s = getStore();
+      const today = airportYmd(nowMs());
+      const from = addAirportDays(today, -(weeks * 7));
+      const buckets = new Map();
+      for (const start of eachWeekStart(from, today)) {
+        buckets.set(start, { key: start, label: shortDate(start), onTime: 0, late: 0 });
+      }
+      for (const i of s.instances) {
+        if (i.status !== 'submitted' || !i.completed_at) continue;
+        const week = weekStartFor(i.period_end);
+        const bucket = buckets.get(week);
+        if (!bucket) continue;
+        if (i.completed_at > i.period_end) bucket.late += 1;
+        else bucket.onTime += 1;
+      }
+      return [...buckets.values()];
+    },
+
+    /** The specific inspections filed after their due date, most recent first. */
+    async lateCompletions({ limit = 12 } = {}) {
+      const s = getStore();
+      const tpl = new Map(s.templates.map((t) => [t.id, t]));
+      return s.instances
+        .filter((i) => i.status === 'submitted' && i.completed_at && i.completed_at > i.period_end)
+        .map((i) => {
+          const t = tpl.get(i.template_id);
+          return {
+            id: i.id,
+            code: t?.code ?? '—',
+            title: t?.title ?? '',
+            team: t?.group ?? 'Other',
+            due: i.period_end,
+            completed: i.completed_at,
+            daysLate: Math.round(
+              (Date.parse(`${i.completed_at}T12:00:00-06:00`) - Date.parse(`${i.period_end}T12:00:00-06:00`)) / 86400000,
+            ),
+          };
+        })
+        .sort((a, b) => String(b.completed).localeCompare(String(a.completed)))
+        .slice(0, limit);
+    },
+
     async departmentOverview() {
       const s = getStore();
       const counts = {};

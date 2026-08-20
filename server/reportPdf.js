@@ -28,38 +28,40 @@ export async function buildReportPdf(payload = {}) {
   };
 
   page.drawRectangle({ x: 0, y: 760, width: 612, height: 32, color: navy });
-  page.drawText('BACC · PGIA compliance report', { x: 48, y: 770, size: 12, font: bold, color: rgb(1, 1, 1) });
+  page.drawText('BACC · PGIA inspection report', { x: 48, y: 770, size: 12, font: bold, color: rgb(1, 1, 1) });
   y = 740;
-  line('America/Belize  ·  Annex D slice  ·  not a controlled form', { size: 9, color: muted, gap: 18 });
+  line('America/Belize  ·  scheduled inspection programme  ·  not a controlled form', { size: 9, color: muted, gap: 18 });
 
-  const sla = payload.sla ?? {};
-  const noc = payload.noc ?? {};
-  const reinspect = payload.reinspect ?? {};
-  line(`SLA on track ${sla.onTrack ?? '—'}  ·  warning ${sla.warning ?? '—'}  ·  breached ${sla.breached ?? '—'}`, {
-    font: bold,
-    size: 11,
-  });
-  line(`NOC register  open ${noc.open ?? 0}  /  closed ${noc.closed ?? 0}`);
+  const totals = payload.totals ?? {};
+  const rate = payload.onTimeRate;
+
   line(
-    `Re-inspection verification  ${
-      reinspect.rate != null ? `${Math.round(reinspect.rate * 100)}%` : '—'
-    }  (${reinspect.withSatReinspection ?? 0}/${reinspect.closed ?? 0})`,
-    { gap: 20 },
+    `${totals.behind ?? 0} inspections behind  ·  ${totals.outstanding ?? 0} still to do  ·  ${
+      rate == null ? '—' : `${rate}%`
+    } filed on time`,
+    { font: bold, size: 11, gap: 20 },
   );
 
-  line('Open deficiencies by Level', { font: bold, size: 11, color: navy });
-  for (const row of payload.levels ?? []) {
-    line(`  ${row.label}: ${row.count}`);
+  line('Which teams still have inspections to complete?', { font: bold, size: 11, color: navy });
+  for (const row of payload.teams ?? []) {
+    const behind = (row.overdue ?? 0) + (row.missed ?? 0);
+    line(
+      `  ${row.label}: ${row.completed}/${row.scheduled} done (${Math.round((row.rate ?? 0) * 100)}%)` +
+        `${behind ? `  ·  ${behind} past due` : ''}${row.late ? `  ·  ${row.late} filed late` : ''}`,
+    );
   }
   y -= 8;
-  line('Overdue / missed inspections', { font: bold, size: 11, color: navy });
-  for (const row of payload.overdue ?? []) {
-    line(`  ${row.templateCode}  ${row.assignee}  ${String(row.due_at).slice(0, 10)}  ${row.status}  ${row.daysOverdue}d`);
+
+  line('Filed on time vs late, by week', { font: bold, size: 11, color: navy });
+  for (const row of payload.weeks ?? []) {
+    if (!row.onTime && !row.late) continue;
+    line(`  week of ${row.label}: ${row.onTime} on time, ${row.late} late`);
   }
   y -= 8;
-  line('Completion rate', { font: bold, size: 11, color: navy });
-  for (const row of payload.completion?.points ?? []) {
-    line(`  ${row.period}  ${row.submitted}/${row.due}  ${Math.round(row.rate * 100)}%`);
+
+  line('What was filed late?', { font: bold, size: 11, color: navy });
+  for (const row of payload.late ?? []) {
+    line(`  ${row.code}  ${row.team}  due ${row.due}  filed ${row.completed}  ${row.daysLate}d late`);
   }
 
   y -= 16;
@@ -69,5 +71,5 @@ export async function buildReportPdf(payload = {}) {
   });
 
   const bytes = await doc.save();
-  return { bytes, filename: 'BACC-compliance-report.pdf' };
+  return { bytes, filename: 'BACC-inspection-report.pdf' };
 }

@@ -5,7 +5,6 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import ApprovalsPage from './pages/ApprovalsPage.jsx';
 import ChecklistDetailPage from './pages/ChecklistDetailPage.jsx';
 import ChecklistCataloguePage from './pages/ChecklistCataloguePage.jsx';
-import ComingSoonPage from './pages/ComingSoonPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import IncidentDetailPage from './pages/IncidentDetailPage.jsx';
 import IncidentListPage from './pages/IncidentListPage.jsx';
@@ -51,24 +50,6 @@ export default function App() {
             <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="reports" element={<ReportsPage />} />
-            <Route
-              path="projects"
-              element={
-                <ComingSoonPage
-                  title="Projects"
-                  blurb="The Projects module appears in the nav and KPI cards but has no design yet. The card reads an empty repository list. Flagged for BACC — not built."
-                />
-              }
-            />
-            <Route
-              path="documents"
-              element={
-                <ComingSoonPage
-                  title="Documents"
-                  blurb="Controlled document library is a later slice. Approved forms stay versioned with each checklist template."
-                />
-              }
-            />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

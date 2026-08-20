@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardCheck, Plus } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useReports, useTemplates } from '../hooks/useRepos.js';
+import { useReports } from '../hooks/useRepos.js';
 import { StatTile } from '../components/reports/StatTile.jsx';
 import { HorizontalBarChart } from '../components/reports/Charts.jsx';
 import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
+import StatusPill from '../components/checklist/StatusPill.jsx';
 import { getRepos } from '../data/repositories/index.js';
+import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
+import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
+import { fmtDate } from '../lib/airportFormat.js';
+
+const RECENT_LIMIT = 6;
+
+/** Anything not yet signed off is still someone's problem. */
+const OPEN_INCIDENT_STATUSES = new Set(['open', 'assigned', 'in_progress', 'resolved']);
 
 export default function DashboardPage() {
-  const { displayName, profile } = useAuth();
-  const { rows: templates } = useTemplates(profile);
+  const { displayName } = useAuth();
   const reports = useReports();
   const [kpis, setKpis] = useState(null);
   const [dept, setDept] = useState([]);
   const [activity, setActivity] = useState([]);
   const [clock, setClock] = useState(null);
+  const [completed, setCompleted] = useState([]);
+  const [pending, setPending] = useState([]);
 
   useEffect(() => {
     reports.kpis().then(setKpis);
@@ -23,6 +33,29 @@ export default function DashboardPage() {
     reports.activityFeed({ limit: 8 }).then(setActivity);
     getRepos().instances.getClock().then(setClock);
   }, [reports]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const repos = getRepos();
+    Promise.all([repos.checklists.listAll(), repos.incidents.list()]).then(([rows, incidents]) => {
+      if (cancelled) return;
+      setCompleted(
+        rows
+          .filter((row) => row.status === 'submitted' || row.status === 'acknowledged')
+          .sort((a, b) => byDateDesc(inspectionDate(a), inspectionDate(b)))
+          .slice(0, RECENT_LIMIT),
+      );
+      setPending(
+        incidents
+          .filter((row) => OPEN_INCIDENT_STATUSES.has(row.status))
+          .sort((a, b) => byDateDesc(a.reported_at, b.reported_at))
+          .slice(0, RECENT_LIMIT),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const delta = (key) => (kpis ? kpis[key] - kpis.prior[key] : null);
 
@@ -36,17 +69,76 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatTile
-          label="Active Projects"
-          value={kpis?.projectsActive ?? 0}
-          delta={delta('projectsActive')}
-          href="/projects"
-          note="Projects is contracted separately and has no design yet."
+          label="Incidents"
+          value={kpis?.incidentsOpen ?? '—'}
+          delta={delta('incidentsOpen')}
+          href="/incidents"
         />
-        <StatTile label="Incidents" value={kpis?.incidentsOpen ?? '—'} delta={delta('incidentsOpen')} href="/incidents" />
-        <StatTile label="Checklists" value={kpis?.checklistsDue ?? '—'} delta={delta('checklistsDue')} href="/checklists/mine" />
-        <StatTile label="Approvals" value={kpis?.approvalsPending ?? '—'} delta={delta('approvalsPending')} href="/approvals" />
+        <StatTile
+          label="Checklists"
+          value={kpis?.checklistsDue ?? '—'}
+          delta={delta('checklistsDue')}
+          href="/checklists/mine"
+        />
+        <StatTile
+          label="Approvals"
+          value={kpis?.approvalsPending ?? '—'}
+          delta={delta('approvalsPending')}
+          href="/approvals"
+        />
+      </div>
+
+      {/* The two questions someone opens this page to answer: what has been
+          filed lately, and what is still outstanding. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Checklists completed" href="/checklists/all" linkLabel="All checklists">
+          {completed.length === 0 ? (
+            <Empty>No checklists have been submitted yet.</Empty>
+          ) : (
+            completed.map((row) => (
+              <RowLink key={row.id} to={`/checklists/${row.id}`}>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-navy">
+                    {row.schema?.annexLabel || row.schema?.annex_label || row.template_code}
+                    {row.schema?.title ? ` — ${row.schema.title}` : ''}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {fmtDate(inspectionDate(row))}
+                    {row.inspector_name ? ` · ${row.inspector_name}` : ''}
+                  </span>
+                </span>
+                <StatusPill status={row.status} />
+              </RowLink>
+            ))
+          )}
+        </Panel>
+
+        <Panel title="Incidents pending" href="/incidents" linkLabel="All incidents">
+          {pending.length === 0 ? (
+            <Empty>Nothing outstanding — every incident is closed.</Empty>
+          ) : (
+            pending.map((row) => {
+              const level = getDeficiencyLevel(row.deficiency_level);
+              return (
+                <RowLink key={row.id} to={`/incidents/${row.id}`}>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-navy">
+                      {row.incident_ref} — {row.source_item_code || row.category || 'Incident'}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-muted">
+                      {incidentStatusLabel(row.status)}
+                      {level ? ` · ${level.label}` : ''}
+                      {row.assigned_to_name ? ` · ${row.assigned_to_name}` : ' · Unassigned'}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted">{fmtDate(row.target_date)}</span>
+                </RowLink>
+              );
+            })
+          )}
+        </Panel>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -66,61 +158,66 @@ export default function DashboardPage() {
           <HorizontalBarChart items={dept} />
         </ChartCard>
 
-        <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-navy">Recent activity</h2>
-          <ul className="text-sm">
-            {activity.map((row) => (
-              <li key={row.id} className="border-b border-navy/5 last:border-0">
-                {/* The whole entry is the target, not just the link text — a
-                    16px line of text is not a tappable thing on a phone. */}
-                <Link
-                  to={row.href || '/dashboard'}
-                  className="-mx-2 block rounded-md px-2 py-2.5 hover:bg-stripe"
-                >
-                  <span className="block font-medium text-primary">{row.summary}</span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {row.actor_name} · {String(row.at).slice(0, 16).replace('T', ' ')}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-navy">Quick actions</h2>
-          <Link
-            to="/checklists/mine"
-            className="-mr-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-primary hover:bg-stripe lg:mr-0 lg:min-h-0 lg:px-0 lg:hover:bg-transparent lg:hover:underline"
-          >
-            View mine
-          </Link>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {templates.map((tpl) => (
-            <Link
-              key={tpl.id}
-              to={`/checklists/new?template=${encodeURIComponent(tpl.id)}`}
-              className="flex items-start gap-3 rounded-md border border-navy/10 p-4 hover:border-primary"
-            >
-              <ClipboardCheck className="mt-0.5 h-5 w-5 text-teal" />
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">{tpl.annex_label}</p>
-                <p className="font-semibold text-navy">{tpl.title}</p>
-                <p className="text-xs text-muted">{tpl.code}</p>
-              </div>
-              <Plus className="ml-auto h-4 w-4 text-primary" />
-            </Link>
+        <Panel title="Recent activity">
+          {activity.map((row) => (
+            // The whole entry is the target, not just the link text — a 16px
+            // line of text is not a tappable thing on a phone.
+            <RowLink key={row.id} to={row.href || '/dashboard'}>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-primary">{row.summary}</span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {row.actor_name} · {String(row.at).slice(0, 16).replace('T', ' ')}
+                </span>
+              </span>
+            </RowLink>
           ))}
-          <Link to="/approvals" className="rounded-md border border-navy/10 p-4 hover:border-primary">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">Inbox</p>
-            <p className="font-semibold text-navy">Open approvals</p>
-            <p className="text-xs text-muted">Items waiting on {profile?.role || 'you'}</p>
-          </Link>
-        </div>
-      </section>
+        </Panel>
+      </div>
     </div>
   );
+}
+
+function inspectionDate(row) {
+  return row.inspection_date || row.header?.date || row.submitted_at;
+}
+
+function byDateDesc(a, b) {
+  return String(b ?? '').localeCompare(String(a ?? ''));
+}
+
+function Panel({ title, href, linkLabel, children }) {
+  return (
+    <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-navy">{title}</h2>
+        {href && (
+          <Link
+            to={href}
+            className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-md px-2 text-sm font-medium text-primary hover:bg-stripe lg:mr-0 lg:min-h-0 lg:px-0 lg:hover:bg-transparent lg:hover:underline"
+          >
+            {linkLabel}
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </Link>
+        )}
+      </div>
+      <ul className="text-sm">{children}</ul>
+    </section>
+  );
+}
+
+function RowLink({ to, children }) {
+  return (
+    <li className="border-b border-navy/5 last:border-0">
+      <Link
+        to={to}
+        className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 hover:bg-stripe"
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+function Empty({ children }) {
+  return <li className="py-6 text-center text-sm text-muted">{children}</li>;
 }

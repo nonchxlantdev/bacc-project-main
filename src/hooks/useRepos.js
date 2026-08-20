@@ -116,12 +116,6 @@ export function useInstances() {
   };
 }
 
-export function useProjects() {
-  const repos = getRepos();
-  const query = useQuery(() => repos.projects.listActive(), []);
-  return { ...query, rows: query.data ?? [] };
-}
-
 export function useUsers() {
   const repos = getRepos();
   const query = useQuery(() => repos.users.list(), []);

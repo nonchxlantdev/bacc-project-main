@@ -29,9 +29,11 @@ export function createSupabaseRepositories() {
     approvals: stubRepo(['listInbox', 'get', 'decide']),
     instances: stubRepo(['list', 'generate', 'advanceClock', 'getClock', 'resetDemo']),
     notifications: stubRepo(['listForUser', 'unreadCount', 'markRead', 'markAllRead']),
-    projects: stubRepo(['listActive']),
     reports: stubRepo([
       'kpis',
+      'teamCompliance',
+      'onTimeByWeek',
+      'lateCompletions',
       'completionRate',
       'overdueInspections',
       'openDeficienciesByLevel',

@@ -7,15 +7,14 @@
 import annexD from '../checklists/annex-d-drainage.json';
 import annexDFieldMap from '../field-maps/annex-d-drainage-ed01.json';
 import { flattenItems, emptyItemState } from '../../lib/checklistSchema.js';
-import { airportIso } from '../../lib/belizeTime.js';
+import { addAirportDays, airportIso } from '../../lib/belizeTime.js';
 import { generatePendingInstances, refreshInstanceStatuses } from '../../lib/instanceGeneration.js';
 import { TEMPLATE_REGISTRY } from '../templates/registry.js';
 
-// Bumped to 8: the scheduler now covers every cadence, not just monthly, and
-// the generated backlog is closed out (see backfillCompletedHistory) so the
-// demo opens on a working operation rather than 55 missed inspections. A saved
-// store from an earlier version must regenerate.
-export const SEED_VERSION = 8;
+// Bumped to 9: scheduled occurrences now record `completed_at`, which the
+// Reports on-time / late views read. A store saved before this has no
+// completion dates and must regenerate.
+export const SEED_VERSION = 9;
 export const SEED_AS_OF = '2026-08-15';
 export const SEED_FROM = '2026-02-01';
 
@@ -397,7 +396,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       level: 3,
       status: 'in_progress',
       title: 'RWY 07 end swale storm debris',
-      assigned: { id: inspector.id, name: 'Maintenance Personnel', team: 'maintenance' },
+      assigned: { id: inspector.id, name: inspector.full_name, team: 'maintenance' },
       target: '2026-08-18',
     }),
     incident({
@@ -429,7 +428,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
       level: 2,
       status: 'resolved',
       title: 'Runway strip channel vegetated south of TWY B',
-      assigned: { id: inspector.id, name: 'Maintenance Personnel', team: 'maintenance' },
+      assigned: { id: inspector.id, name: inspector.full_name, team: 'maintenance' },
       target: '2026-08-20',
     }),
   ];
@@ -722,7 +721,6 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
     instances,
     notifications,
     activity,
-    projects: [],
   };
 }
 
@@ -763,9 +761,27 @@ function backfillCompletedHistory(instances, asOfYmd) {
 
   const leaveOpen = new Set([...overdue, ...backlog.slice(-KEEP_MISSED).map((row) => row.id)]);
 
-  return instances.map((row) =>
-    isOpenBacklog(row) && !leaveOpen.has(row.id) ? { ...row, status: 'submitted' } : row,
-  );
+  let n = 0;
+  return instances.map((row) => {
+    if (!isOpenBacklog(row) || leaveOpen.has(row.id)) return row;
+    n += 1;
+    return { ...row, status: 'submitted', completed_at: closedOn(row, n) };
+  });
+}
+
+/**
+ * When a backfilled occurrence was actually closed out.
+ *
+ * Reports need on-time vs late, and a period alone cannot tell a checklist
+ * filed on day two from one filed three weeks after it was due. Most land
+ * inside the period; roughly one in eight slips past the due date, which is
+ * what a real programme looks like and gives the late-completion views
+ * something honest to show. Deterministic — index-based, never random — so the
+ * seed stays reproducible.
+ */
+function closedOn(row, n) {
+  const late = n % 8 === 3;
+  return late ? addAirportDays(row.period_end, (n % 5) + 1) : row.period_end;
 }
 
 function u(n, email, full_name, position, role, department, can_login = false) {

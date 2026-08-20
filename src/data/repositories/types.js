@@ -101,11 +101,10 @@
 
 /**
  * @typedef {Object} ReportKpis
- * @property {number} projectsActive
  * @property {number} incidentsOpen
  * @property {number} checklistsDue
  * @property {number} approvalsPending
- * @property {{ projectsActive: number, incidentsOpen: number, checklistsDue: number, approvalsPending: number }} prior
+ * @property {{ incidentsOpen: number, checklistsDue: number, approvalsPending: number }} prior
  */
 
 /**
@@ -196,7 +195,6 @@ export const REPOSITORY_METHODS = {
   approvals: ['listInbox', 'get', 'decide'],
   instances: ['list', 'generate', 'advanceClock', 'getClock'],
   notifications: ['listForUser', 'unreadCount', 'markRead', 'markAllRead'],
-  projects: ['listActive'],
   reports: [
     'kpis',
     'completionRate',

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
 import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
+import { TeamChip } from './IncidentListPage.jsx';
 import {
   Card,
   Field,
@@ -437,6 +438,14 @@ export default function IncidentDetailPage() {
             </p>
           </div>
           <StripField label="Incident ID" value={incident.incident_ref} strong />
+          {/* Which team's form raised this — the same chip the incident list
+              and the checklist catalogue use, so the tie is obvious. */}
+          <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-navy/10 lg:pl-6">
+            <p className="text-xs text-muted">Owning Team</p>
+            <div className="mt-0.5">
+              <TeamChip name={incident.source_group} code={incident.source_template_code} />
+            </div>
+          </div>
           <StripField label="Date Reported" value={fmtDateTime(incident.reported_at)} />
           <StripField
             label="Reported By"

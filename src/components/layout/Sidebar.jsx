@@ -4,7 +4,6 @@ import {
   BarChart3,
   ClipboardCheck,
   Crosshair,
-  FileText,
   Inbox,
   LayoutDashboard,
   List,
@@ -25,8 +24,6 @@ const NAV = [
   { to: '/incidents', label: 'Incidents', icon: ShieldAlert },
   { to: '/approvals', label: 'Approvals', icon: Inbox },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/projects', label: 'Projects', icon: FileText, soon: true },
-  { to: '/documents', label: 'Documents', icon: FileText, soon: true },
   { to: '/locations', label: 'Locations', icon: MapPin },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/settings', label: 'Settings', icon: Settings },
@@ -86,11 +83,6 @@ export default function Sidebar({ open = false, onClose }) {
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="flex-1">{item.label}</span>
-            {item.soon && (
-              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/70">
-                Soon
-              </span>
-            )}
           </NavLink>
         ))}
       </nav>

@@ -1,49 +1,85 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
-import { HorizontalBarChart, LineChart } from '../components/reports/Charts.jsx';
-import { StatTile, StatusStateTile } from '../components/reports/StatTile.jsx';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertTriangle, Check, Clock, SlidersHorizontal } from 'lucide-react';
 import { useReports } from '../hooks/useRepos.js';
+import { useDismissable } from '../components/ui/useDismissable.js';
 import { downloadCsv, rowsToCsv } from '../lib/csv.js';
+import { fmtDate } from '../lib/airportFormat.js';
 
+/**
+ * Reports, written to be read by someone who does not work with data.
+ *
+ * Every heading is a plain-English question and every number is followed by
+ * what it means. No chart appears without a sentence saying how to read it,
+ * and no value is carried by colour alone.
+ *
+ * Which sections appear is the reader's choice — see SECTIONS below. Different
+ * people open this page for different reasons, and a monthly reviewer should
+ * not have to scroll past a chart they never use.
+ */
+
+/** Every report on this page. `id` is what the picker toggles. */
+const SECTIONS = [
+  { id: 'headline', label: 'Headline numbers', hint: 'Behind, still to do, on-time rate' },
+  { id: 'onTime', label: 'Filed on time by week', hint: 'Eight-week trend' },
+  { id: 'late', label: 'What was filed late', hint: 'The specific records' },
+];
 export default function ReportsPage() {
   const reports = useReports();
-  const [completion, setCompletion] = useState({ points: [], series: [] });
-  const [overdue, setOverdue] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [lifecycle, setLifecycle] = useState([]);
-  const [ageing, setAgeing] = useState({ openAgeing: [], meanDays: null, closedCount: 0 });
-  const [sla, setSla] = useState(null);
-  const [noc, setNoc] = useState(null);
-  const [reinspect, setReinspect] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [weeks, setWeeks] = useState([]);
+  const [late, setLate] = useState([]);
   const [exporting, setExporting] = useState(false);
+  const [visible, setVisible] = useState(() => new Set(SECTIONS.map((r) => r.id)));
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const shows = (id) => visible.has(id);
+
+  function toggleSection(id) {
+    setVisible((prev) => {
+      const next = new Set(prev);
+      // Hiding the last section would leave a blank page with no obvious way
+      // back, so the final one stays on.
+      if (next.has(id) && next.size > 1) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => {
-    reports.completionRate().then(setCompletion);
-    reports.overdueInspections().then(setOverdue);
-    reports.openDeficienciesByLevel().then(setLevels);
-    reports.incidentsByStatus().then(setLifecycle);
-    reports.deficiencyAgeing().then(setAgeing);
-    reports.slaAdherence().then(setSla);
-    reports.nocRegisterStatus().then(setNoc);
-    reports.reinspectionRate().then(setReinspect);
+    reports.teamCompliance().then(setTeams);
+    reports.onTimeByWeek({ weeks: 8 }).then(setWeeks);
+    reports.lateCompletions({ limit: 12 }).then(setLate);
   }, [reports]);
+
+  const totals = teams.reduce(
+    (acc, t) => ({
+      scheduled: acc.scheduled + t.scheduled,
+      completed: acc.completed + t.completed,
+      onTime: acc.onTime + t.onTime,
+      late: acc.late + t.late,
+      outstanding: acc.outstanding + t.outstanding,
+      behind: acc.behind + t.overdue + t.missed,
+    }),
+    { scheduled: 0, completed: 0, onTime: 0, late: 0, outstanding: 0, behind: 0 },
+  );
+
+  const onTimeRate = totals.completed ? Math.round((totals.onTime / totals.completed) * 100) : null;
+  const teamsBehind = teams.filter((t) => t.overdue + t.missed > 0);
 
   async function exportPdf() {
     setExporting(true);
     try {
-      const payload = { completion, overdue, levels, lifecycle, ageing, sla, noc, reinspect };
       const res = await fetch('/api/export-report-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ teams, weeks, late, totals, onTimeRate }),
       });
       if (!res.ok) throw new Error('Report PDF failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'BACC-compliance-report.pdf';
+      a.download = 'BACC-inspection-report.pdf';
       a.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -52,24 +88,31 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-navy sm:text-2xl">Reports</h1>
           <p className="text-sm text-muted">
-            Compliance views from repository aggregations. Report PDFs are house-style documents, not overlay forms.
+            How the inspection programme is doing, in plain terms. Everything below counts scheduled
+            inspections — the checks each team is supposed to complete.
           </p>
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
+          <SectionPicker
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            visible={visible}
+            onToggle={toggleSection}
+          />
           <button
             type="button"
-            className="min-h-11 flex-1 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm sm:flex-none"
+            className="min-h-11 flex-1 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy hover:bg-stripe sm:flex-none"
             onClick={() =>
               downloadCsv(
-                'compliance-overdue.csv',
+                'inspection-summary.csv',
                 rowsToCsv(
-                  ['template', 'assignee', 'due', 'status', 'days_overdue'],
-                  overdue.map((r) => [r.templateCode, r.assignee, r.due_at, r.status, r.daysOverdue]),
+                  ['team', 'scheduled', 'completed', 'on_time', 'late', 'outstanding', 'overdue', 'missed'],
+                  teams.map((t) => [t.label, t.scheduled, t.completed, t.onTime, t.late, t.outstanding, t.overdue, t.missed]),
                 ),
               )
             }
@@ -79,7 +122,7 @@ export default function ReportsPage() {
           <button
             type="button"
             disabled={exporting}
-            className="min-h-11 flex-1 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white sm:flex-none"
+            className="min-h-11 flex-1 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 sm:flex-none"
             onClick={exportPdf}
           >
             {exporting ? 'Exporting…' : 'Export PDF'}
@@ -87,133 +130,336 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard
-          title="Completion rate over time"
-          subtitle="Submitted instances / due instances per month · Annex D"
-          table={
-            <SimpleTable
-              columns={[
-                { key: 'period', label: 'Period' },
-                { key: 'submitted', label: 'Submitted' },
-                { key: 'due', label: 'Due' },
-                { key: 'rate', label: 'Rate', render: (r) => `${Math.round(r.rate * 100)}%` },
-              ]}
-              rows={completion.points}
-            />
-          }
-        >
-          <LineChart series={completion.series} points={completion.points} />
-        </ChartCard>
-
-        <ChartCard
-          title="Open deficiencies by Level"
-          subtitle="Categorical hues — not a severity ramp. Level 1–4 ordering is undefined."
-          table={
-            <SimpleTable
-              columns={[
-                { key: 'label', label: 'Level' },
-                { key: 'count', label: 'Open' },
-              ]}
-              rows={levels}
-            />
-          }
-        >
-          <HorizontalBarChart items={levels} />
-        </ChartCard>
-
-        <ChartCard
-          title="Incidents by lifecycle"
-          subtitle="Magnitude by state"
-          table={
-            <SimpleTable
-              columns={[
-                { key: 'label', label: 'Status' },
-                { key: 'count', label: 'Count' },
-              ]}
-              rows={lifecycle}
-            />
-          }
-        >
-          <HorizontalBarChart items={lifecycle} />
-        </ChartCard>
-
-        <ChartCard
-          title="Open deficiency ageing"
-          subtitle={
-            ageing.meanDays == null
-              ? 'Mean time to close — not enough closed records'
-              : `Mean time to close: ${ageing.meanDays.toFixed(1)} days (${ageing.closedCount} closed)`
-          }
-          table={
-            <SimpleTable
-              columns={[
-                { key: 'label', label: 'Age' },
-                { key: 'count', label: 'Open' },
-              ]}
-              rows={ageing.openAgeing}
-            />
-          }
-        >
-          <HorizontalBarChart items={ageing.openAgeing} />
-        </ChartCard>
-      </div>
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-navy">SLA adherence</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StatusStateTile kind="ok" label="On track" value={sla?.onTrack ?? '—'} />
-          <StatusStateTile kind="warning" label="Warning window" value={sla?.warning ?? '—'} />
-          <StatusStateTile kind="overdue" label="Breached" value={sla?.breached ?? '—'} />
-        </div>
-        <p className="text-xs text-muted">
-          Closed on time {sla?.closedOnTime ?? 0} · closed late {sla?.closedLate ?? 0}. Target days per Deficiency Level
-          are unset until BACC defines the scale.
-        </p>
-        <div className="overflow-hidden rounded-lg border border-navy/10 bg-white">
-          <SimpleTable
-            columns={[
-              { key: 'ref', label: 'Incident', render: (r) => <Link to={r.href} className="text-primary hover:underline">{r.ref}</Link> },
-              { key: 'status', label: 'Status' },
-              { key: 'target_date', label: 'Target' },
-              { key: 'sla', label: 'SLA' },
-              { key: 'remainingDays', label: 'Days' },
-            ]}
-            rows={sla?.rows ?? []}
-          />
-        </div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <StatTile
-          label="NOC register"
-          value={`${noc?.open ?? 0} open / ${noc?.closed ?? 0} closed`}
-        />
-        <StatTile
-          label="Re-inspection verification"
-          value={reinspect ? `${Math.round(reinspect.rate * 100)}%` : '—'}
-          note={
-            reinspect
-              ? `${reinspect.withSatReinspection} of ${reinspect.closed} closures have a SAT re-inspection`
-              : ''
+      {/* 1 — the headline, three numbers and what each one means */}
+      {shows('headline') && (
+      <section className="grid gap-3 sm:grid-cols-3">
+        <Headline
+          tone={totals.behind ? 'alert' : 'good'}
+          Icon={totals.behind ? AlertTriangle : Check}
+          value={totals.behind}
+          label={totals.behind === 1 ? 'inspection is behind' : 'inspections are behind'}
+          caption={
+            totals.behind
+              ? `Across ${teamsBehind.length} ${teamsBehind.length === 1 ? 'team' : 'teams'}. These are past their due date.`
+              : 'Every scheduled inspection is either done or not due yet.'
           }
         />
-      </div>
-
-      <section className="rounded-lg border border-navy/10 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold text-navy">Overdue and missed inspections</h2>
-        <p className="mb-3 text-xs text-muted">Identity of specific records — table, not a chart.</p>
-        <SimpleTable
-          columns={[
-            { key: 'templateCode', label: 'Form' },
-            { key: 'assignee', label: 'Assignee' },
-            { key: 'due_at', label: 'Due' },
-            { key: 'status', label: 'Status' },
-            { key: 'daysOverdue', label: 'Days overdue' },
-          ]}
-          rows={overdue}
+        <Headline
+          tone="neutral"
+          Icon={Clock}
+          value={totals.outstanding}
+          label={totals.outstanding === 1 ? 'inspection still to do' : 'inspections still to do'}
+          caption="Scheduled but not yet filed, including the ones not due until later."
+        />
+        <Headline
+          tone={onTimeRate != null && onTimeRate < 90 ? 'warn' : 'good'}
+          Icon={Check}
+          value={onTimeRate == null ? '—' : `${onTimeRate}%`}
+          label="filed on time"
+          caption={`${totals.onTime} of ${totals.completed} completed inspections were filed by their due date.`}
         />
       </section>
+      )}
+
+      {/* 2 — on time vs late, by week */}
+      {shows('onTime') && (
+      <Panel
+        title="Are inspections being filed on time?"
+        caption="Each column is one week. Green is filed by the due date, amber is filed late. Taller columns simply mean more inspections were due that week."
+      >
+        {weeks.every((w) => w.onTime + w.late === 0) ? (
+          <Empty>No inspections have been filed in the last eight weeks.</Empty>
+        ) : (
+          <WeeklyBars weeks={weeks} />
+        )}
+      </Panel>
+      )}
+
+      {/* 3 — the specific late ones */}
+      {shows('late') && (
+      <Panel
+        title="What was filed late?"
+        caption="The most recent late inspections, newest first. “Days late” counts from the due date to the day it was actually filed."
+      >
+        {late.length === 0 ? (
+          <Empty>Nothing has been filed late.</Empty>
+        ) : (
+          <div className="overflow-hidden rounded-md border border-navy/10">
+            <table className="table-stack w-full text-left text-sm">
+              <thead className="bg-navy text-white">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Inspection</th>
+                  <th className="px-3 py-2 font-semibold">Team</th>
+                  <th className="px-3 py-2 font-semibold">Was due</th>
+                  <th className="px-3 py-2 font-semibold">Filed</th>
+                  <th className="px-3 py-2 text-right font-semibold">Days late</th>
+                </tr>
+              </thead>
+              <tbody>
+                {late.map((row, i) => (
+                  <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+                    <td data-label="Inspection" className="px-3 py-2">
+                      <span className="font-medium text-navy">{row.title || row.code}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{row.code}</span>
+                    </td>
+                    <td data-label="Team" className="px-3 py-2 text-muted">{row.team}</td>
+                    <td data-label="Was due" className="px-3 py-2 text-muted">{fmtDate(row.due)}</td>
+                    <td data-label="Filed" className="px-3 py-2 text-muted">{fmtDate(row.completed)}</td>
+                    <td data-label="Days late" className="px-3 py-2 md:text-right">
+                      <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        {row.daysLate} {row.daysLate === 1 ? 'day' : 'days'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+      )}
     </div>
   );
+}
+
+/**
+ * Choose which reports to show.
+ *
+ * A checkbox list rather than tabs: these are not alternatives to each other,
+ * and someone comparing the on-time trend against the late records wants both
+ * on screen at once. The count on the trigger keeps the current state visible
+ * when the menu is closed.
+ */
+function SectionPicker({ open, onOpenChange, visible, onToggle }) {
+  const ref = useDismissable(open, useCallback(() => onOpenChange(false), [onOpenChange]));
+  return (
+    <div ref={ref} className="relative flex-1 sm:flex-none">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => onOpenChange(!open)}
+        className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium text-navy transition hover:bg-stripe focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          open ? 'border-primary' : 'border-navy/20'
+        }`}
+      >
+        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        Reports
+        <span className="rounded-full bg-navy/10 px-1.5 text-xs font-semibold tabular-nums">
+          {visible.size}/{SECTIONS.length}
+        </span>
+      </button>
+
+      {/* Anchored left: this is the leftmost control in the toolbar, so a
+          right-anchored panel would hang off the content edge. */}
+      {open && (
+          <div className="absolute left-0 z-40 mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-md border border-navy/15 bg-white p-1.5 shadow-lg">
+            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
+              Show on this page
+            </p>
+            {SECTIONS.map((section) => {
+              const on = visible.has(section.id);
+              const last = on && visible.size === 1;
+              return (
+                <label
+                  key={section.id}
+                  className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 sm:min-h-0 ${
+                    last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-stripe'
+                  }`}
+                  title={last ? 'At least one report must stay visible' : undefined}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={last}
+                    onChange={() => onToggle(section.id)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-navy">{section.label}</span>
+                    <span className="block text-xs text-muted">{section.hint}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+      )}
+    </div>
+  );
+}
+
+const HEADLINE_TONES = {
+  good: 'border-success/30 bg-success-soft text-success',
+  warn: 'border-amber-300 bg-amber-50 text-amber-700',
+  alert: 'border-alert/30 bg-alert-soft text-alert',
+  neutral: 'border-navy/15 bg-stripe text-navy',
+};
+
+function Headline({ tone, Icon, value, label, caption }) {
+  return (
+    <div className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${HEADLINE_TONES[tone]}`}>
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        <p className="min-w-0">
+          <span className="block text-2xl font-bold leading-tight text-navy">{value}</span>
+          <span className="block text-sm text-ink">{label}</span>
+        </p>
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-muted">{caption}</p>
+    </div>
+  );
+}
+
+function Panel({ title, caption, children }) {
+  return (
+    <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm sm:p-5">
+      <h2 className="text-base font-bold text-navy">{title}</h2>
+      <p className="mb-4 mt-0.5 text-xs leading-relaxed text-muted">{caption}</p>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * On-time vs late, by week.
+ *
+ * Proper axes rather than floating bars: a labelled Y scale lets someone read
+ * a value off a column without a tooltip, and the counts sit on the segments
+ * themselves so the chart still answers "how many?" when printed in black and
+ * white. Colour alone never carries the meaning — every segment is labelled.
+ */
+function WeeklyBars({ weeks }) {
+  const peak = Math.max(1, ...weeks.map((w) => w.onTime + w.late));
+  const max = niceCeiling(peak);
+  const ticks = axisTicks(max);
+  const H = 200;
+
+  return (
+    <figure className="m-0">
+      <div className="flex">
+        {/* Y axis — counts, with a gridline per tick */}
+        <div className="relative w-8 shrink-0 sm:w-10" style={{ height: H }}>
+          {ticks.map((t) => (
+            <span
+              key={t}
+              // `bottom` positions the label's lower edge on the gridline, so
+              // it must move DOWN by half its height to sit centred on it.
+              className="absolute right-1.5 translate-y-1/2 text-[11px] tabular-nums text-muted"
+              style={{ bottom: `${(t / max) * 100}%` }}
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="relative border-b-2 border-l-2 border-navy/20" style={{ height: H }}>
+            {ticks.slice(1).map((t) => (
+              <span
+                key={t}
+                aria-hidden
+                className="absolute inset-x-0 border-t border-dashed border-navy/10"
+                style={{ bottom: `${(t / max) * 100}%` }}
+              />
+            ))}
+
+            <div className="absolute inset-0 flex items-end gap-1.5 px-1 sm:gap-3 sm:px-2">
+              {weeks.map((week) => {
+                const total = week.onTime + week.late;
+                return (
+                  <div key={week.key} className="flex h-full min-w-0 flex-1 flex-col justify-end">
+                    {total > 0 && (
+                      <p className="mb-0.5 text-center text-[11px] font-bold tabular-nums text-navy">
+                        {total}
+                      </p>
+                    )}
+                    <div
+                      className="flex w-full flex-col justify-end overflow-hidden rounded-t-sm"
+                      style={{ height: `${(total / max) * 100}%` }}
+                      role="img"
+                      aria-label={`Week of ${week.label}: ${week.onTime} filed on time, ${week.late} filed late`}
+                    >
+                      <Segment count={week.late} total={total} className="bg-amber-400 text-amber-950" />
+                      <Segment count={week.onTime} total={total} className="bg-success text-white" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* X axis — the month is printed only when it changes, so nine weeks
+              fit across a phone without truncating to "Ju…". */}
+          <div className="flex gap-1.5 px-1 pt-1.5 sm:gap-3 sm:px-2">
+            {weeks.map((week, i) => {
+              const [month, day] = week.label.split(' ');
+              const newMonth = i === 0 || month !== weeks[i - 1].label.split(' ')[0];
+              return (
+                <p key={week.key} className="min-w-0 flex-1 text-center text-[11px] text-muted">
+                  <span className={newMonth ? '' : 'hidden sm:inline'}>{month} </span>
+                  {day}
+                </p>
+              );
+            })}
+          </div>
+          <p className="mt-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted">
+            Week the inspection was due
+          </p>
+        </div>
+      </div>
+
+      <figcaption className="mt-3 flex flex-wrap items-center gap-4 border-t border-navy/10 pt-3 text-xs text-muted">
+        <Key className="bg-success">Filed on time</Key>
+        <Key className="bg-amber-400">Filed late</Key>
+        <span className="ml-auto">Vertical axis: number of inspections</span>
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * One coloured slice of a column. The count is printed inside once the slice is
+ * tall enough to hold it — below that it would overflow into its neighbour, and
+ * the total above the column plus the aria-label still carry the number.
+ */
+function Segment({ count, total, className }) {
+  if (!count) return null;
+  const share = count / total;
+  return (
+    <div
+      className={`flex w-full items-center justify-center overflow-hidden ${className}`}
+      style={{ flexGrow: count }}
+    >
+      {share > 0.18 && <span className="text-[10px] font-bold tabular-nums">{count}</span>}
+    </div>
+  );
+}
+
+/** Round the peak up to a friendly axis maximum (10, 20, 25, 50, 100 …). */
+function niceCeiling(peak) {
+  const magnitude = 10 ** Math.floor(Math.log10(peak));
+  for (const step of [1, 2, 2.5, 5, 10]) {
+    const candidate = step * magnitude;
+    if (candidate >= peak) return candidate;
+  }
+  return magnitude * 10;
+}
+
+function axisTicks(max) {
+  return [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
+}
+
+function Key({ className, children }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`h-2.5 w-2.5 rounded-sm ${className}`} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+function Empty({ children }) {
+  return <p className="py-8 text-center text-sm text-muted">{children}</p>;
 }
