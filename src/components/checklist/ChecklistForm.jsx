@@ -1,9 +1,11 @@
 import { AlertTriangle, Check, ChevronDown, Info, Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { missingRequiredHeaderKeys, unresolvedNoSatCodes } from '../../lib/checklistSchema.js';
+import { itemResolutionState } from '../../lib/incidentLifecycle.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
+import ResolutionChip from './ResolutionChip.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
 
 export default function ChecklistForm({
@@ -20,6 +22,8 @@ export default function ChecklistForm({
   onHeaderChange,
   onItemChange,
   onDeficienciesChange,
+  summary = {},
+  onSummaryChange,
   onSelectItem,
   onPhotoSelect,
   onPhotoClear,
@@ -29,7 +33,23 @@ export default function ChecklistForm({
   const unresolved = useMemo(() => unresolvedNoSatCodes(schema, items), [schema, items]);
   const missingHeader = useMemo(() => missingRequiredHeaderKeys(schema, header), [schema, header]);
   const sections = schema.sections ?? [];
+  const hasItems = sections.some((section) => (section.items ?? []).length > 0);
   const [open, setOpen] = useState(() => new Set([0]));
+
+  // Someone opening a submitted checklist is usually asking "was that defect
+  // dealt with?", so any section holding a linked incident starts open —
+  // otherwise the answer is hidden behind a collapsed heading.
+  useEffect(() => {
+    const codes = Object.keys(linkedIncidentByCode ?? {});
+    if (!codes.length) return;
+    setOpen((prev) => {
+      const next = new Set(prev);
+      sections.forEach((section, i) => {
+        if ((section.items ?? []).some((item) => codes.includes(item.code))) next.add(i);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+  }, [linkedIncidentByCode, sections]);
 
   useEffect(() => {
     if (!selectedCode) return;
@@ -53,6 +73,7 @@ export default function ChecklistForm({
   }, [sections, selectedCode]);
 
   const selectedRow = selectedCode ? items[selectedCode] : null;
+  const resolution = selectedCode ? itemResolutionState(linkedIncidentByCode[selectedCode]) : null;
   const inspectionLabel =
     schema.headerFields
       ?.find((field) => field.key === 'inspectionType')
@@ -77,8 +98,8 @@ export default function ChecklistForm({
 
   return (
     <div
-      className={`grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] ${
-        selectedItem ? 'max-xl:pb-[52vh]' : ''
+      className={`grid gap-5 ${hasItems ? 'xl:grid-cols-[minmax(0,1fr)_19rem]' : ''} ${
+        hasItems && selectedItem ? 'max-xl:pb-[52vh]' : ''
       }`}
     >
       <div className="space-y-4">
@@ -92,7 +113,12 @@ export default function ChecklistForm({
                 </p>
               )}
               {missingHeader.length > 0 && (
-                <p className="mt-1">Required header fields are empty: {missingHeader.join(', ')}</p>
+                <p className="mt-1">
+                  Required header fields are empty:{' '}
+                  {missingHeader
+                    .map((k) => schema.headerFields?.find((f) => f.key === k)?.label ?? k)
+                    .join(', ')}
+                </p>
               )}
             </div>
           </div>
@@ -156,7 +182,22 @@ export default function ChecklistForm({
           );
         })}
 
-        {schema.deficienciesField && (
+        {/* Everything the approved form prints after the item table: its free-text
+            areas and its ☐ option groups, in the order they appear on the page.
+            Annex K is nothing but these. */}
+        {(schema.summaryFields ?? []).map((field) => (
+          <SummaryBlock
+            key={field.key}
+            field={field}
+            value={summary?.[field.key] ?? ''}
+            disabled={readOnly}
+            onChange={(value) => onSummaryChange?.({ [field.key]: value })}
+          />
+        ))}
+
+        {/* Forms mapped before summaryFields existed (Annex D) keep the single
+            deficiency box they have always had. */}
+        {schema.deficienciesField && !(schema.summaryFields ?? []).length && (
           <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
             <label className="mb-2 block text-[13px] font-semibold uppercase tracking-wide text-navy">
               {schema.deficienciesField.label}
@@ -170,6 +211,16 @@ export default function ChecklistForm({
             />
           </section>
         )}
+
+        {(schema.preprintedStatements ?? []).map((block) => (
+          <section key={block.key} className="rounded-md border border-navy/15 bg-stripe p-4">
+            <p className="text-[13px] font-semibold uppercase tracking-wide text-navy">{block.label}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{block.text}</p>
+            <p className="mt-2 text-xs text-muted">
+              Pre-printed on the approved form — nothing is written into it.
+            </p>
+          </section>
+        ))}
 
         <div className="grid gap-4 md:grid-cols-2">
           {(schema.signoffs ?? []).map((def) => {
@@ -206,10 +257,12 @@ export default function ChecklistForm({
           appears when an item is tapped, so the panel is next to the thumb
           instead of below every section. Not modal — tapping another item
           swaps the sheet's contents without closing it. */}
+      {/* Annex K and Annex L have no item table, so there is nothing to select
+          and nothing to attach evidence to — the rail would just be an empty box. */}
       <aside
         className={`border-navy/15 bg-white xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-sm max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[52vh] max-xl:overflow-y-auto max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
-          selectedItem ? '' : 'max-xl:hidden'
-        }`}
+          hasItems ? '' : 'hidden'
+        } ${selectedItem ? '' : 'max-xl:hidden'}`}
       >
         {selectedItem ? (
           <div>
@@ -238,11 +291,21 @@ export default function ChecklistForm({
               </div>
             )}
             <div className="space-y-4 p-4">
-              {selectedRow?.result === 'no_sat' && (
+              {(selectedRow?.result === 'no_sat' || resolution) && (
                 <div>
-                  <p className="mb-2 text-sm font-medium text-navy">Create Incident from this item?</p>
-                  <p className="mb-3 text-xs text-alert">
-                    This item has been marked NO SAT. Please provide remarks and select an action.
+                  {resolution ? (
+                    <div className="mb-3">
+                      <p className="mb-1 text-sm font-medium text-navy">Deficiency status</p>
+                      <ResolutionChip resolution={resolution} />
+                      <p className="mt-2 text-xs text-muted">{resolution.detail}</p>
+                    </div>
+                  ) : (
+                    <p className="mb-3 text-xs text-alert">
+                      This item has been marked NO SAT. Please provide remarks and select an action.
+                    </p>
+                  )}
+                  <p className="mb-2 text-sm font-medium text-navy">
+                    {resolution ? 'Incident' : 'Create Incident from this item?'}
                   </p>
                   <button
                     type="button"
@@ -291,6 +354,61 @@ export default function ChecklistForm({
   );
 }
 
+/**
+ * One post-table block from the approved form: a free-text area, or a ☐ choice.
+ * `hint` is the completion guidance the form itself prints in brackets under the
+ * heading, so it is shown rather than paraphrased.
+ */
+function SummaryBlock({ field, value, disabled, onChange }) {
+  const isChoice = field.type === 'yes_no' || field.type === 'radio';
+  return (
+    <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
+      <label className="block text-[13px] font-semibold uppercase tracking-wide text-navy">
+        {field.label}
+      </label>
+      {field.hint && <p className="mt-1 text-xs italic text-muted">{field.hint}</p>}
+      {isChoice ? (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(field.options ?? []).map((opt) => {
+            const active = value === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                disabled={disabled}
+                aria-pressed={active}
+                onClick={() => onChange(active ? '' : opt.value)}
+                className={`min-h-11 rounded border px-3 text-sm font-semibold transition disabled:opacity-60 ${
+                  active
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-navy/20 bg-white text-navy hover:border-primary hover:text-primary'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          <textarea
+            rows={4}
+            disabled={disabled}
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value)}
+            className="mt-2 w-full rounded border border-navy/20 px-3 py-2 text-sm leading-relaxed"
+          />
+          {field.tightOnForm && (
+            <p className="mt-1 text-xs text-muted">
+              The approved form leaves only one line here — anything longer prints on a continuation page.
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 function Detail({ label, value }) {
   return (
     <div className="flex justify-between gap-3">
@@ -307,9 +425,19 @@ const YES_NO_OPTIONS = [
 
 function HeaderFields({ schema, header, disabled, onChange }) {
   const fields = schema.headerFields ?? [];
+  if (!fields.length) return null;
+  // Most forms head with a handful of short entries (Date, Time, Vehicle No.),
+  // which read best several to a row. A form that NUMBERS its header — Annex K's
+  // "1. PROJECT TITLE" through "10. BDCA Acceptance Date" — is a list of
+  // full-width answers on the approved page, and is rendered the same way here.
+  // A draft created before `headerLayout` existed carries a schema snapshot
+  // without it, so fall back to the structure itself: a header the form NUMBERS
+  // is a list of full-width answers, however old the snapshot is.
+  const numbered = fields.filter((f) => /^\s*\d+\./.test(f.label ?? '')).length >= 3;
+  const stacked = schema.headerLayout === 'stacked' || numbered;
   return (
     <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className={stacked ? 'grid gap-4' : 'grid gap-4 md:grid-cols-2 xl:grid-cols-4'}>
         {fields.map((field) => (
           <label key={field.key} className="block">
             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">

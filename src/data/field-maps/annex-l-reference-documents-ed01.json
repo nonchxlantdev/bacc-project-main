@@ -1,0 +1,35 @@
+{
+  "templateKey": "annex-l-reference-documents",
+  "templateVersion": "ed01",
+  "basePdf": "annex-l-reference-documents-ed01.pdf",
+  "documentFamily": "PMM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+  "mapping": {
+    "method": "hand-placed: single added notes box in measured blank space on page 2",
+    "measured": {
+      "lastPrintedRowBottom": 510.7,
+      "footerTop": 715.3,
+      "textLeft": 72.0,
+      "textRight": 528.1
+    },
+    "generated": false
+  },
+  "pageSize": {
+    "width": 612.12,
+    "height": 792.12
+  },
+  "fields": {
+    "review_notes": {
+      "page": 1,
+      "x": 72,
+      "y": 260.12,
+      "width": 456,
+      "height": 187.0,
+      "size": 9,
+      "wrap": true,
+      "maxLines": 16,
+      "overflow": "continuation"
+    }
+  }
+}

@@ -1,0 +1,213 @@
+{
+  "templateKey": "annex-i-grass-cutting-activity-log",
+  "templateVersion": "ed01",
+  "basePdf": "annex-i-grass-cutting-activity-log-ed01.pdf",
+  "documentFamily": "PMM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+  "mapping": {
+    "method": "automated: scripts/pmm-extract.mjs — glyph positions + raster rule detection",
+    "headerRules": [
+      65.9,
+      205.9,
+      533.5
+    ],
+    "generated": true
+  },
+  "pageSize": {
+    "width": 612.12,
+    "height": 792.12
+  },
+  "fields": {
+    "date": {
+      "page": 0,
+      "x": 211.9,
+      "y": 594.88,
+      "size": 9,
+      "width": 317.6
+    },
+    "time_start": {
+      "page": 0,
+      "x": 211.9,
+      "y": 575.32,
+      "size": 9,
+      "width": 317.6
+    },
+    "time_end": {
+      "page": 0,
+      "x": 211.9,
+      "y": 555.75,
+      "size": 9,
+      "width": 317.6
+    },
+    "area_scut_zones_and_description": {
+      "page": 0,
+      "x": 211.9,
+      "y": 525.75,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "equipment_used": {
+      "page": 0,
+      "x": 211.9,
+      "y": 507.27,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "tractor_operator_sname": {
+      "page": 0,
+      "x": 211.9,
+      "y": 487.72,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "pre_cut_grass_height_measured_cm": {
+      "page": 0,
+      "x": 211.9,
+      "y": 457.72,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "post_cut_grass_height_measured_cm": {
+      "page": 0,
+      "x": 211.9,
+      "y": 428.92,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "control_tower_notification_time": {
+      "page": 0,
+      "x": 211.9,
+      "y": 400.12,
+      "size": 9,
+      "width": 317.6
+    },
+    "movement_area_clearance_obtained.yes": {
+      "page": 0,
+      "x": 230,
+      "y": 385.23,
+      "type": "mark",
+      "size": 9
+    },
+    "movement_area_clearance_obtained.no": {
+      "page": 0,
+      "x": 259.4,
+      "y": 385.23,
+      "type": "mark",
+      "size": 9
+    },
+    "apron_supervisor_present_during_cutting.yes": {
+      "page": 0,
+      "x": 230,
+      "y": 356.43,
+      "type": "mark",
+      "size": 9
+    },
+    "apron_supervisor_present_during_cutting.no": {
+      "page": 0,
+      "x": 259.4,
+      "y": 356.43,
+      "type": "mark",
+      "size": 9
+    },
+    "fod_or_hazards_found_during_cutting": {
+      "page": 0,
+      "x": 211.9,
+      "y": 313.72,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "area_cleared_post_cut_clippings_removed_from_pavement_edges.yes": {
+      "page": 0,
+      "x": 230,
+      "y": 298.83,
+      "type": "mark",
+      "size": 9
+    },
+    "area_cleared_post_cut_clippings_removed_from_pavement_edges.no": {
+      "page": 0,
+      "x": 259.4,
+      "y": 298.83,
+      "type": "mark",
+      "size": 9
+    },
+    "notes_observations": {
+      "page": 0,
+      "x": 211.9,
+      "y": 256.12,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "apron_supervisor_signature": {
+      "page": 0,
+      "x": 72,
+      "y": 220.96,
+      "type": "image",
+      "width": 150.2,
+      "height": 22
+    },
+    "apron_supervisor_name": {
+      "page": 0,
+      "x": 72,
+      "y": 220.96,
+      "size": 7,
+      "width": 150.2,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "apron_supervisor_date": {
+      "page": 0,
+      "x": 96.1,
+      "y": 200.32,
+      "size": 8,
+      "width": 75.1
+    },
+    "om_signature": {
+      "page": 0,
+      "x": 306,
+      "y": 220.96,
+      "type": "image",
+      "width": 150.2,
+      "height": 22
+    },
+    "om_name": {
+      "page": 0,
+      "x": 306,
+      "y": 220.96,
+      "size": 7,
+      "width": 150.2,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "om_date": {
+      "page": 0,
+      "x": 330.1,
+      "y": 200.32,
+      "size": 8,
+      "width": 75.1
+    }
+  }
+}

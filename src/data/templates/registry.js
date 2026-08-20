@@ -53,6 +53,24 @@ import c19BlackoutTransferTestRecord from '../checklists/appendix-c19-blackout-t
 import c19BlackoutTransferTestRecordMap from '../field-maps/appendix-c19-blackout-transfer-test-record-ed01.json';
 import c20ConstructionAreaSignageLightingAndNavaidIn from '../checklists/appendix-c20-construction-area-signage-lighting-and-navaid-in.json';
 import c20ConstructionAreaSignageLightingAndNavaidInMap from '../field-maps/appendix-c20-construction-area-signage-lighting-and-navaid-in-ed01.json';
+import annexADailyRoutineInspection from '../checklists/annex-a-daily-routine-inspection-checklist.json';
+import annexADailyRoutineInspectionMap from '../field-maps/annex-a-daily-routine-inspection-checklist-ed01.json';
+import annexBOperationalControlInspection from '../checklists/annex-b-operational-control-inspection-checklist.json';
+import annexBOperationalControlInspectionMap from '../field-maps/annex-b-operational-control-inspection-checklist-ed01.json';
+import annexCTechnicalOversightFieldRecord from '../checklists/annex-c-technical-oversight-inspection-field-record.json';
+import annexCTechnicalOversightFieldRecordMap from '../field-maps/annex-c-technical-oversight-inspection-field-record-ed01.json';
+import annexEAerodromeSignInspection from '../checklists/annex-e-aerodrome-sign-inspection-checklist.json';
+import annexEAerodromeSignInspectionMap from '../field-maps/annex-e-aerodrome-sign-inspection-checklist-ed01.json';
+import annexFUnpavedAreaRoutineInspection from '../checklists/annex-f-unpaved-area-routine-inspection-checklist.json';
+import annexFUnpavedAreaRoutineInspectionMap from '../field-maps/annex-f-unpaved-area-routine-inspection-checklist-ed01.json';
+import annexIGrassCuttingActivityLog from '../checklists/annex-i-grass-cutting-activity-log.json';
+import annexIGrassCuttingActivityLogMap from '../field-maps/annex-i-grass-cutting-activity-log-ed01.json';
+import annexJConstructionAreaDailySafety from '../checklists/annex-j-construction-area-daily-safety-inspection-checkl.json';
+import annexJConstructionAreaDailySafetyMap from '../field-maps/annex-j-construction-area-daily-safety-inspection-checkl-ed01.json';
+import annexKConstructionSafetyPlan from '../checklists/annex-k-construction-safety-plan-minimum-format-template.json';
+import annexKConstructionSafetyPlanMap from '../field-maps/annex-k-construction-safety-plan-minimum-format-template-ed01.json';
+import annexLReferenceDocuments from '../checklists/annex-l-reference-documents.json';
+import annexLReferenceDocumentsMap from '../field-maps/annex-l-reference-documents-ed01.json';
 
 /**
  * VAES entries below are generated — run `node scripts/vaes-extract.mjs <pdf> src/data`
@@ -66,6 +84,7 @@ import c20ConstructionAreaSignageLightingAndNavaidInMap from '../field-maps/appe
 export const TEMPLATE_REGISTRY = [
   {
     key: 'annex-d-drainage',
+    group: 'Duty Manager',
     code: annexD.code,
     version: 'ed01',
     title: annexD.title,
@@ -84,6 +103,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c01-safety-board-and-equipment-inspection',
+    group: 'Crash Fire & Rescue',
     code: c01SafetyBoardAndEquipmentInspection.code,
     version: 'ed01',
     title: c01SafetyBoardAndEquipmentInspection.title,
@@ -101,6 +121,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c02-airfield-lighting-visual-inspection-airfield-ins',
+    group: 'Crash Fire & Rescue',
     code: c02AirfieldLightingVisualInspectionAirfieldIns.code,
     version: 'ed01',
     title: c02AirfieldLightingVisualInspectionAirfieldIns.title,
@@ -118,6 +139,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c03-runway-and-taxiway-light-fixture-pmi',
+    group: 'Crash Fire & Rescue',
     code: c03RunwayAndTaxiwayLightFixturePmi.code,
     version: 'ed01',
     title: c03RunwayAndTaxiwayLightFixturePmi.title,
@@ -135,6 +157,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c04-runway-taxiway-photometric-measurement',
+    group: 'Electrical Engineer',
     code: c04RunwayTaxiwayPhotometricMeasurement.code,
     version: 'ed01',
     title: c04RunwayTaxiwayPhotometricMeasurement.title,
@@ -152,6 +175,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c05-papi-inspection',
+    group: 'Crash Fire & Rescue',
     code: c05PapiInspection.code,
     version: 'ed01',
     title: c05PapiInspection.title,
@@ -169,6 +193,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c06-papi-alignment-verification',
+    group: 'Crash Fire & Rescue',
     code: c06PapiAlignmentVerification.code,
     version: 'ed01',
     title: c06PapiAlignmentVerification.title,
@@ -186,6 +211,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c07-illuminated-guidance-signs-inspection',
+    group: 'Crash Fire & Rescue',
     code: c07IlluminatedGuidanceSignsInspection.code,
     version: 'ed01',
     title: c07IlluminatedGuidanceSignsInspection.title,
@@ -203,6 +229,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c08-wind-cone',
+    group: 'Crash Fire & Rescue',
     code: c08WindCone.code,
     version: 'ed01',
     title: c08WindCone.title,
@@ -220,6 +247,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c09-obstruction-light-inspection',
+    group: 'Crash Fire & Rescue',
     code: c09ObstructionLightInspection.code,
     version: 'ed01',
     title: c09ObstructionLightInspection.title,
@@ -237,6 +265,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c10-obstruction-light-engineering-inspection',
+    group: 'Electrical Engineer',
     code: c10ObstructionLightEngineeringInspection.code,
     version: 'ed01',
     title: c10ObstructionLightEngineeringInspection.title,
@@ -254,6 +283,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c11-airport-lighting-vault-inspection',
+    group: 'Crash Fire & Rescue',
     code: c11AirportLightingVaultInspection.code,
     version: 'ed01',
     title: c11AirportLightingVaultInspection.title,
@@ -271,6 +301,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c12-airport-lighting-vault-inspection',
+    group: 'Crash Fire & Rescue',
     code: c12AirportLightingVaultInspection.code,
     version: 'ed01',
     title: c12AirportLightingVaultInspection.title,
@@ -288,6 +319,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c13-vault-insulation-resistance-test',
+    group: 'Crash Fire & Rescue',
     code: c13VaultInsulationResistanceTest.code,
     version: 'ed01',
     title: c13VaultInsulationResistanceTest.title,
@@ -305,6 +337,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c14-airport-lighting-vault-inspection',
+    group: 'Crash Fire & Rescue',
     code: c14AirportLightingVaultInspection.code,
     version: 'ed01',
     title: c14AirportLightingVaultInspection.title,
@@ -322,6 +355,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c15-vault-engineering-inspection',
+    group: 'Electrical Engineer',
     code: c15VaultEngineeringInspection.code,
     version: 'ed01',
     title: c15VaultEngineeringInspection.title,
@@ -339,6 +373,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c16-ccr-inspection-log',
+    group: 'Crash Fire & Rescue',
     code: c16CcrInspectionLog.code,
     version: 'ed01',
     title: c16CcrInspectionLog.title,
@@ -356,6 +391,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c17-ccr-inspection',
+    group: 'Crash Fire & Rescue',
     code: c17CcrInspection.code,
     version: 'ed01',
     title: c17CcrInspection.title,
@@ -373,6 +409,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c18-standby-generator-operational-check',
+    group: 'Crash Fire & Rescue',
     code: c18StandbyGeneratorOperationalCheck.code,
     version: 'ed01',
     title: c18StandbyGeneratorOperationalCheck.title,
@@ -390,6 +427,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c19-blackout-transfer-test-record',
+    group: 'Crash Fire & Rescue',
     code: c19BlackoutTransferTestRecord.code,
     version: 'ed01',
     title: c19BlackoutTransferTestRecord.title,
@@ -407,6 +445,7 @@ export const TEMPLATE_REGISTRY = [
   },
   {
     key: 'appendix-c20-construction-area-signage-lighting-and-navaid-in',
+    group: 'Crash Fire & Rescue',
     code: c20ConstructionAreaSignageLightingAndNavaidIn.code,
     version: 'ed01',
     title: c20ConstructionAreaSignageLightingAndNavaidIn.title,
@@ -422,6 +461,193 @@ export const TEMPLATE_REGISTRY = [
       { department: 'Engineering', role: 'electrical_tech', frequency: 'on_demand' },
     ],
   },
+  {
+    key: 'annex-a-daily-routine-inspection-checklist',
+    group: 'Crash Fire & Rescue',
+    code: annexADailyRoutineInspection.code,
+    version: 'ed01',
+    title: annexADailyRoutineInspection.title,
+    annexLabel: annexADailyRoutineInspection.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'daily',
+    schema: annexADailyRoutineInspection,
+    fieldMap: annexADailyRoutineInspectionMap,
+    assignments: [
+      { department: 'Operations', role: 'cfr', frequency: 'daily' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-b-operational-control-inspection-checklist',
+    group: 'Apron Supervisor',
+    code: annexBOperationalControlInspection.code,
+    version: 'ed01',
+    title: annexBOperationalControlInspection.title,
+    annexLabel: annexBOperationalControlInspection.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'weekly',
+    schema: annexBOperationalControlInspection,
+    fieldMap: annexBOperationalControlInspectionMap,
+    assignments: [
+      { department: 'Operations', role: 'apron_supervisor', frequency: 'weekly' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-c-technical-oversight-inspection-field-record',
+    group: 'Civil Engineer',
+    code: annexCTechnicalOversightFieldRecord.code,
+    version: 'ed01',
+    title: annexCTechnicalOversightFieldRecord.title,
+    annexLabel: annexCTechnicalOversightFieldRecord.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Engineering',
+    defaultFrequency: 'quarterly',
+    schema: annexCTechnicalOversightFieldRecord,
+    fieldMap: annexCTechnicalOversightFieldRecordMap,
+    assignments: [
+      { department: 'Engineering', role: 'cec', frequency: 'quarterly' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-e-aerodrome-sign-inspection-checklist',
+    group: 'Apron Supervisor',
+    code: annexEAerodromeSignInspection.code,
+    version: 'ed01',
+    title: annexEAerodromeSignInspection.title,
+    annexLabel: annexEAerodromeSignInspection.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'weekly',
+    schema: annexEAerodromeSignInspection,
+    fieldMap: annexEAerodromeSignInspectionMap,
+    assignments: [
+      { department: 'Operations', role: 'apron_supervisor', frequency: 'weekly' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-f-unpaved-area-routine-inspection-checklist',
+    group: 'Apron Supervisor',
+    code: annexFUnpavedAreaRoutineInspection.code,
+    version: 'ed01',
+    title: annexFUnpavedAreaRoutineInspection.title,
+    annexLabel: annexFUnpavedAreaRoutineInspection.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'weekly',
+    schema: annexFUnpavedAreaRoutineInspection,
+    fieldMap: annexFUnpavedAreaRoutineInspectionMap,
+    assignments: [
+      { department: 'Operations', role: 'apron_supervisor', frequency: 'weekly' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-i-grass-cutting-activity-log',
+    group: 'Operations Manager',
+    code: annexIGrassCuttingActivityLog.code,
+    version: 'ed01',
+    title: annexIGrassCuttingActivityLog.title,
+    annexLabel: annexIGrassCuttingActivityLog.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    schema: annexIGrassCuttingActivityLog,
+    fieldMap: annexIGrassCuttingActivityLogMap,
+    assignments: [
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-j-construction-area-daily-safety-inspection-checkl',
+    group: 'Apron Supervisor',
+    code: annexJConstructionAreaDailySafety.code,
+    version: 'ed01',
+    title: annexJConstructionAreaDailySafety.title,
+    annexLabel: annexJConstructionAreaDailySafety.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'daily',
+    schema: annexJConstructionAreaDailySafety,
+    fieldMap: annexJConstructionAreaDailySafetyMap,
+    assignments: [
+      { department: 'Operations', role: 'apron_supervisor', frequency: 'daily' },
+      { department: 'Operations', role: 'om', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-k-construction-safety-plan-minimum-format-template',
+    group: 'General Checklist',
+    code: annexKConstructionSafetyPlan.code,
+    version: 'ed01',
+    title: annexKConstructionSafetyPlan.title,
+    annexLabel: annexKConstructionSafetyPlan.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Engineering',
+    defaultFrequency: 'on_demand',
+    documentType: 'plan',
+    schema: annexKConstructionSafetyPlan,
+    fieldMap: annexKConstructionSafetyPlanMap,
+    assignments: [
+      { department: 'Engineering', role: 'cec', frequency: 'on_demand' },
+      { department: 'Operations', role: 'coo', frequency: 'on_demand' },
+    ],
+  },
+  {
+    key: 'annex-l-reference-documents',
+    group: 'General Checklist',
+    code: annexLReferenceDocuments.code,
+    version: 'ed01',
+    title: annexLReferenceDocuments.title,
+    annexLabel: annexLReferenceDocuments.annexLabel,
+    family: 'PMM',
+    manual: 'Maintenance Paved and Unpaved Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'reference',
+    schema: annexLReferenceDocuments,
+    fieldMap: annexLReferenceDocumentsMap,
+    assignments: [{ department: 'Operations', role: 'om', frequency: 'on_demand' }],
+  },
+];
+
+/**
+ * PMM Annexes A–J below are generated — run
+ * `node scripts/pmm-extract.mjs <pdf> src/data` to add or refresh one.
+ *
+ * Their `role` values are taken from the owner printed on each approved form
+ * (CFR, Apron Supervisor, CEC, OM). `cfr` and `apron_supervisor` have no seeded
+ * user yet, so today only OM/COO/admin can open those forms — the accounts are
+ * a separate decision, not a mapping defect.
+ */
+
+
+/**
+ * How the approved forms are filed in BACC's own document set — the folder a
+ * form arrived in is the team that owns it, so the catalogue groups by this
+ * rather than by the manual it belongs to.
+ */
+export const GROUP_ORDER = [
+  'Apron Supervisor',
+  'Civil Engineer',
+  'Crash Fire & Rescue',
+  'Duty Manager',
+  'Electrical Engineer',
+  'General Checklist',
+  'Operations Manager',
 ];
 
 /** Human labels for the two approved document families. */
@@ -443,24 +669,6 @@ export const FREQUENCY_LABELS = {
 
 export function getRegistryEntry(key) {
   return TEMPLATE_REGISTRY.find((t) => t.key === key) ?? null;
-}
-
-export function registryByCode(code) {
-  return TEMPLATE_REGISTRY.find((t) => t.code === code) ?? null;
-}
-
-/** Every department that owns at least one approved form. */
-export function registryDepartments() {
-  return [...new Set(TEMPLATE_REGISTRY.map((t) => t.department))].sort();
-}
-
-/** Every cadence in use, for catalogue filters. */
-export function registryFrequencies() {
-  const set = new Set();
-  for (const t of TEMPLATE_REGISTRY) {
-    for (const a of t.assignments) set.add(a.frequency);
-  }
-  return [...set];
 }
 
 /**

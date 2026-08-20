@@ -1,0 +1,683 @@
+{
+  "templateKey": "annex-e-aerodrome-sign-inspection-checklist",
+  "templateVersion": "ed01",
+  "basePdf": "annex-e-aerodrome-sign-inspection-checklist-ed01.pdf",
+  "documentFamily": "PMM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+  "mapping": {
+    "method": "automated: scripts/pmm-extract.mjs — glyph positions + raster rule detection",
+    "headerRules": [
+      65.9,
+      205.9,
+      533.5
+    ],
+    "generated": true
+  },
+  "pageSize": {
+    "width": 612.12,
+    "height": 792.12
+  },
+  "fields": {
+    "date": {
+      "page": 0,
+      "x": 211.9,
+      "y": 585.6,
+      "size": 9,
+      "width": 317.6
+    },
+    "time": {
+      "page": 0,
+      "x": 211.9,
+      "y": 566.04,
+      "size": 9,
+      "width": 317.6
+    },
+    "conducted_by_name_position": {
+      "page": 0,
+      "x": 211.9,
+      "y": 536.01,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "inspection_includes_night_illumination_check.yes": {
+      "page": 0,
+      "x": 230.1,
+      "y": 516.16,
+      "type": "mark",
+      "size": 9
+    },
+    "inspection_includes_night_illumination_check.no": {
+      "page": 0,
+      "x": 261.9,
+      "y": 516.16,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-01.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 442.96,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-01.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 442.96,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-01.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 443.96,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-02.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 414.16,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-02.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 414.16,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-02.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 415.16,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-03.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 385.36,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-03.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 385.36,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-03.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 386.36,
+      "width": 78.1,
+      "height": 28.82,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-04.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 356.54,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-04.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 356.54,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-04.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 357.54,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-05.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 336.5,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-05.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 336.5,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-05.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 337.5,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-06.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 316.46,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-06.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 316.46,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-06.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 317.46,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-07.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 287.66,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-07.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 287.66,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-07.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 288.66,
+      "width": 78.1,
+      "height": 73.2,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-08.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 214.46,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-08.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 214.46,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-08.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 215.46,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-09.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 194.42,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-09.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 194.42,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-09.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 195.42,
+      "width": 78.1,
+      "height": 20.19,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-10.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 174.23,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-10.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 174.23,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-10.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 175.23,
+      "width": 78.1,
+      "height": 64.44,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-12.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 109.79,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-12.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 109.79,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-12.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 110.79,
+      "width": 78.1,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-13.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 680.11,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-13.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 680.11,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-13.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 681.11,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-14.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 651.31,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-14.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 651.31,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-14.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 652.31,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-16.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 622.51,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-16.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 622.51,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-16.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 623.51,
+      "width": 78.1,
+      "height": 64.44,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-17.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 558.07,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-17.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 558.07,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-17.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 559.07,
+      "width": 78.1,
+      "height": 28.83,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-18.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 529.24,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-18.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 529.24,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-18.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 530.24,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-19.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 509.2,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-19.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 509.2,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-19.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 510.2,
+      "width": 78.1,
+      "height": 64.56,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-20.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 444.64,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-20.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 444.64,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-20.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 445.64,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "SG-21.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 415.84,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-21.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 415.84,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-21.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 416.84,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-22.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 395.8,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-22.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 395.8,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-22.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 396.8,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-23.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 375.76,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-23.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 375.76,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-23.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 376.76,
+      "width": 78.1,
+      "height": 20.06,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "SG-24.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 355.7,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-24.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 355.7,
+      "type": "mark",
+      "size": 9
+    },
+    "SG-24.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 356.7,
+      "width": 78.1,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "electrical_malfunctions_noted_list_sign_": {
+      "page": 1,
+      "x": 72,
+      "y": 294.87,
+      "width": 457.5,
+      "height": 199.3,
+      "size": 9,
+      "wrap": true,
+      "maxLines": 17,
+      "overflow": "continuation"
+    },
+    "physical_deficiencies_noted_describe_sig": {
+      "page": 1,
+      "x": 72,
+      "y": 75.84,
+      "width": 457.5,
+      "height": 9.7,
+      "size": 6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "inspector_signature": {
+      "page": 2,
+      "x": 72,
+      "y": 451.41,
+      "type": "image",
+      "width": 150,
+      "height": 22
+    },
+    "inspector_name": {
+      "page": 2,
+      "x": 72,
+      "y": 451.41,
+      "size": 7,
+      "width": 150,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "inspector_date": {
+      "page": 2,
+      "x": 96.1,
+      "y": 430.65,
+      "size": 8,
+      "width": 75
+    },
+    "om_signature": {
+      "page": 2,
+      "x": 306.1,
+      "y": 451.41,
+      "type": "image",
+      "width": 150,
+      "height": 22
+    },
+    "om_name": {
+      "page": 2,
+      "x": 306.1,
+      "y": 451.41,
+      "size": 7,
+      "width": 150,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "om_date": {
+      "page": 2,
+      "x": 330.1,
+      "y": 420.33,
+      "size": 8,
+      "width": 75
+    }
+  }
+}

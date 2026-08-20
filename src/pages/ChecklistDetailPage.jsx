@@ -16,6 +16,7 @@ import {
   createCorrection,
   getSubmission,
   persistSubmission,
+  refreshDraftTemplate,
   uploadPhoto,
   acknowledgeSubmission,
 } from '../lib/submissions.js';
@@ -83,13 +84,22 @@ export default function ChecklistDetailPage() {
         if (!cancelled) setLoadError('Checklist not found.');
         return;
       }
+      // A submission pins the template it was filled against, and BACC §11 means
+      // a SUBMITTED record keeps that snapshot forever. A draft has not been
+      // submitted, so it should follow the current approved template — otherwise
+      // a draft started before a template fix is stuck with the old mapping and
+      // exports differently from an identical draft started today.
+      const refreshed = await refreshDraftTemplate(existing);
       if (!cancelled) {
-        setRecord(existing);
+        setRecord(refreshed);
+        if (refreshed !== existing) persistSubmission(refreshed).catch(() => {});
+        // Keep the whole incident, not just its id: the checklist needs to show
+        // whether the deficiency it raised has since been cleared.
         const linked = {};
         const incidents = await listIncidents();
         for (const inc of incidents) {
           if (inc.submission_id === existing.id && inc.source_item_code) {
-            linked[inc.source_item_code] = inc.id;
+            linked[inc.source_item_code] = inc;
           }
         }
         setItemIncidents(linked);
@@ -513,6 +523,10 @@ export default function ChecklistDetailPage() {
           }))
         }
         onDeficienciesChange={(value) => patchRecord((prev) => ({ ...prev, deficiencies_summary: value }))}
+        summary={record.summary ?? {}}
+        onSummaryChange={(patch) =>
+          patchRecord((prev) => ({ ...prev, summary: { ...(prev.summary ?? {}), ...patch } }))
+        }
         onSelectItem={setSelectedCode}
         onPhotoSelect={handlePhotoSelect}
         onPhotoClear={(code) =>
@@ -523,7 +537,7 @@ export default function ChecklistDetailPage() {
         }
         onCreateIncident={(item, row) => {
           if (itemIncidents[item.code]) {
-            navigate(`/incidents/${itemIncidents[item.code]}`);
+            navigate(`/incidents/${itemIncidents[item.code].id}`);
             return;
           }
           setIncidentModal({ item, row });

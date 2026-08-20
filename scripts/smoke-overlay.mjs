@@ -1,59 +1,64 @@
 /**
- * Overlay an empty (and a sample filled) submission onto the approved Annex D PDF.
- * Used by `npm run verify:pdf` so the harness always has a generated artifact.
+ * Layer 1 of the fidelity gate: base integrity.
+ *
+ * Runs each overlay writer over its approved base PDF with NOTHING to stamp,
+ * and writes the result to tmp-pdf-diff. A blank overlay must come out
+ * byte-for-byte indistinguishable from the approved form once rasterised — if
+ * pdf-lib re-encodes a font, drops an XObject or shifts the page box, this is
+ * where it shows up, before any coordinate work is blamed for it.
+ *
+ * `verify-pdf.mjs` then diffs each output against its source with pdf-diff.
+ * Run standalone with:  node scripts/smoke-overlay.mjs
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { overlayChecklistPdf, submissionToOverlayValues } from '../server/overlayChecklistPdf.js';
+import { overlayChecklistPdf } from '../server/overlayChecklistPdf.js';
+import { overlayRegisterPdf } from '../server/overlayRegisterPdf.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const fieldMap = JSON.parse(
-  readFileSync(path.join(root, 'src/data/field-maps/annex-d-drainage-ed01.json'), 'utf8'),
-);
-const basePdfBytes = readFileSync(path.join(root, 'src/assets/forms', fieldMap.basePdf));
 const outDir = path.join(root, 'tmp-pdf-diff');
-mkdirSync(outDir, { recursive: true });
 
-const blank = await overlayChecklistPdf({
-  basePdfBytes,
-  fieldMap,
-  values: {},
-  images: {},
-  meta: { formCode: fieldMap.templateKey, templateVersion: fieldMap.templateVersion },
-});
-writeFileSync(path.join(outDir, 'overlay-blank.pdf'), blank);
+const read = (rel) => readFileSync(path.join(root, rel));
+const json = (rel) => JSON.parse(readFileSync(path.join(root, rel), 'utf8'));
 
-const sampleItems = {};
-for (const key of Object.keys(fieldMap.fields)) {
-  const match = key.match(/^(DR-\d+)\.sat$/);
-  if (match) sampleItems[match[1]] = { result: 'sat', remarks: '' };
-}
-sampleItems['DR-01'] = { result: 'no_sat', remarks: 'Debris at runway 07 swale — continuation test.' };
-
-const sample = await overlayChecklistPdf({
-  basePdfBytes,
-  fieldMap,
-  values: submissionToOverlayValues({
-    header: {
-      date: '2026-08-15',
-      inspectionType: 'monthly_routine',
-      conductedBy: 'Local Inspector / Airside Inspector',
-      rainfallMm: '12',
-    },
-    items: sampleItems,
-    deficiencies_summary: 'See DR-01 remarks.',
-    signoffs: [],
-    id: 'smoke-sample',
-    template_code: 'PGIA-PMM-F04',
-  }),
-  images: {},
-  meta: {
-    formCode: 'PGIA-PMM-F04',
-    templateVersion: 'ed01',
-    submissionId: 'smoke-sample',
+/** Each blank we produce, and the approved form it must match. */
+export const BASE_INTEGRITY_CASES = [
+  {
+    out: 'overlay-blank.pdf',
+    approved: 'src/assets/forms/annex-d-drainage-ed01.pdf',
+    map: 'src/data/field-maps/annex-d-drainage-ed01.json',
+    kind: 'checklist',
   },
-});
-writeFileSync(path.join(outDir, 'overlay-sample.pdf'), sample);
+  {
+    out: 'overlay-h-blank.pdf',
+    approved: 'src/assets/forms/annex-h-work-order-ed01.pdf',
+    map: 'src/data/field-maps/annex-h-work-order-ed01.json',
+    kind: 'checklist',
+  },
+  {
+    out: 'overlay-g-blank.pdf',
+    approved: 'src/assets/forms/annex-g-noc-register-ed01.pdf',
+    map: 'src/data/field-maps/annex-g-noc-register-ed01.json',
+    kind: 'register',
+  },
+];
 
-console.log(`Wrote ${path.join(outDir, 'overlay-blank.pdf')} and overlay-sample.pdf`);
+export async function buildBlanks() {
+  mkdirSync(outDir, { recursive: true });
+  for (const item of BASE_INTEGRITY_CASES) {
+    const basePdfBytes = read(item.approved);
+    const fieldMap = json(item.map);
+    const bytes =
+      item.kind === 'register'
+        ? await overlayRegisterPdf({ basePdfBytes, fieldMap, rows: [] })
+        : await overlayChecklistPdf({ basePdfBytes, fieldMap, values: {}, images: {} });
+    writeFileSync(path.join(outDir, item.out), bytes);
+    console.log(`blank overlay written: ${item.out}`);
+  }
+  return BASE_INTEGRITY_CASES;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await buildBlanks();
+}

@@ -1,0 +1,1016 @@
+{
+  "templateKey": "annex-f-unpaved-area-routine-inspection-checklist",
+  "templateVersion": "ed01",
+  "basePdf": "annex-f-unpaved-area-routine-inspection-checklist-ed01.pdf",
+  "documentFamily": "PMM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+  "mapping": {
+    "method": "automated: scripts/pmm-extract.mjs — glyph positions + raster rule detection",
+    "headerRules": [
+      65.9,
+      205.9,
+      533.5
+    ],
+    "generated": true
+  },
+  "pageSize": {
+    "width": 612.12,
+    "height": 792.12
+  },
+  "fields": {
+    "date": {
+      "page": 0,
+      "x": 211.9,
+      "y": 595.92,
+      "size": 9,
+      "width": 317.6
+    },
+    "time": {
+      "page": 0,
+      "x": 211.9,
+      "y": 576.36,
+      "size": 9,
+      "width": 317.6
+    },
+    "conducted_by_name_position": {
+      "page": 0,
+      "x": 211.9,
+      "y": 546.36,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "inspection_type.routine_weekly_other": {
+      "page": 0,
+      "x": 277.7,
+      "y": 526.6,
+      "type": "mark",
+      "size": 9
+    },
+    "inspection_type.post_rain": {
+      "page": 0,
+      "x": 332.9,
+      "y": 526.6,
+      "type": "mark",
+      "size": 9
+    },
+    "inspection_type.post_excursion": {
+      "page": 0,
+      "x": 411.8,
+      "y": 526.6,
+      "type": "mark",
+      "size": 9
+    },
+    "inspection_type.pre_post_grass_cut": {
+      "page": 0,
+      "x": 510.1,
+      "y": 526.6,
+      "type": "mark",
+      "size": 9
+    },
+    "inspection_type_other": {
+      "page": 0,
+      "x": 239.7,
+      "y": 515.97,
+      "size": 8,
+      "width": 60,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "recent_rainfall_mm_if_applicable": {
+      "page": 0,
+      "x": 211.9,
+      "y": 487.17,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "weather": {
+      "page": 0,
+      "x": 211.9,
+      "y": 468.69,
+      "size": 9,
+      "width": 317.6,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-01.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 403.36,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-01.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 403.36,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-01.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 404.36,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-02.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 374.56,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-02.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 374.56,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-02.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 375.56,
+      "width": 78.1,
+      "height": 20.18,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-03.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 354.38,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-03.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 354.38,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-03.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 355.38,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-04.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 325.58,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-04.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 325.58,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-04.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 326.58,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-05.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 305.54,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-05.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 305.54,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-05.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 306.54,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-06.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 276.74,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-06.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 276.74,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-06.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 277.74,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-07.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 247.94,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-07.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 247.94,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-07.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 248.94,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-08.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 219.14,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-08.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 219.14,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-08.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 220.14,
+      "width": 78.1,
+      "height": 73.23,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-09.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 145.91,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-09.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 145.91,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-09.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 146.91,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-10.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 125.87,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-10.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 125.87,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-10.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 126.87,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-11.sat": {
+      "page": 0,
+      "x": 392.2,
+      "y": 97.08,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-11.no_sat": {
+      "page": 0,
+      "x": 428.2,
+      "y": 97.08,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-11.remarks": {
+      "page": 0,
+      "x": 452.4,
+      "y": 98.08,
+      "width": 78.1,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-12.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 680.11,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-12.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 680.11,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-12.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 681.11,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-13.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 651.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-13.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 651.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-13.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 652.31,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-14.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 631.27,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-14.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 631.27,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-14.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 632.27,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-15.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 602.47,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-15.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 602.47,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-15.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 603.47,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-16.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 582.43,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-16.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 582.43,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-16.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 583.43,
+      "width": 78.1,
+      "height": 73.23,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-17.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 509.2,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-17.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 509.2,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-17.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 510.2,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-18.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 480.4,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-18.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 480.4,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-18.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 481.4,
+      "width": 78.1,
+      "height": 20.16,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-19.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 460.24,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-19.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 460.24,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-19.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 461.24,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-20.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 431.44,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-20.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 431.44,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-20.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 432.44,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-22.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 402.64,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-22.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 402.64,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-22.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 403.64,
+      "width": 78.1,
+      "height": 73.22,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-23.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 329.42,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-23.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 329.42,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-23.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 330.42,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-24.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 300.62,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-24.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 300.62,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-24.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 301.62,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-25.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 280.58,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-25.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 280.58,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-25.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 281.58,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-26.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 251.78,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-26.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 251.78,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-26.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 252.78,
+      "width": 78.1,
+      "height": 64.47,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-27.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 187.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-27.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 187.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-27.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 188.31,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-28.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 167.27,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-28.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 167.27,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-28.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 168.27,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-29.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 138.47,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-29.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 138.47,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-29.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 139.47,
+      "width": 78.1,
+      "height": 20.16,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-30.sat": {
+      "page": 1,
+      "x": 392.2,
+      "y": 118.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-30.no_sat": {
+      "page": 1,
+      "x": 428.2,
+      "y": 118.31,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-30.remarks": {
+      "page": 1,
+      "x": 452.4,
+      "y": 119.31,
+      "width": 78.1,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-31.sat": {
+      "page": 2,
+      "x": 392.2,
+      "y": 661.63,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-31.no_sat": {
+      "page": 2,
+      "x": 428.2,
+      "y": 661.63,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-31.remarks": {
+      "page": 2,
+      "x": 452.4,
+      "y": 662.63,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-32.sat": {
+      "page": 2,
+      "x": 392.2,
+      "y": 632.83,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-32.no_sat": {
+      "page": 2,
+      "x": 428.2,
+      "y": 632.83,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-32.remarks": {
+      "page": 2,
+      "x": 452.4,
+      "y": 633.83,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-33.sat": {
+      "page": 2,
+      "x": 392.2,
+      "y": 604.03,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-33.no_sat": {
+      "page": 2,
+      "x": 428.2,
+      "y": 604.03,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-33.remarks": {
+      "page": 2,
+      "x": 452.4,
+      "y": 605.03,
+      "width": 78.1,
+      "height": 28.8,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 2,
+      "overflow": "continuation"
+    },
+    "UA-34.sat": {
+      "page": 2,
+      "x": 392.2,
+      "y": 575.23,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-34.no_sat": {
+      "page": 2,
+      "x": 428.2,
+      "y": 575.23,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-34.remarks": {
+      "page": 2,
+      "x": 452.4,
+      "y": 576.23,
+      "width": 78.1,
+      "height": 20.04,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "UA-35.sat": {
+      "page": 2,
+      "x": 392.2,
+      "y": 555.19,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-35.no_sat": {
+      "page": 2,
+      "x": 428.2,
+      "y": 555.19,
+      "type": "mark",
+      "size": 9
+    },
+    "UA-35.remarks": {
+      "page": 2,
+      "x": 452.4,
+      "y": 556.19,
+      "width": 78.1,
+      "height": 20.76,
+      "size": 7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "deficiencies_and_observations_describe_z": {
+      "page": 2,
+      "x": 72,
+      "y": 494.45,
+      "width": 457.5,
+      "height": 140.8,
+      "size": 9,
+      "wrap": true,
+      "maxLines": 12,
+      "overflow": "continuation"
+    },
+    "inspector_signature": {
+      "page": 2,
+      "x": 72,
+      "y": 357.31,
+      "type": "image",
+      "width": 150,
+      "height": 22
+    },
+    "inspector_name": {
+      "page": 2,
+      "x": 72,
+      "y": 357.31,
+      "size": 7,
+      "width": 150,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "inspector_date": {
+      "page": 2,
+      "x": 96.1,
+      "y": 336.55,
+      "size": 8,
+      "width": 75
+    },
+    "om_signature": {
+      "page": 2,
+      "x": 306.1,
+      "y": 357.31,
+      "type": "image",
+      "width": 150,
+      "height": 22
+    },
+    "om_name": {
+      "page": 2,
+      "x": 306.1,
+      "y": 357.31,
+      "size": 7,
+      "width": 150,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "om_date": {
+      "page": 2,
+      "x": 330.1,
+      "y": 326.23,
+      "size": 8,
+      "width": 75
+    }
+  }
+}

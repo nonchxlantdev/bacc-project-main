@@ -1,0 +1,460 @@
+{
+  "code": "PGIA-PMM-F02",
+  "annexLabel": "Annex B",
+  "documentFamily": "PMM",
+  "title": "Operational Control Inspection Checklist",
+  "description": "Completed by OM or Apron Supervisor: minimum weekly, and after any triggering event.",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "weekly",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "date"
+    },
+    {
+      "key": "timeStart",
+      "label": "Time Start",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_start"
+    },
+    {
+      "key": "timeEnd",
+      "label": "Time End",
+      "type": "time",
+      "required": true,
+      "mapKey": "time_end"
+    },
+    {
+      "key": "conductedByNamePosition",
+      "label": "Conducted by (Name / Position)",
+      "type": "text",
+      "required": false,
+      "mapKey": "conducted_by_name_position"
+    },
+    {
+      "key": "vehicleUsed",
+      "label": "Vehicle Used",
+      "type": "text",
+      "required": false,
+      "mapKey": "vehicle_used"
+    },
+    {
+      "key": "inspectionType",
+      "label": "Inspection Type",
+      "type": "radio",
+      "required": true,
+      "markPrefix": "inspection_type",
+      "options": [
+        {
+          "value": "weekly",
+          "label": "Weekly"
+        },
+        {
+          "value": "post_rain",
+          "label": "post-rain"
+        },
+        {
+          "value": "post_incident",
+          "label": "post-incident"
+        },
+        {
+          "value": "post_excursion",
+          "label": "post-excursion"
+        }
+      ]
+    },
+    {
+      "key": "inspectionTypeOther",
+      "label": "Inspection Type — other",
+      "type": "text",
+      "required": false,
+      "mapKey": "inspection_type_other"
+    },
+    {
+      "key": "recentRainfallMmIfApplicable",
+      "label": "Recent Rainfall (mm, if applicable)",
+      "type": "text",
+      "required": false,
+      "mapKey": "recent_rainfall_mm_if_applicable"
+    },
+    {
+      "key": "weatherVisibility",
+      "label": "Weather / Visibility",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather_visibility"
+    }
+  ],
+  "sections": [
+    {
+      "title": "SECTION 1 — RUNWAY PAVEMENT SURFACE (ASPHALT)",
+      "items": [
+        {
+          "code": "RW-01",
+          "text": "No potholes or bowl-shaped depressions anywhere on runway surface"
+        },
+        {
+          "code": "RW-02",
+          "text": "No cracking producing loose asphalt or aggregate (FOD hazard)"
+        },
+        {
+          "code": "RW-03",
+          "text": "Widths of all cracks ≥ 3 mm measured and recorded in Remarks column"
+        },
+        {
+          "code": "RW-04",
+          "text": "No alligator/fatigue cracking pattern covering > 0.5 m²"
+        },
+        {
+          "code": "RW-05",
+          "text": "No rutting deeper than 12 mm (measure with 1.2 m straightedge if suspected)"
+        },
+        {
+          "code": "RW-06",
+          "text": "No depressions collecting standing water (identified by wet patches after rain)"
+        },
+        {
+          "code": "RW-07",
+          "text": "No shoving or plastic deformation visible in runway surface"
+        },
+        {
+          "code": "RW-08",
+          "text": "No raveling (loose aggregate at surface) creating FOD hazard"
+        },
+        {
+          "code": "RW-09",
+          "text": "Rubber deposits in touchdown zones — rated: None / Low / Medium / High"
+        },
+        {
+          "code": "RW-10",
+          "text": "Runway shoulder edges at correct elevation (no drop-off > 50 mm)"
+        },
+        {
+          "code": "RW-11",
+          "text": "Runway drainage gutters (both edges) free of sediment and blockage"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 2 — TAXIWAY SURFACES (CONCRETE) Alpha, Bravo, Charlie.",
+      "items": [
+        {
+          "code": "TW-01",
+          "text": "No potholes or loose slab fragments on any taxiway"
+        },
+        {
+          "code": "TW-02",
+          "text": "No joint spalling with loose concrete any loose pieces collected"
+        },
+        {
+          "code": "TW-03",
+          "text": "Joint sealant condition acceptable (no voids > 6 mm; sealant not extruded above slab)"
+        },
+        {
+          "code": "TW-04",
+          "text": "No transverse or longitudinal cracking > 12 mm wide on any taxiway"
+        },
+        {
+          "code": "TW-05",
+          "text": "No corner breaks on any concrete slabs"
+        },
+        {
+          "code": "TW-06",
+          "text": "No pumping visible (water/fines ejected at joints under traffic)"
+        },
+        {
+          "code": "TW-07",
+          "text": "No differential settlement between adjacent slabs > 6 mm"
+        },
+        {
+          "code": "TW-08",
+          "text": "Taxiway Alpha shoulders (7.5 m each side) intact and at correct elevation"
+        },
+        {
+          "code": "TW-09",
+          "text": "Drainage gutters adjacent to all taxiways clear and functional"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 3 — TURN PADS",
+      "items": [
+        {
+          "code": "TP-01",
+          "text": "Turn pads at both runway ends surface free of potholes and loose material"
+        },
+        {
+          "code": "TP-02",
+          "text": "Turn pad joint seals acceptable"
+        },
+        {
+          "code": "TP-03",
+          "text": "Turn pad drainage functional"
+        },
+        {
+          "code": "TP-04",
+          "text": "Turn pad surrounds free of objects > 7.5 cm height"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 4 — AIRCRAFT PARKING APRON (CONCRETE)",
+      "items": [
+        {
+          "code": "AP-01",
+          "text": "No spalled concrete with loose FOD on apron"
+        },
+        {
+          "code": "AP-02",
+          "text": "No cracked or lifted slab corners"
+        },
+        {
+          "code": "AP-03",
+          "text": "All expansion and contraction joints sealed no open voids > 6 mm"
+        },
+        {
+          "code": "AP-04",
+          "text": "No differential slab settlement > 6 mm"
+        },
+        {
+          "code": "AP-05",
+          "text": "No fuel or oil contamination degrading surface"
+        },
+        {
+          "code": "AP-06",
+          "text": "Apron drainage (channels, drains, sumps) fully clear and functional"
+        },
+        {
+          "code": "AP-07",
+          "text": "No standing water on any part of apron 30 min after end of rainfall"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 5 — RESA AND RUNWAY STRIP",
+      "items": [
+        {
+          "code": "RS-01",
+          "text": "RESA (Threshold 07 end) no obstacles > 7.5 cm, level surface, no standing water"
+        },
+        {
+          "code": "RS-02",
+          "text": "RESA (Threshold 25 end) no obstacles > 7.5 cm, level surface, no standing water"
+        },
+        {
+          "code": "RS-03",
+          "text": "Runway strip grass areas grass within 20–38 cm range"
+        },
+        {
+          "code": "RS-04",
+          "text": "Runway strip no objects exceeding 7.5 cm height in cleared area"
+        },
+        {
+          "code": "RS-05",
+          "text": "Runway strip unpaved areas no significant saturated or flooded zones"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 6 — PAVEMENT MARKINGS (VISUAL CONDITION)",
+      "items": [
+        {
+          "code": "MK-01",
+          "text": "Runway centerline continuous, white, full runway length, no major gaps"
+        },
+        {
+          "code": "MK-02",
+          "text": "Runway threshold markings Threshold 07 all bars present, white, visible"
+        },
+        {
+          "code": "MK-03",
+          "text": "Runway threshold markings Threshold 25 all bars present, white, visible"
+        },
+        {
+          "code": "MK-04",
+          "text": "Runway designation '07’ legible, correct numerals"
+        },
+        {
+          "code": "MK-05",
+          "text": "Runway designation '25’ legible, correct numerals"
+        },
+        {
+          "code": "MK-06",
+          "text": "Runway aiming point markings visible at both ends"
+        },
+        {
+          "code": "MK-07",
+          "text": "Runway touchdown zone markings visible at both ends"
+        },
+        {
+          "code": "MK-08",
+          "text": "Holding position markings (all runway/taxiway intersections) yellow, full pattern, visible"
+        },
+        {
+          "code": "MK-09",
+          "text": "Taxiway Alpha centerline yellow, continuous, full length"
+        },
+        {
+          "code": "MK-10",
+          "text": "Taxiway Bravo centerline yellow, continuous"
+        },
+        {
+          "code": "MK-11",
+          "text": "Taxiway Charlie centerline yellow, continuous"
+        },
+        {
+          "code": "MK-12",
+          "text": "Taxiway edge markings visible on all taxiways"
+        },
+        {
+          "code": "MK-13",
+          "text": "Apron aircraft stand numbers visible and legible"
+        },
+        {
+          "code": "MK-14",
+          "text": "Apron lead-in lines visible on active stands"
+        },
+        {
+          "code": "MK-15",
+          "text": "No marking segment obscured by rubber deposits, dirt, or water staining to unacceptable level"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 7 — AIRFIELD SIGNS (PHYSICAL CONDITION)",
+      "items": [
+        {
+          "code": "SG-01",
+          "text": "All mandatory instruction signs (red/white) face intact, legend legible"
+        },
+        {
+          "code": "SG-02",
+          "text": "Runway 07 designation mandatory sign intact and illuminated (if night/reduced vis.)"
+        },
+        {
+          "code": "SG-03",
+          "text": "Runway 25 designation mandatory sign intact and illuminated (if night/reduced vis.)"
+        },
+        {
+          "code": "SG-04",
+          "text": "All location signs (yellow text on black) face intact, legend legible"
+        },
+        {
+          "code": "SG-05",
+          "text": "All direction signs (black text on yellow) face intact, arrows correct and legible"
+        },
+        {
+          "code": "SG-06",
+          "text": "All runway distance remaining signs present, correct numerals, intact"
+        },
+        {
+          "code": "SG-07",
+          "text": "No signs with cracked, missing, or shattered face panels"
+        },
+        {
+          "code": "SG-08",
+          "text": "No signs with bent or severely corroded mounting posts"
+        },
+        {
+          "code": "SG-09",
+          "text": "No signs displaced or tilted > 3° from vertical"
+        },
+        {
+          "code": "SG-10",
+          "text": "No signs obscured by vegetation"
+        },
+        {
+          "code": "SG-11",
+          "text": "Electrical malfunction noted: refer to EEC per Annex 2-2 (list in Remarks if applicable)"
+        }
+      ]
+    },
+    {
+      "title": "SECTION 8 — DRAINAGE OVERVIEW",
+      "items": [
+        {
+          "code": "DR-01",
+          "text": "All runway edge drainage channels visually clear, no overflow onto runway"
+        },
+        {
+          "code": "DR-02",
+          "text": "All taxiway drainage channels clear and flowing"
+        },
+        {
+          "code": "DR-03",
+          "text": "All visible apron drainage channels and sumps clear"
+        },
+        {
+          "code": "DR-04",
+          "text": "No erosion channels created by surface water runoff at pavement edges"
+        },
+        {
+          "code": "DR-05",
+          "text": "No sedimentation visible in drainage channels reducing flow capacity by >50%"
+        }
+      ]
+    }
+  ],
+  "summaryFields": [
+    {
+      "key": "deficiencySummaryForEachNoSatItemSectionItemNoLocationDescriptionSeverityLevel14",
+      "label": "DEFICIENCY SUMMARY (for each NO SAT item: Section, Item No., Location, Description, Severity Level 1–4)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "deficiency_summary_for_each_no_sat_item_"
+    },
+    {
+      "key": "correctiveActionRequiredDescribeOmActionForEachDeficiency",
+      "label": "CORRECTIVE ACTION REQUIRED (describe OM action for each deficiency)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "corrective_action_required_describe_om_a"
+    }
+  ],
+  "deficienciesField": {
+    "label": "DEFICIENCY SUMMARY (for each NO SAT item: Section, Item No., Location, Description, Severity Level 1–4)",
+    "mapKey": "deficiency_summary_for_each_no_sat_item_"
+  },
+  "signoffs": [
+    {
+      "role": "inspector",
+      "label": "Conducted by (Name / Position / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "om",
+      "label": "Reviewed / Received by OM (Name / Signature / Date)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered."
+  ]
+}

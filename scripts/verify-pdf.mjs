@@ -12,15 +12,18 @@
  *      Without this, a field map with every coordinate wrong still passes
  *      layer 1. This is the check that actually verifies an export.
  *
- * VAES templates are DISCOVERED from src/data/field-maps, so a newly extracted
- * form is covered automatically — there is no list to forget to update.
+ * Templates are DISCOVERED from src/data/field-maps, so a newly extracted form
+ * is covered automatically — there is no list to forget to update. Both families
+ * are included: VAES (Appendix C) and PMM (Annexes A–J).
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyPlacement } from './verify-placement.mjs';
-import { buildAndVerify } from './fixture-vaes.mjs';
+import { buildAndVerify as buildVaes } from './fixture-vaes.mjs';
+import { buildAndVerify as buildPmm } from './fixture-pmm.mjs';
+import { buildBlanks } from './smoke-overlay.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const node = process.execPath;
@@ -31,12 +34,9 @@ function run(script, args = []) {
 }
 
 // ---- Layer 1: base integrity -----------------------------------------------
-run('scripts/smoke-overlay.mjs');
-run('scripts/smoke-overlay-h.mjs');
-run('scripts/smoke-register.mjs');
-run('scripts/pdf-diff.mjs', ['tmp-pdf-diff/overlay-blank.pdf', 'src/assets/forms/annex-d-drainage-ed01.pdf']);
-run('scripts/pdf-diff.mjs', ['tmp-pdf-diff/overlay-h-blank.pdf', 'src/assets/forms/annex-h-work-order-ed01.pdf']);
-run('scripts/pdf-diff.mjs', ['tmp-pdf-diff/overlay-g-blank.pdf', 'src/assets/forms/annex-g-noc-register-ed01.pdf']);
+for (const item of await buildBlanks()) {
+  run('scripts/pdf-diff.mjs', [`tmp-pdf-diff/${item.out}`, item.approved]);
+}
 
 let failed = [];
 
@@ -55,15 +55,23 @@ run('scripts/fixture-annex-d.mjs');
   if (!res.ok) failed.push('annex-d-drainage');
 }
 
-// ---- Layer 2b: every VAES template, discovered ----------------------------
+// ---- Layer 2b: every generated template, discovered ------------------------
+// Annex D is hand-mapped and already checked above; Annex G/H are registers,
+// not fillable checklists, so they have no populated fixture.
 const mapDir = path.join(root, 'src/data/field-maps');
-const vaesMaps = readdirSync(mapDir)
-  .filter((f) => f.startsWith('appendix-c') && f.endsWith('-ed01.json'))
+const HAND_MAPPED = new Set([
+  'annex-d-drainage-ed01.json',
+  'annex-g-noc-register-ed01.json',
+  'annex-h-work-order-ed01.json',
+]);
+const generated = readdirSync(mapDir)
+  .filter((f) => f.endsWith('-ed01.json') && !HAND_MAPPED.has(f))
   .sort();
 
-for (const file of vaesMaps) {
+for (const file of generated) {
   const fieldMap = JSON.parse(readFileSync(path.join(mapDir, file), 'utf8'));
   const key = fieldMap.templateKey;
+  const family = fieldMap.documentFamily ?? (file.startsWith('appendix-c') ? 'VAES' : 'PMM');
   const schemaPath = path.join(root, 'src/data/checklists', `${key}.json`);
   const basePdf = path.join(root, 'src/assets/forms', fieldMap.basePdf);
   if (!existsSync(schemaPath) || !existsSync(basePdf)) {
@@ -71,17 +79,18 @@ for (const file of vaesMaps) {
     failed.push(key);
     continue;
   }
-  const res = await buildAndVerify({
+  const build = family === 'PMM' ? buildPmm : buildVaes;
+  const res = await build({
     schema: JSON.parse(readFileSync(schemaPath, 'utf8')),
     fieldMap,
     basePdfBytes: readFileSync(basePdf),
     outDir: path.join(root, 'tmp-pdf-diff'),
-    label: `${fieldMap.templateKey} (VAES)`,
+    label: `${key} (${family})`,
   });
   if (!res.ok) failed.push(key);
 }
 
-console.log(`\nTemplates verified: ${1 + vaesMaps.length}, failures: ${failed.length}`);
+console.log(`\nTemplates verified: ${1 + generated.length}, failures: ${failed.length}`);
 if (failed.length) {
   console.error('Stamped ink landed outside the declared field boxes for:');
   for (const k of failed) console.error(`  - ${k}`);

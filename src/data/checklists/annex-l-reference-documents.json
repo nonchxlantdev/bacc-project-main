@@ -1,0 +1,40 @@
+{
+  "code": "PGIA 16-14",
+  "annexLabel": "Annex L",
+  "documentFamily": "PMM",
+  "title": "Reference Documents",
+  "description": "Controlled list of the regulatory, industry and internal documents the Maintenance Paved and Unpaved Manual is governed by.",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "on_demand",
+  "documentType": "reference",
+  "headerFields": [],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "reviewNotes",
+      "label": "Review notes / acknowledgement",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "review_notes",
+      "addedField": true
+    }
+  ],
+  "deficienciesField": {
+    "label": "Review notes / acknowledgement",
+    "mapKey": "review_notes"
+  },
+  "signoffs": [],
+  "notes": [
+    "The approved sheet carries NO form number — its only identifiers are ANNEX 1-1 / PGIA 16-14 and the annex letter. None has been invented.",
+    "Annex L is a reference list, not an inspection. Every line on it is pre-printed and is never overlaid.",
+    "The single review-notes box is an ADDITION (addedField), placed in the blank area between the last printed row and the running footer on page 2. The approved sheet has no such field — confirm with BACC before this leaves the demo."
+  ]
+}

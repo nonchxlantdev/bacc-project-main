@@ -1,5 +1,4 @@
 import {
-  airportEndMs,
   airportIso,
   airportMonthEndYmd,
   airportYmd,
@@ -86,5 +85,3 @@ export function linkSubmissionToInstance(instances, submission) {
     return row;
   });
 }
-
-export { airportEndMs };

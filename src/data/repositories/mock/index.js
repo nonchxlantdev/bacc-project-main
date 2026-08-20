@@ -106,6 +106,41 @@ export function createMockRepositories() {
         });
         return saved;
       },
+      /**
+       * Amend ONE item's result on a submitted record, and nothing else.
+       *
+       * `persist` deliberately refuses to write to a locked submission — that is
+       * the §11 guarantee. BACC have asked for a cleared deficiency to flip the
+       * source item back to SAT, so this is the single narrow exception: it can
+       * change one item's `result` and the `amendments` trail, and touches no
+       * other field. Anything wider still has to go through `persist` and is
+       * still rejected.
+       *
+       * Pass `amendment: null` with a `reason` to undo an earlier amendment.
+       */
+      async amendItemResult({ id, code, result, amendment, reason }) {
+        const tag = amendment?.reason ?? reason;
+        if (!tag) throw new Error('amendItemResult needs a reason');
+        let saved = null;
+        mutateStore((s) => {
+          const idx = s.submissions.findIndex((row) => row.id === id);
+          if (idx < 0) throw new Error('Checklist not found');
+          const rec = s.submissions[idx];
+          if (!rec.items?.[code]) throw new Error(`Item ${code} is not on this checklist`);
+          const rest = (rec.amendments ?? []).filter(
+            (a) => !(a.item_code === code && a.reason === tag),
+          );
+          saved = {
+            ...rec,
+            items: { ...rec.items, [code]: { ...rec.items[code], result } },
+            amendments: amendment ? [...rest, amendment] : rest,
+            updatedAt: new Date(nowMs()).toISOString(),
+          };
+          s.submissions[idx] = saved;
+          return s;
+        });
+        return saved;
+      },
       async deleteDraft(record) {
         if (record?.status !== 'draft' || record?.locked) {
           throw new Error('Only unlocked drafts can be deleted. Submitted records stay on file.');

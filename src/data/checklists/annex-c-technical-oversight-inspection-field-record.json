@@ -1,0 +1,545 @@
+{
+  "code": "PGIA-PMM-F03",
+  "annexLabel": "Annex C",
+  "documentFamily": "PMM",
+  "title": "Technical Oversight Inspection Field Record",
+  "description": "Completed by Civil Engineering Consultant (CEC) quarterly. Annual PCI Survey in October. Written TOI Report",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "quarterly",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "inspectionDate",
+      "label": "Inspection Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "inspection_date"
+    },
+    {
+      "key": "quarter",
+      "label": "Quarter",
+      "type": "radio",
+      "required": true,
+      "markPrefix": "quarter",
+      "options": [
+        {
+          "value": "q1_jan",
+          "label": "Q1 (Jan)"
+        },
+        {
+          "value": "q2_apr",
+          "label": "Q2 (Apr)"
+        },
+        {
+          "value": "q3_jul",
+          "label": "Q3 (Jul)"
+        },
+        {
+          "value": "q4_oct_annual_pci",
+          "label": "Q4 (Oct — Annual PCI)"
+        }
+      ]
+    },
+    {
+      "key": "cecNameLicenseNo",
+      "label": "CEC Name / License No.",
+      "type": "text",
+      "required": false,
+      "mapKey": "cec_name_license_no"
+    },
+    {
+      "key": "fieldTechnician",
+      "label": "Field Technician",
+      "type": "text",
+      "required": false,
+      "mapKey": "field_technician"
+    },
+    {
+      "key": "previousToiDate",
+      "label": "Previous TOI Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "previous_toi_date"
+    },
+    {
+      "key": "previousToiReportNo",
+      "label": "Previous TOI Report No.",
+      "type": "text",
+      "required": false,
+      "mapKey": "previous_toi_report_no"
+    },
+    {
+      "key": "omPresentDuringInspection",
+      "label": "OM Present During Inspection",
+      "type": "yes_no",
+      "required": true,
+      "markPrefix": "om_present_during_inspection",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "key": "weatherDuringInspection",
+      "label": "Weather During Inspection",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather_during_inspection"
+    },
+    {
+      "key": "movementAreaClearanceRef",
+      "label": "Movement Area Clearance Ref.",
+      "type": "text",
+      "required": false,
+      "mapKey": "movement_area_clearance_ref"
+    },
+    {
+      "key": "notamRefIfIssued",
+      "label": "NOTAM Ref. (if issued)",
+      "type": "text",
+      "required": false,
+      "mapKey": "notam_ref_if_issued"
+    }
+  ],
+  "sections": [
+    {
+      "title": "SECTION A — RUNWAY 07/25: ASPHALT DISTRESS SURVEY (Per ASTM D5340 / AC 150/5320-17A Appendix A)",
+      "items": [
+        {
+          "code": "A-01",
+          "text": "Alligator (fatigue) cracking record area (m²) and severity (Low / Medium / High)"
+        },
+        {
+          "code": "A-02",
+          "text": "Bleeding / flushing asphalt binder pushed to surface; record area and location"
+        },
+        {
+          "code": "A-03",
+          "text": "Block cracking rectangular crack pattern not at joints; record area (m²)"
+        },
+        {
+          "code": "A-04",
+          "text": "Bumps and sags record location and height differential (mm)"
+        },
+        {
+          "code": "A-05",
+          "text": "Corrugation transverse rippling; record wavelength and depth"
+        },
+        {
+          "code": "A-06",
+          "text": "Depression measure maximum water depth accumulation (mm) and area (m²)"
+        },
+        {
+          "code": "A-07",
+          "text": "Edge cracking record length (m) and distance from pavement edge"
+        },
+        {
+          "code": "A-08",
+          "text": "Joint / reflection cracking cracks mirroring underlying layer joints; record length (m) and width (mm)"
+        },
+        {
+          "code": "A-09",
+          "text": "Lane / shoulder drop-off measure differential elevation (mm) between pavement edge and shoulder"
+        },
+        {
+          "code": "A-10",
+          "text": "Longitudinal and transverse cracking record length (m), width (mm) and severity"
+        },
+        {
+          "code": "A-11",
+          "text": "Patching assesses condition of all existing patches (Good / Moderate / Deteriorated)"
+        },
+        {
+          "code": "A-12",
+          "text": "Polished aggregate / low friction notes extent and proximity to touchdown zone"
+        },
+        {
+          "code": "A-13",
+          "text": "Pothole record count, and for each: length × width × depth (mm)"
+        },
+        {
+          "code": "A-14",
+          "text": "Raveling / weathering record area (m²) and severity"
+        },
+        {
+          "code": "A-15",
+          "text": "Rutting measure maximum rut depth (mm) with 1.2 m straightedge; record wheel path location"
+        },
+        {
+          "code": "A-16",
+          "text": "Shoving plastic displacement of surface in direction of traffic; record location"
+        },
+        {
+          "code": "A-17",
+          "text": "Slippage cracking crescent-shaped cracks in direction of travel; record location"
+        },
+        {
+          "code": "A-18",
+          "text": "Swell bulge or upward displacement; record location and height"
+        },
+        {
+          "code": "A-19",
+          "text": "Rubber deposits Touchdown Zone 07: Visual Rating: None / Low / Medium / High"
+        },
+        {
+          "code": "A-20",
+          "text": "Rubber deposits Touchdown Zone 25: Visual Rating: None / Low / Medium / High"
+        },
+        {
+          "code": "A-21",
+          "text": "Friction Assessment recommendation: None ☐ Recommended to COO ☐ (if High rubber or reduced texture)",
+          "inlineOptions": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION B — RUNWAY STRIP, RESA, SHOULDERS (CEC ENGINEERING ASSESSMENT)",
+      "items": [
+        {
+          "code": "B-01",
+          "text": "Runway shoulder condition correct elevation (within 25 mm below runway edge)"
+        },
+        {
+          "code": "B-02",
+          "text": "Runway shoulder no erosion undermining pavement edge on either side"
+        },
+        {
+          "code": "B-03",
+          "text": "RESA (Threshold 07): ground bearing appears adequate no soft spots or subsidence"
+        },
+        {
+          "code": "B-04",
+          "text": "RESA (Threshold 07): obstacle height compliant no objects > 7.5 cm"
+        },
+        {
+          "code": "B-05",
+          "text": "RESA (Threshold 25): ground bearing appears adequate no soft spots or subsidence"
+        },
+        {
+          "code": "B-06",
+          "text": "RESA (Threshold 25): obstacle height compliant no objects > 7.5 cm"
+        },
+        {
+          "code": "B-07",
+          "text": "Runway strip ground surface within graded area level and obstacle- free"
+        }
+      ]
+    },
+    {
+      "title": "SECTION C — TAXIWAYS (ALPHA, BRAVO, CHARLIE): CONCRETE DISTRESS SURVEY (Per ASTM D5340 / AC 150/5320-17A Appendix B)",
+      "items": [
+        {
+          "code": "C-01",
+          "text": "Blowup / buckling sudden upward displacement at joints; record location"
+        },
+        {
+          "code": "C-02",
+          "text": "Corner break triangular piece broken from slab corner; record count and slab ID"
+        },
+        {
+          "code": "C-03",
+          "text": "Divided slab full-depth cracks in 4+ pieces; record count"
+        },
+        {
+          "code": "C-04",
+          "text": "Durability (D-cracking) closely spaced cracking parallel to joints; record area"
+        },
+        {
+          "code": "C-05",
+          "text": "Faulting differential elevation at joints; measure with straightedge (mm); record all joints > 6 mm"
+        },
+        {
+          "code": "C-06",
+          "text": "Joint seal damage inspects ALL joints: rate each section as Good / Cracked / Missing / Extruded"
+        },
+        {
+          "code": "C-07",
+          "text": "Large patch assess condition of all existing patches > 0.1 m²"
+        },
+        {
+          "code": "C-08",
+          "text": "Linear cracking record length (m), width (mm); assess if full-depth"
+        },
+        {
+          "code": "C-09",
+          "text": "Shrinkage / map cracking hairline network cracking on slab surface; record area (m²)"
+        },
+        {
+          "code": "C-10",
+          "text": "Popouts broken pieces pulled from slab surface; record count per 10 m²"
+        },
+        {
+          "code": "C-11",
+          "text": "Pumping evidence of water/fines ejected at joints; check with wheel loading"
+        },
+        {
+          "code": "C-12",
+          "text": "Shattered slab multiple intersecting cracks; record count"
+        },
+        {
+          "code": "C-13",
+          "text": "Spalling (corner) fragment broken from corner without full-depth crack; record count"
+        },
+        {
+          "code": "C-14",
+          "text": "Spalling (joint) concrete broken along joint edge; record linear meters per joint"
+        },
+        {
+          "code": "C-15",
+          "text": "Alkali-silica reaction (ASR) map cracking with gel staining near aggregate; record if suspected"
+        }
+      ]
+    },
+    {
+      "title": "SECTION D — TURN PADS",
+      "items": [
+        {
+          "code": "D-01",
+          "text": "Turn pad Threshold 07: surface distress survey per Section C above (PCC) complete"
+        },
+        {
+          "code": "D-02",
+          "text": "Turn pad Threshold 25: surface distress survey per Section C above (PCC) complete"
+        },
+        {
+          "code": "D-03",
+          "text": "Both turn pads: joint sealant condition assessed"
+        },
+        {
+          "code": "D-04",
+          "text": "Both turn pads: drainage adequate, no standing water"
+        }
+      ]
+    },
+    {
+      "title": "SECTION E — AIRCRAFT PARKING APRON (CONCRETE)",
+      "items": [
+        {
+          "code": "E-01",
+          "text": "Full distress survey completed for all apron slabs per Section C methodology"
+        },
+        {
+          "code": "E-02",
+          "text": "All joint conditions mapped and rated"
+        },
+        {
+          "code": "E-03",
+          "text": "Drainage channels and sumps structurally sound and at correct grade"
+        },
+        {
+          "code": "E-04",
+          "text": "Evidence of differential settlement between stands or between aprons and taxiway junction"
+        },
+        {
+          "code": "E-05",
+          "text": "Fuel/oil contamination zones record area and recommend surface treatment if warranted"
+        }
+      ]
+    },
+    {
+      "title": "SECTION F — PAVEMENT MARKINGS (TECHNICAL ASSESSMENT)",
+      "items": [
+        {
+          "code": "F-01",
+          "text": "Retroreflectivity measurements conducted (if retroreflectometer available): record values"
+        },
+        {
+          "code": "F-02",
+          "text": "Runway centerline dimensions per BCAR-14 / FAA AC 150/5340-1M; condition"
+        },
+        {
+          "code": "F-03",
+          "text": "Threshold bar count and dimensions compliant with BCAR-14"
+        },
+        {
+          "code": "F-04",
+          "text": "Aiming point dimensions compliant with BCAR-14"
+        },
+        {
+          "code": "F-05",
+          "text": "Touchdown zone markings dimensions compliant"
+        },
+        {
+          "code": "F-06",
+          "text": "Holding position markings correct geometry and color on all intersections"
+        },
+        {
+          "code": "F-07",
+          "text": "Taxiway centerlines width and continuity compliant"
+        },
+        {
+          "code": "F-08",
+          "text": "Paint showing crazing, peeling, or delamination from surface record location"
+        },
+        {
+          "code": "F-09",
+          "text": "Markings obscured by rubber deposits record length affected (m) by zone"
+        },
+        {
+          "code": "F-10",
+          "text": "Apron markings stand layout conforming to approved apron design plan"
+        }
+      ]
+    },
+    {
+      "title": "SECTION G — DRAINAGE STRUCTURAL ASSESSMENT (Annual: March / September)",
+      "items": [
+        {
+          "code": "G-01",
+          "text": "All runway edge channels: slope ≥ 1%, structurally sound, headwalls intact"
+        },
+        {
+          "code": "G-02",
+          "text": "All taxiway drainage gutters: slope ≥ 1%, clear of sediment, structurally sound"
+        },
+        {
+          "code": "G-03",
+          "text": "Apron drainage channels: slope ≥ 1%, all sumps accessible and clear"
+        },
+        {
+          "code": "G-04",
+          "text": "All culverts: structurally sound pipes, clear inverts, intact headwalls and wingwalls"
+        },
+        {
+          "code": "G-05",
+          "text": "No evidence of subsurface voids (detected by hammer sounding adjacent to pavement joints)"
+        },
+        {
+          "code": "G-06",
+          "text": "No evidence of pavement edge erosion creating differential between pavement and shoulder"
+        },
+        {
+          "code": "G-07",
+          "text": "Saturated Zone Map updated new zones or expansion of existing zones documented"
+        }
+      ]
+    },
+    {
+      "title": "SECTION H — AIRFIELD SIGNS (CEC ANNUAL STRUCTURAL ASSESSMENT)",
+      "items": [
+        {
+          "code": "H-01",
+          "text": "All mandatory instruction signs structures base integrity sound, no corrosion affecting structural adequacy"
+        },
+        {
+          "code": "H-02",
+          "text": "All mandatory signs face panels intact, correctly dimensioned, legend and colors correct per BCAR-14"
+        },
+        {
+          "code": "H-03",
+          "text": "All location signs face panels intact, dimensions correct"
+        },
+        {
+          "code": "H-04",
+          "text": "All direction signs face panels intact, arrows correct, dimensions correct"
+        },
+        {
+          "code": "H-05",
+          "text": "All runway distance remaining signs present, correct numerals, positions correct"
+        },
+        {
+          "code": "H-06",
+          "text": "No signs with inadequate setback from pavement edge creating FOD or collision risk"
+        }
+      ]
+    },
+    {
+      "title": "SECTION I — ANNUAL PCI SURVEY (October TOI only — Per ASTM D5340)",
+      "items": [
+        {
+          "code": "I-01",
+          "text": "PCI survey completed for Runway 07/25 all ASTM D5340 sample units surveyed"
+        },
+        {
+          "code": "I-02",
+          "text": "PCI survey completed for Taxiway Alpha"
+        },
+        {
+          "code": "I-03",
+          "text": "PCI survey completed for Taxiway Bravo"
+        },
+        {
+          "code": "I-04",
+          "text": "PCI survey completed for Taxiway Charlie"
+        },
+        {
+          "code": "I-06",
+          "text": "PCI survey completed for Aircraft Parking Apron"
+        },
+        {
+          "code": "I-07",
+          "text": "PCI survey completed for Turn Pads"
+        },
+        {
+          "code": "I-08",
+          "text": "All PCI values recorded in Pavement Condition Index Database"
+        },
+        {
+          "code": "I-09",
+          "text": "PCI trend analysis updated and compared against prior 3 years"
+        },
+        {
+          "code": "I-10",
+          "text": "Maintenance and rehabilitation recommendations issued based on PCI results"
+        }
+      ]
+    }
+  ],
+  "summaryFields": [],
+  "preprintedStatements": [
+    {
+      "key": "cecCertificationStatement",
+      "label": "CEC CERTIFICATION STATEMENT",
+      "page": 4,
+      "text": "I, the undersigned Civil Engineering Consultant, certify that this inspection was conducted in accordance"
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "cec",
+      "label": "CEC (Name / License No. / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "om",
+      "label": "OM (Name / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "coo",
+      "label": "COO Acknowledgment of Receipt (Name / Signature / Date)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered."
+  ]
+}

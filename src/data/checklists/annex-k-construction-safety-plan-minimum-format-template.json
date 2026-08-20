@@ -1,0 +1,257 @@
+{
+  "code": "PGIA-PMM-F11",
+  "annexLabel": "Annex K",
+  "headerLayout": "stacked",
+  "documentFamily": "PMM",
+  "title": "Construction Safety Plan — Minimum Format Template",
+  "description": "Template only. All sections must be completed in full. BACCL is responsible for ensuring all BDCA requirements are",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "on_demand",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "projectTitle",
+      "label": "1. PROJECT TITLE",
+      "type": "text",
+      "required": false,
+      "mapKey": "project_title"
+    },
+    {
+      "key": "projectLocationOnAerodrome",
+      "label": "2. Project Location on Aerodrome",
+      "type": "text",
+      "required": false,
+      "mapKey": "project_location_on_aerodrome"
+    },
+    {
+      "key": "projectDescription",
+      "label": "3. Project Description",
+      "type": "text",
+      "required": false,
+      "mapKey": "project_description"
+    },
+    {
+      "key": "contractorNameAndContact",
+      "label": "4. Contractor Name and Contact",
+      "type": "text",
+      "required": false,
+      "mapKey": "contractor_name_and_contact"
+    },
+    {
+      "key": "contractorSiteSafetyOfficerNameAndContact",
+      "label": "5. Contractor Site Safety Officer Name and Contact",
+      "type": "text",
+      "required": false,
+      "mapKey": "contractor_site_safety_officer_name_and_contact"
+    },
+    {
+      "key": "cecNameAndContact",
+      "label": "6. CEC Name and Contact",
+      "type": "text",
+      "required": false,
+      "mapKey": "cec_name_and_contact"
+    },
+    {
+      "key": "cooNameAndContact",
+      "label": "7. COO Name and Contact",
+      "type": "text",
+      "required": false,
+      "mapKey": "coo_name_and_contact"
+    },
+    {
+      "key": "omNameAndContact",
+      "label": "8. OM Name and Contact",
+      "type": "text",
+      "required": false,
+      "mapKey": "om_name_and_contact"
+    },
+    {
+      "key": "bdcaSubmissionDate",
+      "label": "9. BDCA Submission Date",
+      "type": "date",
+      "required": false,
+      "mapKey": "bdca_submission_date"
+    },
+    {
+      "key": "bdcaAcceptanceDate",
+      "label": "10. BDCA Acceptance Date",
+      "type": "date",
+      "required": false,
+      "mapKey": "bdca_acceptance_date"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "sectionAOperationalImpactAssessment",
+      "label": "SECTION A — OPERATIONAL IMPACT ASSESSMENT",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_aoperational_impact_assessment",
+      "hint": "(Describe all aerodrome areas affected; closures required; changes to declared distances; impact on RFF; impact on navigation aids or lighting.)"
+    },
+    {
+      "key": "sectionBPhasedConstructionSchedule",
+      "label": "SECTION B — PHASED CONSTRUCTION SCHEDULE",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_bphased_construction_schedule",
+      "hint": "(List all project phases with start and end dates; identify which aerodrome areas are affected in each phase.)"
+    },
+    {
+      "key": "sectionCConstructionAreaDemarcationPlan",
+      "label": "SECTION C — CONSTRUCTION AREA DEMARCATION PLAN",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_cconstruction_area_demarcation_p",
+      "hint": "(Attach drawing. Describe cone/barricade type, spacing, and lighting. Confirm all elements are frangible.)"
+    },
+    {
+      "key": "sectionDTemporaryMarkingsPlan",
+      "label": "SECTION D — TEMPORARY MARKINGS PLAN",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_dtemporary_markings_plan",
+      "hint": "(Attach drawing. Confirm markings comply with BCAR-14. List all permanent markings to be removed/covered and their temporary replacements.)"
+    },
+    {
+      "key": "sectionETemporarySignsPlanIfApplicable",
+      "label": "SECTION E — TEMPORARY SIGNS PLAN (if applicable)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_etemporary_signs_plan_if_applica",
+      "hint": "(Attach drawing. Confirm signs comply with BCAR-14)"
+    },
+    {
+      "key": "sectionFTemporaryLightingPlanIfApplicableConfirmed",
+      "label": "SECTION F — TEMPORARY LIGHTING PLAN (if applicable) — confirmed",
+      "type": "yes_no",
+      "required": false,
+      "markPrefix": "section_ftemporary_lighting_plan_if_appl",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "key": "sectionFTemporaryLightingPlanIfApplicable",
+      "label": "SECTION F — TEMPORARY LIGHTING PLAN (if applicable)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_ftemporary_lighting_plan_if_appl",
+      "hint": "(Attach drawing. Confirm compliance with BCAR-14 and Annex 2-2. EEC involvement confirmed: Yes ☐ No ☐.)"
+    },
+    {
+      "key": "sectionGNotamPlan",
+      "label": "SECTION G — NOTAM PLAN",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_gnotam_plan",
+      "hint": "(List all NOTAMs required; draft text for each; responsible party; timing relative to construction phases.)"
+    },
+    {
+      "key": "sectionHFodPreventionAndControlProcedures",
+      "label": "SECTION H — FOD PREVENTION AND CONTROL PROCEDURES",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_hfod_prevention_and_control_proc"
+    },
+    {
+      "key": "sectionIVehicleAndEquipmentManagement",
+      "label": "SECTION I — VEHICLE AND EQUIPMENT MANAGEMENT",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_ivehicle_and_equipment_managemen"
+    },
+    {
+      "key": "sectionJEmergencyProceduresDuringConstruction",
+      "label": "SECTION J — EMERGENCY PROCEDURES DURING CONSTRUCTION",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_jemergency_procedures_during_con"
+    },
+    {
+      "key": "sectionKWeatherSeasonalContingencyPlan",
+      "label": "SECTION K — WEATHER / SEASONAL CONTINGENCY PLAN",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_kweather_seasonal_contingency_pl",
+      "hint": "(Describe procedures for rainy season; hurricane season work suspension protocol.)"
+    },
+    {
+      "key": "sectionLEnvironmentalManagement",
+      "label": "SECTION L — ENVIRONMENTAL MANAGEMENT",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_lenvironmental_management"
+    },
+    {
+      "key": "sectionMPostConstructionRestorationPlan",
+      "label": "SECTION M — POST-CONSTRUCTION RESTORATION PLAN",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "section_mpost_construction_restoration_p"
+    }
+  ],
+  "preprintedStatements": [
+    {
+      "key": "sectionNComplianceStatement",
+      "label": "SECTION N — COMPLIANCE STATEMENT",
+      "page": 5,
+      "text": "BACCL confirms that this Construction Safety Plan, and all works described herein, shall be conducted in full compliance with BCAR-139, BCAR-14, and all other applicable Belize civil aviation regulations and BDCA requirements, throughout all phases of the project."
+    }
+  ],
+  "deficienciesField": {
+    "label": "SECTION A — OPERATIONAL IMPACT ASSESSMENT",
+    "mapKey": "section_aoperational_impact_assessment"
+  },
+  "signoffs": [
+    {
+      "role": "inspector",
+      "label": "(Name / License / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "coo",
+      "label": "COO Approval (Name / Signature / Date)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "ceo",
+      "label": "CEO Approval (Name / Signature / Date)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered.",
+    "The two BDCA dates are not required to save a draft — they are only known once the plan has been submitted to and accepted by BDCA."
+  ]
+}

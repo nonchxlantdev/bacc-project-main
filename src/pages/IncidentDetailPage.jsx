@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calendar,
-  Camera,
   Check,
   ChevronDown,
   Clock,
@@ -20,12 +19,24 @@ import {
   X,
 } from 'lucide-react';
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
+import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
+import {
+  Card,
+  Field,
+  MenuItem,
+  Metric,
+  Row,
+  SelectField,
+  StripField,
+  labelOf,
+} from '../components/incidents/detailUi.jsx';
+import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
 import { DEFICIENCY_LEVELS, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
 import { ASSIGNED_TEAMS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { syncSourceChecklist } from '../lib/checklistSync.js';
 import { getRepos } from '../data/repositories/index.js';
-import { AIRPORT_TZ } from '../lib/belizeTime.js';
 import { compressImage } from '../lib/imageCompress.js';
 import {
   INCIDENT_STATUSES,
@@ -51,45 +62,6 @@ const TABS = [
 ];
 
 const STEP_LABELS = ['Reported', 'Assigned', 'In Progress', 'Resolved', 'Closed'];
-
-const dateTimeFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: AIRPORT_TZ,
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
-
-const dateFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: AIRPORT_TZ,
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-});
-
-function fmtDateTime(value) {
-  if (!value) return '—';
-  const ms = Date.parse(value);
-  return Number.isNaN(ms) ? String(value) : dateTimeFmt.format(ms);
-}
-
-function fmtDate(value) {
-  if (!value) return '—';
-  const ms = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(String(value)) ? `${value}T12:00:00-06:00` : value);
-  return Number.isNaN(ms) ? String(value) : dateFmt.format(ms);
-}
-
-/**
- * Display precision for coordinates. 5 decimal places is ~1 m at this latitude —
- * already finer than the ±5 m the device reports, so more digits are noise.
- * Stored values keep their full precision; this only affects display.
- */
-function fmtCoord(value) {
-  if (value == null || value === '') return '—';
-  const n = Number(value);
-  return Number.isFinite(n) ? n.toFixed(5) : String(value);
-}
 
 export default function IncidentDetailPage() {
   const { id } = useParams();
@@ -151,6 +123,17 @@ export default function IncidentDetailPage() {
   async function saveIncident(next) {
     const saved = await persistIncident(next);
     setIncident(saved);
+    // One call site keeps the checklist in step with the incident. See
+    // lib/checklistSync.js for why this writes back at all. The incident itself
+    // is already saved, so a failure here is reported, not thrown away.
+    try {
+      await syncSourceChecklist(saved);
+    } catch (err) {
+      setBanner({
+        type: 'error',
+        text: `Incident saved, but the source checklist could not be updated: ${err.message}`,
+      });
+    }
     return saved;
   }
 
@@ -682,140 +665,17 @@ export default function IncidentDetailPage() {
                 </section>
               </div>
 
-              {/* Related checklist item + verification */}
-              <Card title="Related Checklist Item">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-navy/10 text-left text-xs font-semibold text-muted">
-                        <th className="py-2 pr-3">Item</th>
-                        <th className="py-2 pr-3" />
-                        <th className="w-16 py-2 text-center">SAT</th>
-                        <th className="w-20 py-2 text-center">NO SAT</th>
-                        <th className="py-2 pr-3">Remarks / Location</th>
-                        <th className="w-28 py-2 text-center">View Checklist</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="py-3 pr-3 align-top font-medium text-navy">{incident.source_item_code}</td>
-                        <td className="py-3 pr-3 align-top">{incident.source_item_description}</td>
-                        <td className="py-3 text-center align-top">
-                          <RadioButton
-                            checked={verified}
-                            tone="success"
-                            label={`Mark ${incident.source_item_code} verified SAT`}
-                            onClick={() => !verified && setVerifyDraft({ note: '', photo: null })}
-                          />
-                        </td>
-                        <td className="py-3 text-center align-top">
-                          <RadioButton
-                            checked={!verified}
-                            tone="alert"
-                            label={`Revert ${incident.source_item_code} to NO SAT`}
-                            onClick={() => verified && clearVerification()}
-                          />
-                        </td>
-                        <td className="py-3 pr-3 align-top">{incident.source_item_remarks || incident.description}</td>
-                        <td className="py-3 text-center align-top">
-                          {incident.submission_id ? (
-                            <Link
-                              to={`/checklists/${incident.submission_id}`}
-                              title="View checklist"
-                              className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-navy/20 text-navy hover:bg-stripe"
-                            >
-                              <Camera size={16} aria-hidden />
-                              <span className="sr-only">View checklist</span>
-                            </Link>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Audit trail — the submitted checklist is never altered */}
-                <p className="mt-3 border-t border-navy/10 pt-3 text-xs text-muted">
-                  Recorded <strong className="font-semibold text-alert">NO SAT</strong> on{' '}
-                  {fmtDate(incident.source_inspection_date)} in {incident.source_template_code}.
-                  {incident.verification?.result === 'sat' && (
-                    <>
-                      {' '}
-                      Verified <strong className="font-semibold text-success">SAT</strong> by{' '}
-                      {incident.verification.verified_by_name} on {fmtDateTime(incident.verification.verified_at)}.
-                      {incident.verification.note ? ` ${incident.verification.note}` : ''}
-                    </>
-                  )}
-                  {incident.reinspection_submission_id && ' Closure evidence: linked re-inspection.'}
-                  <br />
-                  The submitted checklist is a locked record and is never modified — verification is stored against
-                  the incident.
-                </p>
-
-                {incident.verification?.photo_url && (
-                  <img
-                    src={incident.verification.photo_url}
-                    alt="Verification evidence"
-                    className="mt-2 h-32 rounded border border-navy/15 object-cover"
-                  />
-                )}
-
-                {verifyDraft && (
-                  <div className="mt-3 rounded-md border border-success/40 bg-success-soft/60 p-3">
-                    <p className="text-sm font-semibold text-navy">
-                      Verify {incident.source_item_code} back to SAT
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      Records that corrective action was completed and the item re-inspected. The original checklist
-                      stays untouched.
-                    </p>
-                    <textarea
-                      rows={2}
-                      value={verifyDraft.note}
-                      onChange={(e) => setVerifyDraft({ ...verifyDraft, note: e.target.value })}
-                      placeholder="What was done, and what was observed on re-inspection…"
-                      className="mt-2 w-full rounded border border-navy/20 px-3 py-2 text-sm"
-                    />
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-navy/20 bg-white px-3 text-xs font-semibold text-navy hover:bg-stripe">
-                        <ImagePlus size={14} aria-hidden /> Attach evidence
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) attachVerificationPhoto(f);
-                            e.target.value = '';
-                          }}
-                        />
-                      </label>
-                      {verifyDraft.photo && (
-                        <img src={verifyDraft.photo} alt="Evidence preview" className="h-9 w-14 rounded object-cover" />
-                      )}
-                      <span className="flex-1" />
-                      <button
-                        type="button"
-                        onClick={() => setVerifyDraft(null)}
-                        className="min-h-9 rounded-md border border-navy/20 bg-white px-3 text-xs font-semibold text-navy hover:bg-stripe"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={confirmVerification}
-                        disabled={busy}
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-success px-3 text-xs font-semibold text-white disabled:opacity-60"
-                      >
-                        <Check size={14} aria-hidden /> Confirm SAT
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </Card>
+              <VerificationPanel
+                incident={incident}
+                verified={verified}
+                verifyDraft={verifyDraft}
+                busy={busy}
+                onStartVerify={() => setVerifyDraft({ note: '', photo: null })}
+                onClearVerification={clearVerification}
+                onDraftChange={setVerifyDraft}
+                onAttachPhoto={attachVerificationPhoto}
+                onConfirm={confirmVerification}
+              />
             </>
           )}
 
@@ -1161,102 +1021,11 @@ export default function IncidentDetailPage() {
   );
 }
 
-function RadioButton({ checked, tone, label, onClick }) {
-  const ring = tone === 'success' ? 'border-success' : 'border-alert';
-  const dot = tone === 'success' ? 'bg-success' : 'bg-alert';
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={checked}
-      aria-label={label}
-      title={label}
-      className={`inline-flex h-5 w-5 items-center justify-center rounded-full border-2 transition ${
-        checked ? ring : 'border-navy/25 hover:border-navy/50'
-      }`}
-    >
-      {checked && <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />}
-    </button>
-  );
-}
 
-function Card({ title, children }) {
-  return (
-    <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-sm font-semibold text-navy">{title}</h2>
-      {children}
-    </section>
-  );
-}
 
-function Row({ label, value }) {
-  return (
-    <div className="grid gap-0.5 py-2 text-sm sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className="break-words text-ink">{value || '—'}</dd>
-    </div>
-  );
-}
 
-function Field({ label, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs text-muted">{label}</span>
-      {children}
-    </label>
-  );
-}
 
-function StripField({ label, value, sub, strong }) {
-  return (
-    <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-navy/10 lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
-      <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-0.5 text-sm ${strong ? 'font-semibold text-navy' : 'text-ink'}`}>{value || '—'}</p>
-      {sub && <p className="text-xs text-muted">{sub}</p>}
-    </div>
-  );
-}
 
-function Metric({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs text-muted">{label}</p>
-      <p className="mt-0.5 text-sm text-ink">{value}</p>
-    </div>
-  );
-}
 
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <div>
-      <span className="mb-1 block text-xs text-muted">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
 
-function MenuItem({ onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="block w-full px-3 py-2 text-left text-sm text-navy hover:bg-stripe"
-    >
-      {children}
-    </button>
-  );
-}
 
-function labelOf(list, value) {
-  return list.find((row) => row.value === value)?.label || value || '—';
-}

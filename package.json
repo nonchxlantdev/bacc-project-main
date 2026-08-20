@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "verify:pdf": "node scripts/verify-pdf.mjs",
-    "verify:palette": "node scripts/validate-palette.mjs"
+    "verify:palette": "node scripts/validate-palette.mjs",
+    "verify:content": "node scripts/audit-pmm-content.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

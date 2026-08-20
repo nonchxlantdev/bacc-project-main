@@ -99,6 +99,12 @@ textarea {
     display: block;
   }
 
+  /* A group heading spans the card and stays left-aligned, unlike the centred
+     loading and empty-state rows. */
+  .table-stack tr.group-row td[colspan] {
+    text-align: left;
+  }
+
   /* Empty-state and loading rows span the table and have no label. */
   .table-stack td[colspan] {
     display: block;

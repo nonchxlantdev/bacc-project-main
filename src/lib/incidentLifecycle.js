@@ -107,3 +107,52 @@ export function isQualifyingReinspection(submission, incident) {
   if (!date || !incident.reported_at) return true;
   return String(date) >= String(incident.reported_at).slice(0, 10);
 }
+
+/**
+ * What a linked incident means for the checklist item it came from.
+ *
+ * The item's recorded answer NEVER changes — BACC §11: a submitted record is
+ * the evidence of what was observed on the day, and clearing the defect later
+ * does not make the runway have been serviceable at the time of inspection.
+ * What the checklist should show is the CURRENT state of the deficiency, so a
+ * reader is not left thinking nothing was ever done about it.
+ */
+export function itemResolutionState(incident) {
+  if (!incident) return null;
+  const ref = incident.incident_ref || incident.noc_no || 'Incident';
+  if (incident.status === 'closed' || hasSatVerification(incident)) {
+    const when =
+      incident.verification?.verified_at ??
+      incident.closed_at ??
+      incident.resolved_at ??
+      null;
+    return {
+      tone: 'cleared',
+      ref,
+      label: 'Cleared — re-inspected SAT',
+      detail: incident.reinspection_submission_id
+        ? 'Verified by a later re-inspection of this item.'
+        : 'Verified against this incident.',
+      at: when,
+      incidentId: incident.id,
+    };
+  }
+  if (incident.status === 'resolved') {
+    return {
+      tone: 'pending',
+      ref,
+      label: 'Resolved — awaiting SAT verification',
+      detail: 'Corrective work reported complete; the re-inspection has not been recorded yet.',
+      at: incident.resolved_at ?? null,
+      incidentId: incident.id,
+    };
+  }
+  return {
+    tone: 'open',
+    ref,
+    label: `Open — ${incidentStatusLabel(incident.status)}`,
+    detail: 'Corrective action is still in progress.',
+    at: null,
+    incidentId: incident.id,
+  };
+}

@@ -1,0 +1,261 @@
+{
+  "code": "PGIA-PMM-F10",
+  "annexLabel": "Annex J",
+  "documentFamily": "PMM",
+  "title": "Construction Area Daily Safety Inspection Checklist",
+  "description": "Completed by Apron Supervisor or OM daily during any active construction or major maintenance project. Submitted",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "daily",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "date"
+    },
+    {
+      "key": "projectName",
+      "label": "Project Name",
+      "type": "text",
+      "required": false,
+      "mapKey": "project_name"
+    },
+    {
+      "key": "projectPhase",
+      "label": "Project Phase",
+      "type": "text",
+      "required": false,
+      "mapKey": "project_phase"
+    },
+    {
+      "key": "inspectionConductedBy",
+      "label": "Inspection conducted by",
+      "type": "text",
+      "required": false,
+      "mapKey": "inspection_conducted_by"
+    },
+    {
+      "key": "contractorSiteSafetyOfficerPresent",
+      "label": "Contractor Site Safety Officer present",
+      "type": "yes_no",
+      "required": true,
+      "markPrefix": "contractor_site_safety_officer_present",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "key": "notamActiveRef",
+      "label": "NOTAM Active (Ref.)",
+      "type": "text",
+      "required": false,
+      "mapKey": "notam_active_ref"
+    },
+    {
+      "key": "workArea",
+      "label": "Work Area",
+      "type": "text",
+      "required": false,
+      "mapKey": "work_area"
+    }
+  ],
+  "sections": [
+    {
+      "title": "DEMARCATION AND SITE SAFETY",
+      "items": [
+        {
+          "code": "CS-01",
+          "text": "Construction area boundary cones/barricades in place and complete no gaps"
+        },
+        {
+          "code": "CS-02",
+          "text": "All barriers frangible (not rigid) no solid structures in safety areas"
+        },
+        {
+          "code": "CS-03",
+          "text": "Cone spacing ≤ 7.5 m along all active boundaries"
+        },
+        {
+          "code": "CS-04",
+          "text": "Retroreflective material on all cones and barriers adequate for current visibility"
+        },
+        {
+          "code": "CS-05",
+          "text": "Obstruction lights on all barriers (red, steady or flashing) operational if evening/night works"
+        },
+        {
+          "code": "CS-06",
+          "text": "No non-frangible structures, equipment, or stockpiled materials within RESA or runway strip without BDCA approval"
+        }
+      ]
+    },
+    {
+      "title": "FOD PREVENTION",
+      "items": [
+        {
+          "code": "CS-07",
+          "text": "All stockpiled materials contained (aggregate, concrete, HMA) no loose windblown material"
+        },
+        {
+          "code": "CS-08",
+          "text": "No loose fasteners, tools, or small materials visible on or near movement area"
+        },
+        {
+          "code": "CS-09",
+          "text": "Construction vehicle FOD check log completed for all vehicles entering operational area"
+        },
+        {
+          "code": "CS-10",
+          "text": "Contractor FOD walk of construction site completed for this shift (confirm with Site Safety Officer)"
+        },
+        {
+          "code": "CS-11",
+          "text": "No FOD from construction site found on operational pavement areas"
+        }
+      ]
+    },
+    {
+      "title": "TEMPORARY MARKINGS AND SIGNS",
+      "items": [
+        {
+          "code": "CS-12",
+          "text": "All temporary pavement markings required by Construction Safety Plan in place and visible"
+        },
+        {
+          "code": "CS-13",
+          "text": "Temporary markings clearly distinguishable from permanent markings"
+        },
+        {
+          "code": "CS-14",
+          "text": "All temporary signs in place per Construction Safety Plan"
+        },
+        {
+          "code": "CS-15",
+          "text": "No permanent markings obscured without temporary equivalents installed"
+        }
+      ]
+    },
+    {
+      "title": "OPERATIONAL AREA INTEGRITY",
+      "items": [
+        {
+          "code": "CS-16",
+          "text": "Operational runway surfaces no debris, no equipment, no material from construction zone"
+        },
+        {
+          "code": "CS-17",
+          "text": "Operational taxiways no debris or material from construction zone"
+        },
+        {
+          "code": "CS-18",
+          "text": "No construction equipment parked within safety area outside designated construction zone"
+        },
+        {
+          "code": "CS-19",
+          "text": "All construction vehicles have visible PGIA airside identification"
+        },
+        {
+          "code": "CS-20",
+          "text": "All construction personnel wearing high-visibility vests"
+        },
+        {
+          "code": "CS-21",
+          "text": "Construction site radio communications confirmed operational"
+        }
+      ]
+    },
+    {
+      "title": "NOTAM AND COORDINATION",
+      "items": [
+        {
+          "code": "CS-22",
+          "text": "Current NOTAM accurately reflects scope of construction closure/restriction"
+        },
+        {
+          "code": "CS-23",
+          "text": "No work has exceeded the scope of the current NOTAM"
+        },
+        {
+          "code": "CS-24",
+          "text": "If works scope has changed, updated NOTAM issued before proceeding"
+        }
+      ]
+    }
+  ],
+  "summaryFields": [
+    {
+      "key": "nonConformancesFoundDescribeAndActionTaken",
+      "label": "NON-CONFORMANCES FOUND (describe and action taken)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "non_conformances_found_describe_and_acti"
+    },
+    {
+      "key": "worksSuspendedToday",
+      "label": "WORKS SUSPENDED TODAY",
+      "type": "yes_no",
+      "required": false,
+      "markPrefix": "works_suspended_today",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    }
+  ],
+  "deficienciesField": {
+    "label": "NON-CONFORMANCES FOUND (describe and action taken)",
+    "mapKey": "non_conformances_found_describe_and_acti"
+  },
+  "signoffs": [
+    {
+      "role": "inspector",
+      "label": "Inspection conducted by (Name / Position / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "contractor",
+      "label": "Contractor Site Safety Officer acknowledgment (Name / Signature)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered."
+  ]
+}

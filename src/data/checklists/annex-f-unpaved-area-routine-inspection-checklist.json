@@ -1,0 +1,297 @@
+{
+  "code": "PGIA-PMM-F06",
+  "annexLabel": "Annex F",
+  "documentFamily": "PMM",
+  "title": "Unpaved Area Routine Inspection Checklist",
+  "description": "Completed by Apron Supervisor or OM: weekly and after any triggering event. Submitted to OM.",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "weekly",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "time",
+      "required": true,
+      "mapKey": "time"
+    },
+    {
+      "key": "conductedByNamePosition",
+      "label": "Conducted by (Name / Position)",
+      "type": "text",
+      "required": false,
+      "mapKey": "conducted_by_name_position"
+    },
+    {
+      "key": "inspectionType",
+      "label": "Inspection Type",
+      "type": "radio",
+      "required": true,
+      "markPrefix": "inspection_type",
+      "options": [
+        {
+          "value": "routine_weekly_other",
+          "label": "Routine Weekly Other: ____"
+        },
+        {
+          "value": "post_rain",
+          "label": "post-rain"
+        },
+        {
+          "value": "post_excursion",
+          "label": "post-excursion"
+        },
+        {
+          "value": "pre_post_grass_cut",
+          "label": "Pre/Post Grass-Cut"
+        }
+      ]
+    },
+    {
+      "key": "inspectionTypeOther",
+      "label": "Inspection Type — other",
+      "type": "text",
+      "required": false,
+      "mapKey": "inspection_type_other"
+    },
+    {
+      "key": "recentRainfallMmIfApplicable",
+      "label": "Recent Rainfall (mm, if applicable)",
+      "type": "text",
+      "required": false,
+      "mapKey": "recent_rainfall_mm_if_applicable"
+    },
+    {
+      "key": "weather",
+      "label": "Weather",
+      "type": "text",
+      "required": false,
+      "mapKey": "weather"
+    }
+  ],
+  "sections": [
+    {
+      "title": "ZONE 1 — RUNWAY STRIP GRASS AREAS",
+      "items": [
+        {
+          "code": "UA-01",
+          "text": "Grass height measured at representative points within 20–38 cm range"
+        },
+        {
+          "code": "UA-02",
+          "text": "No areas of grass exceeding 38 cm height anywhere in runway strip"
+        },
+        {
+          "code": "UA-03",
+          "text": "No objects, debris, or non-grass items exceeding 7.5 cm height in cleared area"
+        },
+        {
+          "code": "UA-04",
+          "text": "No significant depressions, mounds, or ruts > 7.5 cm in runway strip"
+        },
+        {
+          "code": "UA-05",
+          "text": "No saturated or flooded zones in runway strip adjacent to runway edges"
+        },
+        {
+          "code": "UA-06",
+          "text": "No wildlife nests, burrows, or significant bird/wildlife congregation observed"
+        },
+        {
+          "code": "UA-07",
+          "text": "No unauthorized equipment, vehicles, or materials left in runway strip"
+        },
+        {
+          "code": "UA-08",
+          "text": "Runway strip boundaries (fence / markers) intact and correctly positioned"
+        }
+      ]
+    },
+    {
+      "title": "ZONE 2 — RUNWAY END SAFETY AREAS (RESA)",
+      "items": [
+        {
+          "code": "UA-09",
+          "text": "RESA at Threshold 07 completely free of objects > 7.5 cm height"
+        },
+        {
+          "code": "UA-10",
+          "text": "RESA at Threshold 07 ground surface level, no significant depressions or mounds"
+        },
+        {
+          "code": "UA-11",
+          "text": "RESA at Threshold 07 no standing water; ground appears firm"
+        },
+        {
+          "code": "UA-12",
+          "text": "RESA at Threshold 07 no soft spots or subsidence evident under foot-probe"
+        },
+        {
+          "code": "UA-13",
+          "text": "RESA at Threshold 25 completely free of objects > 7.5 cm height"
+        },
+        {
+          "code": "UA-14",
+          "text": "RESA at Threshold 25 ground surface level, no significant depressions or mounds"
+        },
+        {
+          "code": "UA-15",
+          "text": "RESA at Threshold 25 no standing water; ground appears firm"
+        },
+        {
+          "code": "UA-16",
+          "text": "RESA at Threshold 25 no soft spots or subsidence evident under foot-probe"
+        }
+      ]
+    },
+    {
+      "title": "ZONE 3 — TAXIWAY STRIPS (ALPHA, BRAVO, CHARLIE,)",
+      "items": [
+        {
+          "code": "UA-17",
+          "text": "Taxiway Alpha strip grass within acceptable height range; no objects > 7.5 cm"
+        },
+        {
+          "code": "UA-18",
+          "text": "Taxiway Alpha strip no soft spots adjacent to taxiway shoulders"
+        },
+        {
+          "code": "UA-19",
+          "text": "Taxiway Bravo strip grass within acceptable height range; no objects > 7.5 cm"
+        },
+        {
+          "code": "UA-20",
+          "text": "Taxiway Charlie strip grass within acceptable height range; no objects > 7.5 cm"
+        },
+        {
+          "code": "UA-22",
+          "text": "No saturated areas in taxiway strips that may undermine unpaved shoulder integrity"
+        }
+      ]
+    },
+    {
+      "title": "ZONE 4 — TURN PAD SURROUNDS",
+      "items": [
+        {
+          "code": "UA-23",
+          "text": "Turn pad surround at Threshold 07 free of FOD, loose aggregate, and objects > 7.5 cm"
+        },
+        {
+          "code": "UA-24",
+          "text": "Turn pad surround at Threshold 07 no ruts > 7.5 cm from nose gear"
+        },
+        {
+          "code": "UA-25",
+          "text": "Turn pad surround at Threshold 25 free of FOD, loose aggregate, and objects > 7.5 cm"
+        },
+        {
+          "code": "UA-26",
+          "text": "Turn pad surround at Threshold 25 no ruts > 7.5 cm from nose gear"
+        }
+      ]
+    },
+    {
+      "title": "ZONE 5 — INFIELD GRASS AREAS",
+      "items": [
+        {
+          "code": "UA-27",
+          "text": "No unauthorized vehicles, materials, or structures in infield areas"
+        },
+        {
+          "code": "UA-28",
+          "text": "No waste accumulation, debris piles, nesting material, or animal carcasses"
+        },
+        {
+          "code": "UA-29",
+          "text": "No significant bird or wildlife congregation creating aviation hazard"
+        },
+        {
+          "code": "UA-30",
+          "text": "No infield grass exceeding 50 cm height"
+        }
+      ]
+    },
+    {
+      "title": "ZONE 7 — SATURATED AND LOW-BEARING ZONES",
+      "items": [
+        {
+          "code": "UA-31",
+          "text": "All mapped Zone 7 areas no expansion of saturated zones beyond mapped boundaries"
+        },
+        {
+          "code": "UA-32",
+          "text": "No new soft spots or subsidence identified outside existing Zone 7 map"
+        },
+        {
+          "code": "UA-33",
+          "text": "No upwelling water or seepage from Zone 7 areas onto adjacent safety areas"
+        },
+        {
+          "code": "UA-34",
+          "text": "No unauthorized vehicle entry into any Zone 7 restricted area"
+        },
+        {
+          "code": "UA-35",
+          "text": "Zone 7 restricted zone markers/signage in place and legible"
+        }
+      ]
+    }
+  ],
+  "summaryFields": [
+    {
+      "key": "deficienciesAndObservationsDescribeZoneItemLocationConditionAndRecommendedAction",
+      "label": "DEFICIENCIES AND OBSERVATIONS (describe zone, item, location, condition, and recommended action)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "deficiencies_and_observations_describe_z"
+    }
+  ],
+  "deficienciesField": {
+    "label": "DEFICIENCIES AND OBSERVATIONS (describe zone, item, location, condition, and recommended action)",
+    "mapKey": "deficiencies_and_observations_describe_z"
+  },
+  "signoffs": [
+    {
+      "role": "inspector",
+      "label": "Conducted by (Name / Position / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "om",
+      "label": "OM or COO Acknowledgment (Name / Signature / Date)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered."
+  ]
+}

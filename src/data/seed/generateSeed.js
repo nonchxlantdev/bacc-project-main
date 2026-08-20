@@ -11,10 +11,10 @@ import { airportIso } from '../../lib/belizeTime.js';
 import { generatePendingInstances, refreshInstanceStatuses } from '../../lib/instanceGeneration.js';
 import { TEMPLATE_REGISTRY } from '../templates/registry.js';
 
-// Bumped to 5: the sign-in roster changed (Shamira Young / Glenrick Spain, with
-// can_login), so saved demo stores must regenerate or the login screen would
-// still offer the old accounts.
-export const SEED_VERSION = 5;
+// Bumped to 7: Annexes K and L joined the registry and every template now
+// carries its owning group, so a saved demo store must regenerate or the
+// catalogue would show 28 ungrouped forms.
+export const SEED_VERSION = 7;
 export const SEED_AS_OF = '2026-08-15';
 export const SEED_FROM = '2026-02-01';
 
@@ -98,6 +98,9 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
     title: entry.title,
     annex_label: entry.annexLabel,
     document_family: entry.family,
+    // The folder the approved form arrived in — the team that owns it.
+    group: entry.group ?? null,
+    document_type: entry.documentType ?? 'checklist',
     manual: entry.manual,
     department: entry.department,
     default_frequency: entry.defaultFrequency,

@@ -9,9 +9,13 @@
  *   1. render a POPULATED overlay and a BLANK overlay of the same base
  *   2. diff them — every changed pixel is stamped content
  *   3. assert each changed pixel falls inside a declared field box
+ *   4. assert no stamped pixel lands on the form's own pre-printed ink
  *
- * Anything outside a declared box is ink on the approved form where the map did
- * not say it would be. That is exactly BACC acceptance criterion #11.
+ * Step 3 catches a coordinate the map did not declare. Step 4 catches the more
+ * dangerous case: a box that IS declared but sits over the approved artwork —
+ * a remarks cell wider than its column, a value written across a printed label.
+ * A declared box is not automatically a legal one. Together these are BACC
+ * acceptance criterion #11.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -21,6 +25,9 @@ import { PNG } from 'pngjs';
 
 const DPI = Number(process.env.PDF_DIFF_DPI || 130);
 const PAD = Number(process.env.PLACEMENT_PAD_PT || 3); // tolerance in PDF points
+// A handful of pixels can touch a printed rule where a cell's own border runs
+// through the padded box. Anything more is a value sitting on the artwork.
+const OVERPRINT_TOLERANCE = Number(process.env.OVERPRINT_TOLERANCE || 40);
 
 export function rasterise(pdfPath, prefix) {
   try {
@@ -77,14 +84,24 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
 
   // Group declared boxes by page
   const boxesByPage = new Map();
+  // Ticks and signatures are MEANT to sit on the artwork — a ✓ goes inside the
+  // printed ☐, a signature runs along the printed rule. Only text is forbidden
+  // from landing on pre-printed ink.
+  const inkOkByPage = new Map();
   for (const [key, f] of Object.entries(fieldMap.fields ?? {})) {
     const p = f.page ?? 0;
     if (!boxesByPage.has(p)) boxesByPage.set(p, []);
     boxesByPage.get(p).push({ key, ...fieldBox(f) });
+    if (f.type === 'mark' || f.type === 'image') {
+      if (!inkOkByPage.has(p)) inkOkByPage.set(p, []);
+      inkOkByPage.get(p).push({ key, ...fieldBox(f) });
+    }
   }
 
   const violations = [];
+  const overprints = [];
   let stampedPx = 0;
+  let overprintPx = 0;
 
   for (let p = 0; p < Math.min(A.length, basePages); p++) {
     const a = A[p];
@@ -104,7 +121,15 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
       py1: (pageH - (bx.y0 - PAD)) * pxPerPtY,
     }));
 
+    const inkOk = (inkOkByPage.get(p) ?? []).map((bx) => ({
+      px0: (bx.x0 - PAD) * pxPerPtX,
+      px1: (bx.x1 + PAD) * pxPerPtX,
+      py0: (pageH - (bx.y1 + PAD)) * pxPerPtY,
+      py1: (pageH - (bx.y0 - PAD)) * pxPerPtY,
+    }));
+
     const stray = new Map();
+    const over = new Map();
     for (let y = 0; y < a.height; y++) {
       for (let x = 0; x < a.width; x++) {
         const i = (a.width * y + x) << 2;
@@ -119,7 +144,29 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
           const kx = `${Math.round(x / 10) * 10},${Math.round(y / 10) * 10}`;
           stray.set(kx, (stray.get(kx) ?? 0) + 1);
         }
+        // Was this pixel already carrying the approved form's own printing?
+        // Grey is left alone — that is anti-aliasing at a glyph edge, not ink.
+        const lum = (b.data[i] + b.data[i + 1] + b.data[i + 2]) / 3;
+        const tickOrSignature = inkOk.some((bx) => x >= bx.px0 && x <= bx.px1 && y >= bx.py0 && y <= bx.py1);
+        if (lum < 140 && !tickOrSignature) {
+          overprintPx += 1;
+          const ko = `${Math.round(x / 10) * 10},${Math.round(y / 10) * 10}`;
+          over.set(ko, (over.get(ko) ?? 0) + 1);
+        }
       }
+    }
+
+    const overTotal = [...over.values()].reduce((s, n) => s + n, 0);
+    if (overTotal > OVERPRINT_TOLERANCE) {
+      const worst = [...over.entries()].sort((m, n) => n[1] - m[1]).slice(0, 6);
+      overprints.push({
+        page: p + 1,
+        count: overTotal,
+        hotspots: worst.map(([xy, n]) => {
+          const [px, py] = xy.split(',').map(Number);
+          return `${n}px near (${(px / pxPerPtX).toFixed(0)}pt, ${(pageH - py / pxPerPtY).toFixed(0)}pt)`;
+        }),
+      });
     }
 
     const total = [...stray.values()].reduce((s, n) => s + n, 0);
@@ -137,18 +184,29 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
   }
 
   const extraPages = A.length - basePages;
-  console.log(`\n${label}: ${stampedPx} stamped px across ${basePages} approved pages, ${extraPages} continuation page(s)`);
-  if (!violations.length) {
-    console.log('PASS — every stamped pixel falls inside a declared field box.\n');
-    return { ok: true, violations, stampedPx };
+  console.log(
+    `\n${label}: ${stampedPx} stamped px across ${basePages} approved pages, ${extraPages} continuation page(s)`,
+  );
+  if (!violations.length && !overprints.length) {
+    console.log('PASS — every stamped pixel is inside a declared box and clear of the approved artwork.\n');
+    return { ok: true, violations, overprints, stampedPx, overprintPx };
   }
-  console.error('FAIL — ink outside declared field boxes:');
-  for (const v of violations) {
-    console.error(`  page ${v.page}: ${v.count}px stray${v.note ? ` (${v.note})` : ''}`);
-    for (const h of v.hotspots ?? []) console.error(`      ${h}`);
+  if (violations.length) {
+    console.error('FAIL — ink outside declared field boxes:');
+    for (const v of violations) {
+      console.error(`  page ${v.page}: ${v.count}px stray${v.note ? ` (${v.note})` : ''}`);
+      for (const h of v.hotspots ?? []) console.error(`      ${h}`);
+    }
+  }
+  if (overprints.length) {
+    console.error('FAIL — stamped values printed on top of the approved form:');
+    for (const v of overprints) {
+      console.error(`  page ${v.page}: ${v.count}px over pre-printed ink`);
+      for (const h of v.hotspots ?? []) console.error(`      ${h}`);
+    }
   }
   console.error('');
-  return { ok: false, violations, stampedPx };
+  return { ok: false, violations, overprints, stampedPx, overprintPx };
 }
 
 if (process.argv[1] && process.argv[1].endsWith('verify-placement.mjs')) {

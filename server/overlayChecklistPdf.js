@@ -245,15 +245,32 @@ export function submissionToOverlayValues(record) {
     if (row?.remarks) values[`${code}.remarks`] = row.remarks;
   }
 
-  const inspector = (record.signoffs ?? []).find((s) => s.role === 'inspector');
-  const om = (record.signoffs ?? []).find((s) => s.role === 'om_acknowledgment');
-  if (inspector) {
-    values.inspector_name = [inspector.name, inspector.position].filter(Boolean).join(' / ');
-    values.inspector_date = inspector.signed_at ? String(inspector.signed_at).slice(0, 10) : '';
+  // Summary blocks: the free-text areas and ☐ option groups the approved forms
+  // print after the item table ("DEFICIENCY DETAILS (…):", "OVERALL STATUS
+  // (mark one):"). Same contract as headerFields — markPrefix for a tick,
+  // mapKey for text.
+  const summary = record.summary ?? {};
+  for (const field of schema?.summaryFields ?? []) {
+    const raw = summary[field.key];
+    if (raw === undefined || raw === null || raw === '') continue;
+    if (field.markPrefix) values[`${field.markPrefix}.${raw}`] = true;
+    else values[field.mapKey ?? snake(field.key)] = raw;
   }
-  if (om) {
-    values.om_name = [om.name, om.position].filter(Boolean).join(' / ');
-    values.om_date = om.signed_at ? String(om.signed_at).slice(0, 10) : '';
+  // The app's single deficiency narrative maps onto whichever block the form
+  // designates as its deficiency area.
+  const narrative = schema?.deficienciesField?.mapKey;
+  if (narrative && record.deficiencies_summary && values[narrative] === undefined) {
+    values[narrative] = record.deficiencies_summary;
+  }
+
+  // Sign-offs. Annex D's two roles keep their historical field names; every
+  // other role (cec, coo, contractor, apron_supervisor, inspector_2 …) maps
+  // straight through, because the PMM annexes carry two or three slots.
+  for (const s of record.signoffs ?? []) {
+    if (!s?.role) continue;
+    const prefix = s.role === 'om_acknowledgment' ? 'om' : s.role;
+    values[`${prefix}_name`] = [s.name, s.position].filter(Boolean).join(' / ');
+    values[`${prefix}_date`] = s.signed_at ? String(s.signed_at).slice(0, 10) : '';
   }
   return values;
 }

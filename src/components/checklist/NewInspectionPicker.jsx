@@ -1,31 +1,29 @@
 import { useMemo, useState } from 'react';
 import { ClipboardCheck, Search, X } from 'lucide-react';
-import { FAMILY_LABELS, FREQUENCY_LABELS } from '../../data/templates/registry.js';
+import { FREQUENCY_LABELS } from '../../data/templates/registry.js';
+import { filterTemplates, groupTemplates } from '../../lib/checklistCatalogue.js';
 
 /**
- * Pick a form to start. With 31 approved forms a single "New inspection" button
- * is meaningless, and an unfiltered list of 31 is worse — the list passed in is
+ * Pick a form to start. With 30 approved forms a single "New inspection" button
+ * is meaningless, and an unfiltered list of 30 is worse — the list passed in is
  * already limited to what this user's role and department may open (BACC §4).
+ *
+ * Grouped by the owning team, matching how BACC files the approved forms, and
+ * filterable by cadence because "what am I due to do today" is the real question.
  */
 export default function NewInspectionPicker({ templates, onPick, onClose, busyKey }) {
   const [query, setQuery] = useState('');
+  const [frequency, setFrequency] = useState('');
 
-  const grouped = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const matches = templates.filter((t) => {
-      if (!q) return true;
-      return [t.code, t.title, t.annex_label, t.department, t.document_family]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q));
-    });
-    const byFamily = new Map();
-    for (const t of matches) {
-      const fam = t.document_family || 'Other';
-      if (!byFamily.has(fam)) byFamily.set(fam, []);
-      byFamily.get(fam).push(t);
-    }
-    return [...byFamily.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [templates, query]);
+  const frequencies = useMemo(() => {
+    const present = new Set(templates.map((t) => t.default_frequency).filter(Boolean));
+    return Object.keys(FREQUENCY_LABELS).filter((f) => present.has(f));
+  }, [templates]);
+
+  const grouped = useMemo(
+    () => groupTemplates(filterTemplates(templates, { query, frequency })),
+    [templates, query, frequency],
+  );
 
   const total = grouped.reduce((n, [, list]) => n + list.length, 0);
 
@@ -43,24 +41,37 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded p-1 text-muted hover:bg-stripe hover:text-navy"
+            className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-stripe hover:text-navy"
           >
             <X size={18} aria-hidden />
           </button>
         </div>
 
-        <div className="border-b border-navy/10 px-5 py-3">
-          <div className="relative">
+        <div className="flex flex-col gap-2 border-b border-navy/10 px-4 py-3 sm:flex-row sm:px-5">
+          <div className="relative min-w-0 flex-1">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
             <input
               type="search"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by form number, title or department…"
-              className="min-h-10 w-full rounded border border-navy/20 pl-9 pr-3 text-sm"
+              placeholder="Search by form number, title or team…"
+              className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
             />
           </div>
+          <select
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value)}
+            aria-label="Filter by frequency"
+            className="min-h-11 shrink-0 rounded border border-navy/20 px-2 text-sm sm:min-h-10"
+          >
+            <option value="">Any frequency</option>
+            {frequencies.map((f) => (
+              <option key={f} value={f}>
+                {FREQUENCY_LABELS[f]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
@@ -72,10 +83,11 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
             </p>
           )}
 
-          {grouped.map(([family, list]) => (
-            <section key={family} className="mb-4 last:mb-0">
-              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {FAMILY_LABELS[family] ?? family}
+          {grouped.map(([groupName, list]) => (
+            <section key={groupName} className="mb-4 last:mb-0">
+              <h3 className="sticky top-0 z-10 -mx-1 mb-2 bg-white px-1 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {groupName}
+                <span className="ml-1.5 font-normal normal-case tracking-normal">· {list.length}</span>
               </h3>
               <ul className="space-y-1.5">
                 {list.map((t) => (

@@ -19,6 +19,7 @@ export function createSupabaseRepositories() {
       'listAll',
       'get',
       'persist',
+      'amendItemResult',
       'deleteDraft',
       'acknowledge',
       'listQualifyingReinspections',

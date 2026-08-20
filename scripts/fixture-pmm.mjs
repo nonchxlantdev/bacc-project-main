@@ -1,10 +1,16 @@
 /**
- * Generic VAES fixture + placement check.
+ * Generic PMM fixture + placement check.
  *
- * One fixture for the whole family: everything is driven by the template's own
- * schema and field map, so a newly extracted form is verifiable with no new code.
+ * Builds a fully-populated submission for any PMM annex — every header field,
+ * every item result, every remarks cell, every summary block and every
+ * signature — overlays it onto the approved base, and asserts that every pixel
+ * of stamped ink lands inside a declared field box.
  *
- *   node fixture-vaes.mjs <schema.json> <fieldmap.json> <base.pdf>
+ * A form that passes here cannot have a coordinate quietly landing on top of
+ * the approved wording, because the diff is against the same overlay run with
+ * no values at all.
+ *
+ *   node fixture-pmm.mjs <schema.json> <fieldmap.json> <base.pdf> [outDir]
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -15,8 +21,8 @@ import { verifyPlacement } from './verify-placement.mjs';
 const SAMPLE = {
   date: '2026-05-22',
   time: '08:15',
+  number: '42',
   text: 'Clear, light NE wind 8 kt, visibility 10 km',
-  yes_no: 'no',
 };
 
 function strokePng(seed) {
@@ -44,30 +50,43 @@ export async function buildAndVerify({ schema, fieldMap, basePdfBytes, outDir, l
 
   const header = {};
   for (const f of schema.headerFields ?? []) {
-    header[f.key] = SAMPLE[f.type] ?? SAMPLE.text;
+    header[f.key] = f.options?.length ? f.options[0].value : SAMPLE[f.type] ?? SAMPLE.text;
+  }
+
+  const summary = {};
+  for (const f of schema.summaryFields ?? []) {
+    summary[f.key] = f.options?.length
+      ? f.options[f.options.length - 1].value
+      : 'Deficiency recorded during this inspection; OM notified and corrective action scheduled with the contractor.';
   }
 
   const items = {};
-  const results = ['sat', 'no_sat', 'na'];
+  const results = ['sat', 'no_sat'];
   (schema.sections ?? []).forEach((sec) => {
     (sec.items ?? []).forEach((item, i) => {
       const result = results[i % results.length];
       items[item.code] = {
         result,
-        remarks:
-          result === 'sat'
-            ? ''
-            : `Defect noted at ${item.code}; OEM part ordered and scheduled for replacement`,
+        remarks: result === 'sat' ? '' : `Defect at ${item.code}; repair raised and scheduled`,
       };
     });
   });
+
+  const signoffs = (schema.signoffs ?? []).map((s) => ({
+    role: s.role,
+    name: 'R. Charlie',
+    position: 'Maintenance Inspector',
+    signed_at: '2026-05-22T16:10:00-06:00',
+  }));
 
   const record = {
     id: `${fieldMap.templateKey}-FIXTURE`,
     template_code: schema.code,
     schema,
     header,
+    summary,
     items,
+    signoffs,
     deficiencies_summary: '',
   };
 
@@ -79,14 +98,13 @@ export async function buildAndVerify({ schema, fieldMap, basePdfBytes, outDir, l
       seed += 40;
     }
   }
-  // every *_name beside a signature
+
   const values = submissionToOverlayValues(record);
-  for (const key of Object.keys(fieldMap.fields)) {
-    if (key.endsWith('_name') && values[key] === undefined) {
-      values[key] = key.startsWith('supervisor')
-        ? 'D. Flowers / Elec. Maint. Supervisor'
-        : 'R. Charlie / Elec. Maint. Technician';
-    }
+  // Anything mapped but still unset would leave a coordinate unexercised, and an
+  // unexercised coordinate is an unverified one.
+  for (const [key, f] of Object.entries(fieldMap.fields)) {
+    if (f.type === 'image' || f.type === 'mark') continue;
+    if (values[key] === undefined || values[key] === '') values[key] = SAMPLE.text;
   }
 
   const meta = {
@@ -113,7 +131,7 @@ export async function buildAndVerify({ schema, fieldMap, basePdfBytes, outDir, l
   return verifyPlacement({ populatedPdf: populated, blankPdf: blank, fieldMap, label: label ?? fieldMap.templateKey });
 }
 
-if (process.argv[1]?.endsWith('fixture-vaes.mjs')) {
+if (process.argv[1]?.endsWith('fixture-pmm.mjs')) {
   const [, , schemaPath, mapPath, basePdf, outDir = 'tmp-pdf-diff'] = process.argv;
   const res = await buildAndVerify({
     schema: JSON.parse(readFileSync(schemaPath, 'utf8')),

@@ -1,0 +1,223 @@
+{
+  "code": "PGIA-PMM-F05",
+  "annexLabel": "Annex E",
+  "documentFamily": "PMM",
+  "title": "Aerodrome Sign Inspection Checklist",
+  "description": "Completed by Apron Supervisor or OM during weekly OCI. Electrical faults referred immediately to EEC per Annex 2-",
+  "manualHeader": {
+    "line1": "AERODROME OPERATIONS MANUAL",
+    "line2": "PHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "ANNEX 1-1\nPGIA 16-14"
+  },
+  "footer": {
+    "reviewLine": "Review: Ed. 01 Annex 2-1",
+    "dateLine": "Date: March 12, 2026. Maintenance Paved and Unpaved Manual."
+  },
+  "frequency": "weekly",
+  "responseType": {
+    "columns": [
+      "sat",
+      "no_sat"
+    ],
+    "labels": {
+      "sat": "SAT",
+      "no_sat": "NO SAT"
+    },
+    "remarksLabel": "Remarks / Location"
+  },
+  "headerFields": [
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date",
+      "required": true,
+      "mapKey": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "time",
+      "required": true,
+      "mapKey": "time"
+    },
+    {
+      "key": "conductedByNamePosition",
+      "label": "Conducted by (Name / Position)",
+      "type": "text",
+      "required": false,
+      "mapKey": "conducted_by_name_position"
+    },
+    {
+      "key": "inspectionIncludesNightIlluminationCheck",
+      "label": "Inspection includes night illumination check",
+      "type": "yes_no",
+      "required": true,
+      "markPrefix": "inspection_includes_night_illumination_check",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "title": "MANDATORY INSTRUCTION SIGNS (Red / White)",
+      "items": [
+        {
+          "code": "SG-01",
+          "text": "Runway 07 designation sign at holding position -face intact, legend '07' correct, illuminated"
+        },
+        {
+          "code": "SG-02",
+          "text": "Runway 25 designation sign at holding position- face intact, legend '25' correct, illuminated"
+        },
+        {
+          "code": "SG-03",
+          "text": "All other mandatory holding position signs face intact, legends correct, illuminated"
+        },
+        {
+          "code": "SG-04",
+          "text": "Critical area boundary sign (if applicable) intact and illuminated"
+        },
+        {
+          "code": "SG-05",
+          "text": "No-entry signs present and legible at all applicable locations"
+        },
+        {
+          "code": "SG-06",
+          "text": "All mandatory signposts upright, no visible corrosion or structural damage"
+        },
+        {
+          "code": "SG-07",
+          "text": "All mandatory sign bases secure, no cracking of base plate or anchor"
+        }
+      ]
+    },
+    {
+      "title": "LOCATION SIGNS (Yellow Text on Black Background)",
+      "items": [
+        {
+          "code": "SG-08",
+          "text": "Taxiway Alpha location sign 'A’ intact, legible, correct color"
+        },
+        {
+          "code": "SG-09",
+          "text": "Taxiway Bravo location sign 'B’ intact, legible, correct color"
+        },
+        {
+          "code": "SG-10",
+          "text": "Taxiway Charlie location sign 'C’ intact, legible, correct color"
+        }
+      ]
+    },
+    {
+      "title": "DIRECTION SIGNS (Black Text on Yellow Background)",
+      "items": [
+        {
+          "code": "SG-12",
+          "text": "Direction signs at Taxiway Alpha / Runway intersection all arrows correct and legible"
+        },
+        {
+          "code": "SG-13",
+          "text": "Direction signs at Taxiway Bravo / Runway intersection all arrows correct and legible"
+        },
+        {
+          "code": "SG-14",
+          "text": "Direction signs at Taxiway Charlie / Runway intersection all arrows correct and legible"
+        },
+        {
+          "code": "SG-16",
+          "text": "All direction signposts upright and structurally sound"
+        }
+      ]
+    },
+    {
+      "title": "RUNWAY DISTANCE REMAINING SIGNS (White on Black)",
+      "items": [
+        {
+          "code": "SG-17",
+          "text": "All runway distance remaining signs present on both sides of runway (verify count per BCAR-14)"
+        },
+        {
+          "code": "SG-18",
+          "text": "All numerals correct and legible"
+        },
+        {
+          "code": "SG-19",
+          "text": "All distance remaining signs illuminated (night/low visibility check)"
+        }
+      ]
+    },
+    {
+      "title": "GENERAL SIGN CONDITIONS",
+      "items": [
+        {
+          "code": "SG-20",
+          "text": "No sign face panels with water ingress (darkened, clouded, or moisture-fogged face)"
+        },
+        {
+          "code": "SG-21",
+          "text": "No signs with missing letters, numbers, or arrows"
+        },
+        {
+          "code": "SG-22",
+          "text": "No signs obscured by grass, weeds, or other vegetation"
+        },
+        {
+          "code": "SG-23",
+          "text": "No signs with impact damage from vehicles or FOD"
+        },
+        {
+          "code": "SG-24",
+          "text": "All sign mounting hardware intact (no missing bolts or loose fittings)"
+        }
+      ]
+    }
+  ],
+  "summaryFields": [
+    {
+      "key": "electricalMalfunctionsNotedListSignLocationAndNatureOfElectricalFaultReferEachToEecPerAnnex22",
+      "label": "ELECTRICAL MALFUNCTIONS NOTED (list sign location and nature of electrical fault — refer each to EEC per Annex 2-2)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "electrical_malfunctions_noted_list_sign_"
+    },
+    {
+      "key": "physicalDeficienciesNotedDescribeSignLocationDeficiencyTypeAndRecommendedAction",
+      "label": "PHYSICAL DEFICIENCIES NOTED (describe sign location, deficiency type, and recommended action)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "physical_deficiencies_noted_describe_sig",
+      "tightOnForm": true
+    }
+  ],
+  "deficienciesField": {
+    "label": "ELECTRICAL MALFUNCTIONS NOTED (list sign location and nature of electrical fault — refer each to EEC per Annex 2-2)",
+    "mapKey": "electrical_malfunctions_noted_list_sign_"
+  },
+  "signoffs": [
+    {
+      "role": "inspector",
+      "label": "Conducted by (Name / Position / Signature)",
+      "dateLabel": "Date"
+    },
+    {
+      "role": "om",
+      "label": "OM or COO Acknowledgment (Name / Signature / Date)",
+      "dateLabel": "Date"
+    }
+  ],
+  "validationRules": [
+    "Every item marked NO SAT requires non-empty remarks before submission."
+  ],
+  "notes": [
+    "Generated by scripts/pmm-extract.mjs from the approved base PDF. Re-run it rather than hand-editing; every coordinate is a measured glyph or rule position.",
+    "Item codes are the ones PRINTED on the approved form — they are not synthetic and must not be renumbered."
+  ]
+}
