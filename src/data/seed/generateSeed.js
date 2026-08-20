@@ -11,10 +11,11 @@ import { airportIso } from '../../lib/belizeTime.js';
 import { generatePendingInstances, refreshInstanceStatuses } from '../../lib/instanceGeneration.js';
 import { TEMPLATE_REGISTRY } from '../templates/registry.js';
 
-// Bumped to 7: Annexes K and L joined the registry and every template now
-// carries its owning group, so a saved demo store must regenerate or the
-// catalogue would show 28 ungrouped forms.
-export const SEED_VERSION = 7;
+// Bumped to 8: the scheduler now covers every cadence, not just monthly, and
+// the generated backlog is closed out (see backfillCompletedHistory) so the
+// demo opens on a working operation rather than 55 missed inspections. A saved
+// store from an earlier version must regenerate.
+export const SEED_VERSION = 8;
 export const SEED_AS_OF = '2026-08-15';
 export const SEED_FROM = '2026-02-01';
 
@@ -692,6 +693,7 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
     august.status = 'in_progress';
   }
 
+  instances = backfillCompletedHistory(instances, asOf);
   instances = refreshInstanceStatuses([...instances, ...extraInstances], asOfMs);
 
   const notifications = buildNotifications({ users, om, inspector, coo, cec, submissions, incidents, work_orders, asOf });
@@ -722,6 +724,48 @@ export function generateSeed({ asOf = SEED_AS_OF } = {}) {
     activity,
     projects: [],
   };
+}
+
+/**
+ * Close out the generated backlog.
+ *
+ * The scheduler fabricates every occurrence in the seed window, but PGIA is a
+ * working airport and those inspections were done. Left raw, the demo opened on
+ * ~55 missed items, which reads as a failing operation rather than a working
+ * one. So every past-due generated occurrence is marked submitted, except a
+ * deliberate handful left open so the overdue and missed states are still
+ * demonstrable on the dashboard and the team cards.
+ *
+ * Only untouched generated rows are affected — anything already carrying a real
+ * submission, or hand-written into the seed, is left exactly as it is.
+ */
+const KEEP_OVERDUE = 3;
+const KEEP_MISSED = 1;
+
+function backfillCompletedHistory(instances, asOfYmd) {
+  const isOpenBacklog = (row) =>
+    row.status === 'pending' && !row.submission_id && row.period_end < asOfYmd;
+
+  // Newest first, so the head of the list is recent enough to read as overdue
+  // rather than missed once statuses are refreshed.
+  const backlog = instances.filter(isOpenBacklog).sort((a, b) => (a.due_at < b.due_at ? 1 : -1));
+
+  // One per template, so the overdue items spread across teams instead of
+  // stacking three deep on whichever form happens to run daily.
+  const overdue = [];
+  const usedTemplates = new Set();
+  for (const row of backlog) {
+    if (overdue.length >= KEEP_OVERDUE) break;
+    if (usedTemplates.has(row.template_id)) continue;
+    usedTemplates.add(row.template_id);
+    overdue.push(row.id);
+  }
+
+  const leaveOpen = new Set([...overdue, ...backlog.slice(-KEEP_MISSED).map((row) => row.id)]);
+
+  return instances.map((row) =>
+    isOpenBacklog(row) && !leaveOpen.has(row.id) ? { ...row, status: 'submitted' } : row,
+  );
 }
 
 function u(n, email, full_name, position, role, department, can_login = false) {

@@ -1,10 +1,64 @@
 import {
+  addAirportDays,
   airportIso,
   airportMonthEndYmd,
   airportYmd,
+  eachDay,
   eachMonthStart,
+  eachPeriodStart,
+  eachWeekStart,
   isOverdueAt,
 } from './belizeTime.js';
+
+/**
+ * How each cadence carves the calendar.
+ *
+ * `starts` lists the period starts in a window; `end` gives the last day of a
+ * period. Everything else about generation is identical across cadences, so
+ * adding one is a single entry here rather than a new branch.
+ *
+ * `on_demand` and `ad_hoc` are deliberately absent: they are startable at any
+ * time but never scheduled, so they generate nothing.
+ *
+ * `backfillDays` caps how far back a cadence reaches on a first run. Without
+ * it, standing up the scheduler against a six-month window would conjure ~180
+ * "missed" daily inspections that nobody was ever asked to do. Low-frequency
+ * cadences have no cap — a missed quarterly genuinely is worth surfacing.
+ */
+const CADENCES = {
+  daily: {
+    starts: (from, to) => eachDay(from, to),
+    end: (start) => start,
+    backfillDays: 14,
+  },
+  weekly: {
+    starts: (from, to) => eachWeekStart(from, to),
+    end: (start) => addAirportDays(start, 6),
+    backfillDays: 56,
+  },
+  monthly: {
+    starts: (from, to) => eachMonthStart(from, to),
+    end: (start) => airportMonthEndYmd(start),
+  },
+  quarterly: {
+    starts: (from, to) => eachPeriodStart(from, to, 3),
+    end: (start) => airportMonthEndYmd(shiftMonths(start, 2)),
+  },
+  semi_annual: {
+    starts: (from, to) => eachPeriodStart(from, to, 6),
+    end: (start) => airportMonthEndYmd(shiftMonths(start, 5)),
+  },
+  annual: {
+    starts: (from, to) => eachPeriodStart(from, to, 12),
+    end: (start) => `${start.slice(0, 4)}-12-31`,
+  },
+};
+
+function shiftMonths(ymd, months) {
+  const [y, m] = ymd.split('-').map(Number);
+  const total = (m - 1) + months;
+  return `${y + Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}-01`;
+}
 
 /**
  * Idempotent instance generation: unique (assignment_rule_id, period_start).
@@ -23,12 +77,16 @@ export function generatePendingInstances({
   let n = 0;
 
   for (const rule of rules) {
-    if (rule.frequency !== 'monthly') continue;
-    for (const period_start of eachMonthStart(fromYmd, toYmd)) {
+    const cadence = CADENCES[rule.frequency];
+    if (!cadence) continue;
+    const from = cadence.backfillDays
+      ? maxYmd(fromYmd, addAirportDays(toYmd, -cadence.backfillDays))
+      : fromYmd;
+    for (const period_start of cadence.starts(from, toYmd)) {
       const key = `${rule.id}|${period_start}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      const period_end = airportMonthEndYmd(period_start);
+      const period_end = cadence.end(period_start);
       const due_at = airportIso(period_end, '23:59:59.999');
       n += 1;
       created.push({
@@ -51,6 +109,10 @@ export function generatePendingInstances({
   }
 
   return created;
+}
+
+function maxYmd(a, b) {
+  return a > b ? a : b;
 }
 
 export function refreshInstanceStatuses(instances, nowMs) {

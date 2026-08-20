@@ -1,4 +1,4 @@
-import { CalendarClock, Check, ChevronRight, Clock, Plus } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Check, ChevronRight, Clock, Plus } from 'lucide-react';
 
 /**
  * One team's folder in the catalogue grid.
@@ -33,7 +33,7 @@ export default function TeamCard({ team, onOpen }) {
       <p className="line-clamp-2 text-[13px] leading-snug text-muted">{team.blurb}</p>
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-        <StatusChip overdue={team.overdue} dueSoon={team.dueSoon} />
+        <StatusChip overdue={team.overdue} missed={team.missed} dueSoon={team.dueSoon} />
         <span className="text-xs text-muted">
           Last completed {team.lastCompleted ?? '—'}
         </span>
@@ -42,7 +42,16 @@ export default function TeamCard({ team, onOpen }) {
   );
 }
 
-function StatusChip({ overdue, dueSoon }) {
+// Worst state wins the chip: a missed inspection outranks an overdue one,
+// which outranks something merely coming up.
+function StatusChip({ overdue, missed, dueSoon }) {
+  if (missed > 0) {
+    return (
+      <Chip className="border-alert/30 bg-alert-soft text-alert" Icon={AlertTriangle}>
+        {missed} missed
+      </Chip>
+    );
+  }
   if (overdue > 0) {
     return (
       <Chip className="border-alert/30 bg-alert-soft text-alert" Icon={Clock}>

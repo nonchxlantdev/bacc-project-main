@@ -1,4 +1,4 @@
-import { ChevronLeft, ClipboardCheck, Plus, Search, X } from 'lucide-react';
+import { ChevronLeft, ClipboardCheck, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewInspectionPicker from '../components/checklist/NewInspectionPicker.jsx';
@@ -93,7 +93,10 @@ export default function ChecklistCataloguePage() {
     [templates, submissions, instances, nowMs],
   );
 
-  const lastByCode = useMemo(() => lastCompletedByCode(submissions), [submissions]);
+  const lastByCode = useMemo(
+    () => lastCompletedByCode(submissions, instances, templates),
+    [submissions, instances, templates],
+  );
 
   const searching = query.trim().length > 0;
   const showForms = searching || team !== null;
@@ -120,22 +123,14 @@ export default function ChecklistCataloguePage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-navy sm:text-2xl">All Checklists</h1>
-          <p className="text-sm text-muted">
-            Every approved form you are permitted to open, grouped the way BACC files them.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setPickerOpen(true)}
-          disabled={templates.length === 0}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50 sm:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          New Inspection
-        </button>
+      {/* No header action here on purpose — starting an inspection belongs with
+          the forms themselves: the Create New Inspection tile on the team grid,
+          or the Start button on each row once a team is open. */}
+      <header>
+        <h1 className="text-xl font-bold text-navy sm:text-2xl">All Checklists</h1>
+        <p className="text-sm text-muted">
+          Every approved form you are permitted to open, grouped the way BACC files them.
+        </p>
       </header>
 
       {error && (
@@ -145,7 +140,13 @@ export default function ChecklistCataloguePage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Total Checklist Forms" value={kpis.total} />
         <StatTile label="Completed This Month" value={kpis.completedThisMonth} />
-        <StatTile label="Overdue" value={kpis.overdue} />
+        {/* Overdue is recoverable, missed is a compliance gap — the note keeps
+            them distinct without spending a fifth tile on it. */}
+        <StatTile
+          label="Overdue"
+          value={kpis.overdue}
+          note={kpis.missed ? `${kpis.missed} also missed` : null}
+        />
         <StatTile label="Due Soon" value={kpis.dueSoon} note="Next 7 days" />
       </div>
 

@@ -32,7 +32,12 @@ import {
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
 import { DEFICIENCY_LEVELS, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
-import { ASSIGNED_TEAMS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
+import {
+  ASSIGNED_TEAMS,
+  INCIDENT_CATEGORIES,
+  INCIDENT_TYPES,
+  defaultTeamFor,
+} from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { syncSourceChecklist } from '../lib/checklistSync.js';
@@ -82,6 +87,7 @@ export default function IncidentDetailPage() {
   const [draft, setDraft] = useState(null);
   const [verifyDraft, setVerifyDraft] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [directory, setDirectory] = useState([]);
 
   async function reload() {
     const rec = await getIncident(id);
@@ -114,6 +120,20 @@ export default function IncidentDetailPage() {
     const t = params.get('tab');
     if (t) setTab(t);
   }, [params]);
+
+  // Anyone in the directory can carry an incident — a deficiency does not know
+  // which department will end up fixing it, so the list is not filtered by
+  // role or by where the checklist came from.
+  useEffect(() => {
+    let cancelled = false;
+    getRepos()
+      .users.list()
+      .then((rows) => !cancelled && setDirectory(rows))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const level = incident ? getDeficiencyLevel(incident.deficiency_level) : null;
   const sla = incident ? slaState(incident.target_date, clockMs) : { kind: 'none' };
@@ -426,8 +446,8 @@ export default function IncidentDetailPage() {
           <StripField label="Department" value={incident.department || '—'} />
           <StripField
             label="Assigned To"
-            value={incident.assigned_team ? labelOf(ASSIGNED_TEAMS, incident.assigned_team) : 'Unassigned'}
-            sub={incident.assigned_to_name || null}
+            value={incident.assigned_to_name || 'Unassigned'}
+            sub={incident.assigned_team ? labelOf(ASSIGNED_TEAMS, incident.assigned_team) : null}
           />
           <StripField label="Due Date" value={fmtDate(incident.target_date)} />
         </div>
@@ -875,10 +895,33 @@ export default function IncidentDetailPage() {
             <div className="space-y-3">
               <SelectField
                 label="Assigned To"
+                value={incident.assigned_to || ''}
+                onChange={(v) => {
+                  const person = directory.find((u) => u.id === v);
+                  const next = {
+                    ...incident,
+                    assigned_to: v || null,
+                    assigned_to_name: person?.full_name ?? '',
+                    // Picking a person sets a sensible team; the team select
+                    // below still overrides it.
+                    assigned_team: person ? defaultTeamFor(person) : null,
+                  };
+                  setIncident(next);
+                  saveIncident(next);
+                }}
+                options={[
+                  { value: '', label: 'Unassigned' },
+                  ...directory.map((u) => ({
+                    value: u.id,
+                    label: `${u.full_name} — ${u.position}`,
+                  })),
+                ]}
+              />
+              <SelectField
+                label="Team"
                 value={incident.assigned_team || ''}
                 onChange={(v) => {
-                  const team = ASSIGNED_TEAMS.find((t) => t.value === v);
-                  const next = { ...incident, assigned_team: v, assigned_to_name: team?.label || '' };
+                  const next = { ...incident, assigned_team: v || null };
                   setIncident(next);
                   saveIncident(next);
                 }}

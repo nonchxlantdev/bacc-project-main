@@ -60,6 +60,54 @@ export function daysUntilDue(dueAt, nowMs) {
   return Math.round((airportStartMs(dueDay) - airportStartMs(nowDay)) / 86400000);
 }
 
+/** Every day from `fromYmd` to `toYmd` inclusive, airport-local. */
+export function eachDay(fromYmd, toYmd) {
+  const out = [];
+  let cursor = fromYmd;
+  while (cursor <= toYmd) {
+    out.push(cursor);
+    cursor = addAirportDays(cursor, 1);
+  }
+  return out;
+}
+
+/**
+ * Every week start from `fromYmd` to `toYmd`, anchored to Monday so a weekly
+ * inspection always covers Mon–Sun rather than drifting with the seed date.
+ */
+export function eachWeekStart(fromYmd, toYmd) {
+  const dow = new Date(airportStartMs(fromYmd) + 12 * 3600000).getUTCDay();
+  const out = [];
+  let cursor = addAirportDays(fromYmd, dow === 0 ? -6 : 1 - dow);
+  while (cursor <= toYmd) {
+    out.push(cursor);
+    cursor = addAirportDays(cursor, 7);
+  }
+  return out;
+}
+
+/**
+ * Every period start of `months` length, aligned to the calendar year so
+ * quarters land on Jan/Apr/Jul/Oct and half-years on Jan/Jul — which is how
+ * BACC's cadences are actually written.
+ */
+export function eachPeriodStart(fromYmd, toYmd, months) {
+  const [fy, fm] = airportMonthStartYmd(fromYmd).split('-').map(Number);
+  const out = [];
+  let year = fy;
+  let month = Math.floor((fm - 1) / months) * months + 1;
+  const end = airportMonthStartYmd(toYmd);
+  while (`${year}-${String(month).padStart(2, '0')}-01` <= end) {
+    out.push(`${year}-${String(month).padStart(2, '0')}-01`);
+    month += months;
+    if (month > 12) {
+      year += 1;
+      month -= 12;
+    }
+  }
+  return out;
+}
+
 export function eachMonthStart(fromYmd, toYmd) {
   const out = [];
   let cursor = airportMonthStartYmd(fromYmd);

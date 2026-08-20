@@ -91,20 +91,39 @@ export function groupTemplates(templates) {
   return [...GROUP_ORDER, UNGROUPED].filter((g) => byGroup.has(g)).map((g) => [g, byGroup.get(g)]);
 }
 
-/** Latest non-draft inspection date per template code. */
-export function lastCompletedByCode(submissions) {
+/**
+ * Latest completion date per template code.
+ *
+ * Two sources, because they answer the same question from different ends: a
+ * filed checklist record proves the work was done, and a scheduled occurrence
+ * marked submitted records that it was closed out. Using only the first left
+ * every form but Annex D reading "Never" despite a full completion history.
+ */
+export function lastCompletedByCode(submissions, instances = [], templates = []) {
   const map = new Map();
+  const keep = (code, date) => {
+    if (!code || !date) return;
+    const current = map.get(code);
+    if (!current || date > current) map.set(code, date);
+  };
+
   for (const row of submissions) {
     if (row.status === 'draft') continue;
-    const date = row.inspection_date || row.header?.date;
-    if (!date) continue;
-    const current = map.get(row.template_code);
-    if (!current || date > current) map.set(row.template_code, date);
+    keep(row.template_code, row.inspection_date || row.header?.date);
   }
+
+  const codeByTemplateId = new Map(templates.map((t) => [t.id, t.code]));
+  for (const row of instances) {
+    if (row.status !== 'submitted') continue;
+    keep(codeByTemplateId.get(row.template_id), row.period_end);
+  }
+
   return map;
 }
 
-const OVERDUE = new Set(['overdue', 'missed']);
+// Overdue and missed are different states, not synonyms: an overdue inspection
+// is recoverable, a missed one is a compliance gap. The scheduler separates
+// them at 14 days past due, so the catalogue keeps them separate too.
 const DUE_SOON_DAYS = 7;
 
 function isDueSoon(instance, nowMs) {
@@ -122,28 +141,30 @@ function isDueSoon(instance, nowMs) {
  * drill-down actually shows.
  */
 export function buildTeamSummaries({ templates, submissions = [], instances = [], nowMs = Date.now() }) {
-  const lastByCode = lastCompletedByCode(submissions);
+  const lastByCode = lastCompletedByCode(submissions, instances, templates);
   const groupByTemplateId = new Map(templates.map((t) => [t.id, t.group || UNGROUPED]));
 
   const counts = new Map();
   for (const instance of instances) {
     const group = groupByTemplateId.get(instance.template_id);
     if (!group) continue;
-    const tally = counts.get(group) ?? { overdue: 0, dueSoon: 0 };
-    if (OVERDUE.has(instance.status)) tally.overdue += 1;
+    const tally = counts.get(group) ?? { overdue: 0, missed: 0, dueSoon: 0 };
+    if (instance.status === 'overdue') tally.overdue += 1;
+    else if (instance.status === 'missed') tally.missed += 1;
     else if (isDueSoon(instance, nowMs)) tally.dueSoon += 1;
     counts.set(group, tally);
   }
 
   return groupTemplates(templates).map(([name, list]) => {
     const dates = list.map((t) => lastByCode.get(t.code)).filter(Boolean);
-    const tally = counts.get(name) ?? { overdue: 0, dueSoon: 0 };
+    const tally = counts.get(name) ?? { overdue: 0, missed: 0, dueSoon: 0 };
     return {
       name,
       templates: list,
       count: list.length,
       lastCompleted: dates.length ? dates.sort().at(-1) : null,
       overdue: tally.overdue,
+      missed: tally.missed,
       dueSoon: tally.dueSoon,
       blurb: teamBlurb(name, list.length),
       ...teamStyle(name),
@@ -159,12 +180,13 @@ export function catalogueKpis({ templates, submissions = [], instances = [], now
 
   return {
     total: templates.length,
-    completedThisMonth: submissions.filter((row) => {
-      if (row.status === 'draft') return false;
-      const date = row.inspection_date || row.header?.date;
-      return date && date >= monthStart;
-    }).length,
-    overdue: scoped.filter((i) => OVERDUE.has(i.status)).length,
+    // Scheduled work closed out this month, not checklist records filed — a
+    // form completed against last month's occurrence is not this month's work.
+    completedThisMonth: scoped.filter(
+      (i) => i.status === 'submitted' && i.period_start >= monthStart,
+    ).length,
+    overdue: scoped.filter((i) => i.status === 'overdue').length,
+    missed: scoped.filter((i) => i.status === 'missed').length,
     dueSoon: scoped.filter((i) => isDueSoon(i, nowMs)).length,
   };
 }

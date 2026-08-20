@@ -18,3 +18,17 @@ export const ASSIGNED_TEAMS = [
   { value: 'cec', label: 'CEC' },
   { value: 'eec', label: 'EEC' },
 ];
+
+/**
+ * Default team for a person, used to prefill the Team field when someone is
+ * assigned. It is only a starting point — the team select stays editable,
+ * because who does the work and which team carries it are not always the same.
+ */
+const TEAM_BY_ROLE = {
+  cec: 'cec',
+  electrical_tech: 'eec',
+};
+
+export function defaultTeamFor(user) {
+  return TEAM_BY_ROLE[user?.role] ?? 'maintenance';
+}
