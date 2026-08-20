@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "verify:pdf": "node scripts/verify-pdf.mjs",
+    "verify:signoffs": "node scripts/verify-signoffs.mjs",
     "verify:palette": "node scripts/validate-palette.mjs",
     "verify:content": "node scripts/audit-pmm-content.mjs"
   },

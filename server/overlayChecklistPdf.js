@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { signoffFieldKeys } from '../src/lib/signoffFields.js';
 
 const CONTINUATION_MARKER = '— see continuation p.';
 
@@ -100,12 +101,7 @@ export async function overlayChecklistPdf({
       const bytes = images[key];
       if (!bytes) continue;
       const png = await pdfDoc.embedPng(bytes);
-      page.drawImage(png, {
-        x: field.x,
-        y: field.y,
-        width: field.width ?? png.width,
-        height: field.height ?? png.height,
-      });
+      page.drawImage(png, signatureBox(field, key, fieldMap, png));
       continue;
     }
 
@@ -141,13 +137,17 @@ async function appendContinuationPages(pdfDoc, font, bold, overflow, meta) {
   const width = 612.12;
   const height = 792.12;
   const photos = meta.photos ?? [];
+  // The header block runs from y=730 down to the identifier line at y=714, so
+  // content starts below it. Starting at height-72 (720) put the first caption
+  // straight through the identifier line.
+  const CONTENT_TOP = 690;
   let page = pdfDoc.addPage([width, height]);
-  let y = height - 72;
+  let y = CONTENT_TOP;
 
   const ensureSpace = (need) => {
     if (y - need < 72) {
       page = pdfDoc.addPage([width, height]);
-      y = height - 72;
+      y = CONTENT_TOP;
       drawContinuationHeader(page, bold, meta, pdfDoc.getPageCount());
     }
   };
@@ -170,7 +170,15 @@ async function appendContinuationPages(pdfDoc, font, bold, overflow, meta) {
   for (const photo of photos) {
     if (!photo?.bytes) continue;
     ensureSpace(220);
-    page.drawText(`Photo evidence — ${photo.label ?? ''}`, { x: 72, y, size: 10, font: bold });
+    // Drawings and photo evidence share this channel; the caption is what tells
+    // them apart in the output, so an attached site plan is not filed as
+    // "photo evidence" of a deficiency.
+    page.drawText(photo.caption ?? `Photo evidence — ${photo.label ?? ''}`, {
+      x: 72,
+      y,
+      size: 10,
+      font: bold,
+    });
     y -= 14;
     try {
       const img = photo.contentType?.includes('png')
@@ -186,6 +194,42 @@ async function appendContinuationPages(pdfDoc, font, bold, overflow, meta) {
       y -= 14;
     }
   }
+}
+
+/**
+ * Where a signature image goes inside its declared box.
+ *
+ * Two things the naive placement got wrong on all 63 signature slots in the
+ * project:
+ *
+ *  1. The typed name sits on the same signature line, anchored at the same `y`.
+ *     Drawing the image from that same `y` laid the scribble straight across
+ *     the name. So the image is lifted clear of the name's text height and
+ *     takes the remaining space in the box — the top of the box is unchanged,
+ *     which is what keeps the placement gate honest.
+ *
+ *  2. Forcing both width and height stretched every signature to the box's
+ *     aspect ratio. A signature is handwriting; distorting it is closer to
+ *     altering it than to reproducing it. It now scales to fit and keeps its
+ *     shape, sitting at the left of the box the way a signature meets a line.
+ */
+function signatureBox(field, key, fieldMap, png) {
+  const name = key.endsWith('_signature')
+    ? fieldMap.fields?.[key.replace(/_signature$/, '_name')]
+    : null;
+  // Only lift when they genuinely share the line.
+  const lift = name && name.y === field.y ? (name.size ?? 9) + 1 : 0;
+
+  const boxW = field.width ?? png.width;
+  const boxH = Math.max((field.height ?? png.height) - lift, 6);
+  const scale = Math.min(boxW / png.width, boxH / png.height);
+
+  return {
+    x: field.x,
+    y: field.y + lift,
+    width: png.width * scale,
+    height: png.height * scale,
+  };
 }
 
 function drawContinuationHeader(page, bold, meta, pageNumber) {
@@ -263,14 +307,14 @@ export function submissionToOverlayValues(record) {
     values[narrative] = record.deficiencies_summary;
   }
 
-  // Sign-offs. Annex D's two roles keep their historical field names; every
-  // other role (cec, coo, contractor, apron_supervisor, inspector_2 …) maps
-  // straight through, because the PMM annexes carry two or three slots.
+  // Sign-offs. The role -> field-key rule is shared with the browser so the
+  // names, dates and signature image of one slot cannot disagree about which
+  // slot they belong to. See src/lib/signoffFields.js.
   for (const s of record.signoffs ?? []) {
     if (!s?.role) continue;
-    const prefix = s.role === 'om_acknowledgment' ? 'om' : s.role;
-    values[`${prefix}_name`] = [s.name, s.position].filter(Boolean).join(' / ');
-    values[`${prefix}_date`] = s.signed_at ? String(s.signed_at).slice(0, 10) : '';
+    const keys = signoffFieldKeys(s.role);
+    values[keys.name] = [s.name, s.position].filter(Boolean).join(' / ');
+    values[keys.date] = s.signed_at ? String(s.signed_at).slice(0, 10) : '';
   }
   return values;
 }

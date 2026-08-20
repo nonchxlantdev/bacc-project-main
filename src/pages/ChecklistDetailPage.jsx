@@ -24,6 +24,8 @@ import { listIncidents } from '../lib/incidents.js';
 import { getTemplate } from '../lib/templates.js';
 import { airportYmd } from '../lib/belizeTime.js';
 import { getRepos } from '../data/repositories/index.js';
+import { baseFormUrl } from '../lib/baseForms.js';
+import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
 
@@ -115,7 +117,11 @@ export default function ChecklistDetailPage() {
   }, [id, searchParams, user, displayName, position, navigate]);
 
   const schema = record?.schema;
-  const readOnly = record?.status === 'submitted' || record?.locked;
+  // A reference sheet (Annex L) is pre-printed end to end. There is nothing to
+  // draft, submit, acknowledge or stamp — only to read, and to open as the
+  // approved PDF. Treating it as read-only keeps the autosave loop off it too.
+  const isReference = Boolean(schema?.referenceGroups?.length) || schema?.documentType === 'reference';
+  const readOnly = isReference || record?.status === 'submitted' || record?.locked;
 
   useEffect(() => {
     if (!record || readOnly) return undefined;
@@ -245,11 +251,8 @@ export default function ChecklistDetailPage() {
   }
 
   async function buildOverlayBlob(current = record) {
-    const images = {};
-    for (const sign of current.signoffs ?? []) {
-      if (sign.role === 'inspector' && sign.signature_data_uri) images.inspector_signature = sign.signature_data_uri;
-      if (sign.role === 'om_acknowledgment' && sign.signature_data_uri) images.om_signature = sign.signature_data_uri;
-    }
+    // Every declared sign-off, not a hardcoded pair. See lib/signoffFields.js.
+    const images = signatureImages(current, current.field_map);
     const photos = [];
     for (const item of flattenItems(schema)) {
       const row = current.items[item.code];
@@ -260,6 +263,23 @@ export default function ChecklistDetailPage() {
         if (rec?.blob) dataUri = await blobToDataUri(rec.blob);
       }
       if (dataUri) photos.push({ label: item.code, dataUri, contentType: 'image/jpeg' });
+    }
+    // Drawings ride the same attachment channel as photo evidence — both end up
+    // on captioned continuation pages after the approved sheets, which are
+    // never drawn over. The caption names the section that asked for the
+    // drawing, so a reader of the export knows which one it answers.
+    const sectionLabel = (key) =>
+      (schema.summaryFields ?? []).find((f) => f.key === key)?.label ?? key;
+    for (const [key, list] of Object.entries(current.attachments ?? {})) {
+      for (const drawing of list ?? []) {
+        if (!drawing?.dataUri) continue;
+        photos.push({
+          label: drawing.label,
+          caption: `${sectionLabel(key)} — ${drawing.label}`,
+          dataUri: drawing.dataUri,
+          contentType: drawing.contentType || 'image/png',
+        });
+      }
     }
     const res = await fetch('/api/export-checklist-pdf', {
       method: 'POST',
@@ -299,7 +319,26 @@ export default function ChecklistDetailPage() {
     document.getElementById('pdf-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function closePreview() {
+    // Only blob URLs we created need revoking; a bundled asset URL must not be.
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
+    setPreviewUrl(null);
+  }
+
   async function handleShowPreview() {
+    // Nothing is stamped onto a reference sheet, so there is no overlay to
+    // render — open the approved file itself.
+    if (isReference) {
+      const url = baseFormUrl(record?.field_map?.basePdf);
+      if (!url) {
+        setPreviewError('The approved PDF for this document is not bundled with the app.');
+        return;
+      }
+      setPreviewError(null);
+      setPreviewUrl(url);
+      return;
+    }
     scrollToPreview();
     if (!online) {
       setPreviewError('Preview is available once you are back online. Your checklist is saved.');
@@ -375,6 +414,9 @@ export default function ChecklistDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-xl font-bold leading-tight text-navy sm:text-[1.65rem]">{schema.title}</h1>
+            {/* A reference sheet has no workflow state — it is never drafted,
+                submitted or acknowledged, so it carries no status pill. */}
+            {!isReference && (
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                 inProgress ? 'bg-success-soft text-success' : 'bg-navy text-white'
@@ -382,11 +424,12 @@ export default function ChecklistDetailPage() {
             >
               {inProgress ? 'In Progress' : record.status === 'acknowledged' ? 'Acknowledged' : 'Submitted'}
             </span>
+            )}
           </div>
           <p className="mt-1 text-sm text-muted">
             Form: {schema.code}
-            {record.locked ? ' · locked' : ''}
-            {record.supersedes_id ? ' · correction' : ''}
+            {!isReference && record.locked ? ' · locked' : ''}
+            {!isReference && record.supersedes_id ? ' · correction' : ''}
           </p>
         </div>
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
@@ -403,12 +446,12 @@ export default function ChecklistDetailPage() {
           )}
           <button
             type="button"
-            onClick={handleShowPreview}
+            onClick={isReference && previewUrl ? closePreview : handleShowPreview}
             disabled={previewing}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
           >
             <Eye className="h-4 w-4" />
-            {previewing ? 'Rendering…' : 'Show preview'}
+            {previewing ? 'Rendering…' : !isReference ? 'Show preview' : previewUrl ? 'Back to list' : 'View PDF'}
           </button>
           {!readOnly && (
             <button
@@ -419,6 +462,7 @@ export default function ChecklistDetailPage() {
               Submit Checklist
             </button>
           )}
+          {!isReference && (
           <button
             type="button"
             onClick={handleExport}
@@ -428,7 +472,8 @@ export default function ChecklistDetailPage() {
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export PDF'}
           </button>
-          {readOnly && (
+          )}
+          {readOnly && !isReference && (
             <button
               type="button"
               onClick={async () => {
@@ -497,6 +542,13 @@ export default function ChecklistDetailPage() {
         </section>
       )}
 
+      {isReference && previewUrl ? (
+        <iframe
+          title={`${schema.title} — approved PDF`}
+          src={previewUrl}
+          className="block h-[calc(100dvh-13rem)] min-h-[420px] w-full rounded-lg border border-navy/15 bg-stripe"
+        />
+      ) : (
       <ChecklistForm
         schema={schema}
         header={record.header}
@@ -526,6 +578,10 @@ export default function ChecklistDetailPage() {
         summary={record.summary ?? {}}
         onSummaryChange={(patch) =>
           patchRecord((prev) => ({ ...prev, summary: { ...(prev.summary ?? {}), ...patch } }))
+        }
+        attachments={record.attachments ?? {}}
+        onAttachmentsChange={(patch) =>
+          patchRecord((prev) => ({ ...prev, attachments: { ...(prev.attachments ?? {}), ...patch } }))
         }
         onSelectItem={setSelectedCode}
         onPhotoSelect={handlePhotoSelect}
@@ -561,8 +617,16 @@ export default function ChecklistDetailPage() {
           })
         }
       />
+      )}
 
-      <PdfPreview url={previewUrl} loading={previewing} error={previewError} onRefresh={handleShowPreview} />
+      {/* A reference sheet has no overlay to re-render, so it gets no refresh
+          block — View PDF simply swaps the page for the approved document. */}
+      {!isReference && (
+        <PdfPreview url={previewUrl} loading={previewing} error={previewError} onRefresh={handleShowPreview} />
+      )}
+      {isReference && previewError && (
+        <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{previewError}</p>
+      )}
 
       {incidentModal && (
         <CreateIncidentModal

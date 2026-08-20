@@ -1,5 +1,6 @@
 import { getRepos } from '../data/repositories/index.js';
-import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
+import { targetDateFor } from '../config/deficiencyLevels.js';
+import { airportYmd } from './belizeTime.js';
 
 export const DESCRIPTION_MAX = 500;
 
@@ -103,7 +104,9 @@ export async function createIncidentFromChecklist({
     assigned_team: null,
     assigned_to_name: '',
     assigned_at: null,
-    target_date: defaultTargetDate(draft.deficiency_level),
+    // Null until BACC set a response time for this level in Settings — nothing
+    // counts down to a date that was never agreed.
+    target_date: targetDateFor(draft.deficiency_level, airportYmd(Date.now())),
     closed_at: null,
     closure_notes: '',
     reinspection_submission_id: null,
@@ -112,14 +115,6 @@ export async function createIncidentFromChecklist({
     created_at: now,
   };
   return persistIncident(record);
-}
-
-function defaultTargetDate(level) {
-  const cfg = getDeficiencyLevel(level);
-  if (!cfg?.targetDays) return null;
-  const d = new Date();
-  d.setDate(d.getDate() + cfg.targetDays);
-  return d.toISOString().slice(0, 10);
 }
 
 export async function persistIncident(record) {

@@ -1,6 +1,6 @@
 import { AlertTriangle, Info, MapPin, Navigation, Paperclip, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { DEFICIENCY_LEVELS } from '../../config/deficiencyLevels.js';
+import { deficiencyLevels } from '../../config/deficiencyLevels.js';
 import { INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../../lib/checklistSchema.js';
 import {
@@ -157,7 +157,7 @@ export default function CreateIncidentModal({
                   className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
                 >
                   <option value="">Select…</option>
-                  {DEFICIENCY_LEVELS.map((lvl) => (
+                  {deficiencyLevels().map((lvl) => (
                     <option key={lvl.level} value={lvl.level}>
                       {lvl.label}
                     </option>

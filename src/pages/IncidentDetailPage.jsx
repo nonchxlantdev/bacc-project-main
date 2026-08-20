@@ -32,7 +32,7 @@ import {
   labelOf,
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
-import { DEFICIENCY_LEVELS, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
+import { deficiencyLevels, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
 import {
   ASSIGNED_TEAMS,
   INCIDENT_CATEGORIES,
@@ -543,7 +543,7 @@ export default function IncidentDetailPage() {
                             onChange={(e) => setDraft({ ...draft, deficiency_level: e.target.value })}
                             className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
                           >
-                            {DEFICIENCY_LEVELS.map((l) => (
+                            {deficiencyLevels().map((l) => (
                               <option key={l.level} value={l.level}>
                                 {l.label}
                               </option>

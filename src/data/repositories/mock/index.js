@@ -1,5 +1,5 @@
 import { CATEGORICAL, DEPARTMENT_COLORS, INCIDENT_STATUS_COLORS, TEMPLATE_COLORS } from '../../../config/chartPalette.js';
-import { DEFICIENCY_LEVELS, slaState } from '../../../config/deficiencyLevels.js';
+import { deficiencyLevels, slaState } from '../../../config/deficiencyLevels.js';
 import { isQualifyingReinspection, workOrderVerifiedBlockers } from '../../../lib/incidentLifecycle.js';
 import { generatePendingInstances, linkSubmissionToInstance, refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
 import { addAirportDays, airportYmd, daysUntilDue, eachWeekStart } from '../../../lib/belizeTime.js';
@@ -363,6 +363,69 @@ export function createMockRepositories() {
         );
       },
     },
+    /**
+     * Portal configuration BACC control themselves.
+     *
+     * Only overridden sections are stored — an untouched section is absent, so
+     * it keeps following the shipped default rather than being frozen at
+     * whatever the default happened to be on the day the store was created.
+     *
+     * Every write appends to `settings_audit`. §14 asks that a change to
+     * approved configuration be controlled rather than casual, and a record of
+     * who changed what, when, and what it was before is what makes it so.
+     */
+    settings: {
+      async get() {
+        return getStore().settings ?? {};
+      },
+      async save({ section, value, actor }) {
+        let saved = {};
+        mutateStore((s) => {
+          s.settings = s.settings ?? {};
+          s.settings_audit = s.settings_audit ?? [];
+          s.settings_audit.unshift({
+            id: crypto.randomUUID(),
+            section,
+            action: 'save',
+            from: s.settings[section] ?? null,
+            to: value,
+            by: actor?.id ?? null,
+            by_name: actor?.full_name ?? null,
+            at: new Date(nowMs()).toISOString(),
+          });
+          s.settings[section] = value;
+          saved = s.settings;
+          return s;
+        });
+        return saved;
+      },
+      async resetSection({ section, actor }) {
+        let saved = {};
+        mutateStore((s) => {
+          s.settings = s.settings ?? {};
+          s.settings_audit = s.settings_audit ?? [];
+          if (s.settings[section] !== undefined) {
+            s.settings_audit.unshift({
+              id: crypto.randomUUID(),
+              section,
+              action: 'reset',
+              from: s.settings[section],
+              to: null,
+              by: actor?.id ?? null,
+              by_name: actor?.full_name ?? null,
+              at: new Date(nowMs()).toISOString(),
+            });
+          }
+          delete s.settings[section];
+          saved = s.settings;
+          return s;
+        });
+        return saved;
+      },
+      async audit() {
+        return getStore().settings_audit ?? [];
+      },
+    },
     instances: {
       async list() {
         return refreshInstanceStatuses(getStore().instances, nowMs());
@@ -584,7 +647,7 @@ function createReportAggregations() {
     },
     async openDeficienciesByLevel() {
       const open = getStore().incidents.filter((i) => i.status !== 'closed');
-      return DEFICIENCY_LEVELS.map((lvl) => ({
+      return deficiencyLevels().map((lvl) => ({
         key: String(lvl.level),
         label: lvl.label,
         count: open.filter((i) => i.deficiency_level === lvl.level).length,

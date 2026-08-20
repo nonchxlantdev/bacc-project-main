@@ -6,6 +6,8 @@ import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
 import ResolutionChip from './ResolutionChip.jsx';
+import DrawingAttach from './DrawingAttach.jsx';
+import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
 
 export default function ChecklistForm({
@@ -24,6 +26,8 @@ export default function ChecklistForm({
   onDeficienciesChange,
   summary = {},
   onSummaryChange,
+  attachments = [],
+  onAttachmentsChange,
   onSelectItem,
   onPhotoSelect,
   onPhotoClear,
@@ -95,6 +99,11 @@ export default function ChecklistForm({
       document.getElementById(`section-${nextIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
+
+  // A reference sheet has no items, no header fields and nothing to fill in —
+  // rendering the inspection chrome around it would invent an interaction the
+  // approved document does not have.
+  if (schema.referenceGroups?.length) return <ReferenceList schema={schema} />;
 
   return (
     <div
@@ -192,6 +201,8 @@ export default function ChecklistForm({
             value={summary?.[field.key] ?? ''}
             disabled={readOnly}
             onChange={(value) => onSummaryChange?.({ [field.key]: value })}
+            drawings={attachments?.[field.key] ?? []}
+            onDrawingsChange={(next) => onAttachmentsChange?.({ [field.key]: next })}
           />
         ))}
 
@@ -359,7 +370,7 @@ export default function ChecklistForm({
  * `hint` is the completion guidance the form itself prints in brackets under the
  * heading, so it is shown rather than paraphrased.
  */
-function SummaryBlock({ field, value, disabled, onChange }) {
+function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsChange }) {
   const isChoice = field.type === 'yes_no' || field.type === 'radio';
   return (
     <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
@@ -404,6 +415,17 @@ function SummaryBlock({ field, value, disabled, onChange }) {
             </p>
           )}
         </>
+      )}
+
+      {/* Only the sections whose pre-printed hint says "Attach drawing." */}
+      {field.attachDrawing && (
+        <DrawingAttach
+          sectionKey={field.key}
+          sectionLabel={field.label}
+          items={drawings}
+          disabled={disabled}
+          onChange={onDrawingsChange}
+        />
       )}
     </section>
   );

@@ -17,24 +17,156 @@
   "documentType": "reference",
   "headerFields": [],
   "sections": [],
-  "summaryFields": [
-    {
-      "key": "reviewNotes",
-      "label": "Review notes / acknowledgement",
-      "type": "textarea",
-      "required": false,
-      "mapKey": "review_notes",
-      "addedField": true
-    }
-  ],
-  "deficienciesField": {
-    "label": "Review notes / acknowledgement",
-    "mapKey": "review_notes"
-  },
+  "summaryFields": [],
   "signoffs": [],
   "notes": [
     "The approved sheet carries NO form number — its only identifiers are ANNEX 1-1 / PGIA 16-14 and the annex letter. None has been invented.",
-    "Annex L is a reference list, not an inspection. Every line on it is pre-printed and is never overlaid.",
-    "The single review-notes box is an ADDITION (addedField), placed in the blank area between the last printed row and the running footer on page 2. The approved sheet has no such field — confirm with BACC before this leaves the demo."
-  ]
+    "Annex L is a reference list, not an inspection. Every line is pre-printed and is never overlaid, so the portal renders it read-only and offers the approved PDF for viewing.",
+    "referenceGroups is a verbatim transcription of the approved sheet — headings, reference codes and wording exactly as printed, including the two identically-named PASER MANUAL rows."
+  ],
+  "referenceGroups": [
+    {
+      "heading": "L.1 Mandatory National Regulatory Documents (Belize)",
+      "entries": [
+        {
+          "ref": "BCAR-139",
+          "text": "Aerodrome Certification, Operation and Surveillance — Belize Civil Aviation Regulations. MANDATORY. Governs aerodrome certification, operational standards, maintenance requirements, and regulatory oversight of PGIA."
+        },
+        {
+          "ref": "BCAR-14",
+          "text": "Aerodrome Design and Construction — Belize Civil Aviation Regulations. MANDATORY. Establishes design and construction standards for runways, taxiways, aprons, pavements, markings, signs, and lighting at Belizean aerodromes."
+        }
+      ]
+    },
+    {
+      "heading": "L.2 International Standards Reference — ICAO",
+      "entries": [
+        {
+          "ref": "ICAO Doc 9137, Part 2",
+          "text": "Airport Services Manual — Pavement Surface Conditions, 4th Edition, 2002. Guidance on contamination removal, friction measurement, and pavement surface management."
+        },
+        {
+          "ref": "ICAO Doc 9157, Part 3",
+          "text": "Aerodrome Design Manual — Pavements. Technical guidance on pavement design, construction, and evaluation."
+        }
+      ]
+    },
+    {
+      "heading": "L.3 FAA Advisory Circulars (Reference)",
+      "entries": [
+        {
+          "ref": "FAA AC 150/5380-6C",
+          "text": "Guidelines and Procedures for Maintenance of Airport Pavements, 2014."
+        },
+        {
+          "ref": "FAA AC 150/5380-7B",
+          "text": "Airport Pavement Management Program, 2015."
+        },
+        {
+          "ref": "FAA AC 150/5320-17A",
+          "text": "Airfield Pavement Surface Evaluation and Rating (PASER) Manual, including Appendix A (Asphalt) and Appendix B (Concrete)."
+        },
+        {
+          "ref": "FAA AC 150/5320-12C",
+          "text": "Measurement, Construction, and Maintenance of Skid-Resistant Airport Pavement Surfaces."
+        },
+        {
+          "ref": "FAA AC 150/5340-1M",
+          "text": "Standards for Airport Markings."
+        },
+        {
+          "ref": "FAA AC 150/5340-30J",
+          "text": "Design and Installation Details for Airport Visual Aids."
+        },
+        {
+          "ref": "FAA AC 150/5300-13B",
+          "text": "Airport Design."
+        },
+        {
+          "ref": "FAA AC 150/5370-10H",
+          "text": "Standards for Specifying Construction of Airports."
+        },
+        {
+          "ref": "FAA AC 150/5370-2G",
+          "text": "Operational Safety on Airports During Construction."
+        },
+        {
+          "ref": "FAA AC 150/5320-6G",
+          "text": "Airport Pavement Design and Evaluation."
+        }
+      ]
+    },
+    {
+      "heading": "L.4 Industry Standards and Technical Publications",
+      "entries": [
+        {
+          "ref": "ASTM D5340",
+          "text": "Standard Test Method for Airport Pavement Condition Index (PCI) Surveys."
+        },
+        {
+          "ref": "ASTM D6433",
+          "text": "Standard Practice for Roads and Parking Lots Pavement Condition Index Surveys."
+        },
+        {
+          "ref": "ASTM D6690",
+          "text": "Standard Specification for Joint and Crack Sealants, Hot Applied, for Concrete and Asphalt Pavements."
+        },
+        {
+          "ref": "ASTM D5249",
+          "text": "Standard Specification for Backer Material for Use with Cold- and Hot-Applied Joint Sealants."
+        },
+        {
+          "ref": "ASTM C920",
+          "text": "Specification for Elastomeric Joint Sealants."
+        },
+        {
+          "ref": "ACI 308",
+          "text": "Guide to External Curing of Concrete."
+        },
+        {
+          "ref": "NAPA AIR-003v",
+          "text": "Asphalt Paving Handbook with Videos, October 2025. National Asphalt Pavement Association."
+        },
+        {
+          "ref": "PASER MANUAL",
+          "text": "Paser Manual Asphalt Airfield Pavements- Pavement Surface Evaluation and Rating"
+        },
+        {
+          "ref": "PASER MANUAL",
+          "text": "Paser Manual Concrete Airfield Pavements- Pavement Surface Evaluation and Rating"
+        }
+      ]
+    },
+    {
+      "heading": "L.5 Internal PGIA Reference Documents",
+      "entries": [
+        {
+          "ref": "Airport Maintenance Manual — Vol. II Annex 2-2",
+          "text": "Electrical Maintenance and Visual Aids. Governs all electrical maintenance of aerodrome lighting, signs, and visual aids. All electrical malfunctions identified in this PMM are referred to the Electrical Engineering Consultant (EEC) per Annex 2-2."
+        },
+        {
+          "ref": "PGIA Aerodrome Operations Manual (AOM)",
+          "text": "Governing document for all aerodrome operational procedures."
+        },
+        {
+          "ref": "PGIA Airport Emergency Plan (AEP) Vol. II Annex 3.",
+          "text": "Emergency response procedures for aerodrome incidents."
+        },
+        {
+          "ref": "PGIA Wildlife Hazard Management Plan Vol. II Annex 5.",
+          "text": "Procedures for managing bird and wildlife hazards at the aerodrome."
+        },
+        {
+          "ref": "PGIA Vol. II Annex 2",
+          "text": "Procedures for vehicle access and movement on the aerodrome."
+        },
+        {
+          "ref": "PGIA Safety Management System (SMS) Manual Vol. II Annex 6.",
+          "text": "Overarching safety management framework for all PGIA operations."
+        }
+      ]
+    }
+  ],
+  "sectionHeading": "ANNEX L — REFERENCE DOCUMENTS",
+  "readOnly": true
 }

@@ -63,7 +63,7 @@ export async function buildExport(body) {
   const photos = [];
   for (const photo of body.photos ?? []) {
     const bytes = dataUriToBytes(photo.dataUri);
-    if (bytes) photos.push({ bytes, label: photo.label, contentType: photo.contentType });
+    if (bytes) photos.push({ bytes, label: photo.label, caption: photo.caption, contentType: photo.contentType });
   }
 
   const pdfBytes = await overlayChecklistPdf({

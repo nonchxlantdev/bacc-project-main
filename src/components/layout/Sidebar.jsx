@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
   ClipboardCheck,
-  Crosshair,
   Inbox,
   LayoutDashboard,
   List,
@@ -28,10 +27,6 @@ const NAV = [
   { to: '/users', label: 'Users', icon: Users },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
-
-if (import.meta.env.DEV) {
-  NAV.push({ to: '/dev/field-mapper', label: 'Field mapper', icon: Crosshair });
-}
 
 export default function Sidebar({ open = false, onClose }) {
   const { signOut } = useAuth();

@@ -5,6 +5,8 @@
  * recipient: role name, 'assignee', 'reporter', or a user id.
  * alerting incidents: driven by DEFICIENCY_LEVELS[].alerting (all false until BACC defines levels).
  */
+import { getSection } from '../lib/settingsStore.js';
+
 export const NOTIFICATION_RULES = [
   {
     event_type: 'incident_assigned',
@@ -82,6 +84,27 @@ export const NOTIFICATION_RULES = [
   },
 ];
 
+/**
+ * The rule for one event, with BACC's configured recipients and channels
+ * applied over the shipped copy.
+ *
+ * Wording stays in this file — it is developer copy, not configuration. Who
+ * receives it and on which channel is question B3, and lives in Settings →
+ * Alerts & Escalation. An event switched off in settings returns null, so no
+ * caller has to remember to check separately.
+ */
 export function ruleFor(eventType) {
-  return NOTIFICATION_RULES.find((row) => row.event_type === eventType) ?? null;
+  const base = NOTIFICATION_RULES.find((row) => row.event_type === eventType);
+  if (!base) return null;
+  const configured = getSection('alerts').events?.[eventType];
+  if (!configured) return base;
+  if (!configured.inApp && !configured.email) return null;
+  return {
+    ...base,
+    inApp: configured.inApp,
+    email: configured.email,
+    recipients: configured.recipients ?? base.recipients,
+    escalation: configured.escalation ?? base.escalation,
+    escalateAfterHours: configured.escalateAfterHours ?? null,
+  };
 }
