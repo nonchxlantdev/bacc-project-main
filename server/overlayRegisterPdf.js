@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { ASSIGNED_UNITS } from '../src/config/incidentLookups.js';
 
 const SOURCE_INSPECTION_LABELS = {
   monthly_routine: 'Monthly Routine',
@@ -120,7 +121,8 @@ export function incidentToRegisterRow(incident) {
       SOURCE_INSPECTION_LABELS[incident.source_inspection_type] || incident.source_inspection_type || '',
     level: incident.deficiency_level != null ? String(incident.deficiency_level) : '',
     description: [incident.description, incident.location_label].filter(Boolean).join(' — '),
-    assigned_to: incident.assigned_team || incident.assigned_to_name || '',
+    // The register column is headed "Assigned To"; what goes in it is the unit.
+    assigned_to: ASSIGNED_UNITS.find((u) => u.value === incident.assigned_unit)?.label || '',
     target_date: incident.target_date ? String(incident.target_date).slice(0, 10) : '',
     closed_date_notes: notes,
   };

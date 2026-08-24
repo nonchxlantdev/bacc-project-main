@@ -1,0 +1,82 @@
+{
+  "code": "PGIA-AOM-A5-08",
+  "annexLabel": "Annex 08",
+  "documentFamily": "AOM",
+  "title": "Monthly Wildlife Incursion Log for the Movement Area",
+  "description": "A month's wildlife incursions into the movement area, with damage, cause and measures taken.",
+  "manualHeader": {
+    "line1": "ANNEX 5",
+    "line2": "AERODROME OPERATIONAL MANUAL\nPHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "Annex 5\nWildlife"
+  },
+  "footer": {
+    "reviewLine": "Review: 1  Edition: 1",
+    "dateLine": "Date: September 08, 2024.  Wildlife"
+  },
+  "frequency": "on_demand",
+  "documentType": "log",
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "reportedBy",
+      "label": "Reported by",
+      "type": "text",
+      "required": false,
+      "mapKey": "reported_by"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "text",
+      "required": false,
+      "mapKey": "date"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "rows",
+      "label": "Monthly Wildlife Incursion Log for the Movement Area",
+      "type": "table",
+      "required": false,
+      "mapKey": "row",
+      "printedRows": 8,
+      "columns": [
+        {
+          "key": "date_and_time",
+          "label": "Date and Time"
+        },
+        {
+          "key": "description",
+          "label": "Description"
+        },
+        {
+          "key": "damages",
+          "label": "Damages"
+        },
+        {
+          "key": "causes",
+          "label": "Causes"
+        },
+        {
+          "key": "measures_taken",
+          "label": "Measures Taken"
+        },
+        {
+          "key": "observations",
+          "label": "Observations"
+        }
+      ]
+    }
+  ],
+  "signoffs": [],
+  "validationRules": [],
+  "notes": [
+    "The approved grid prints 8 rows. More may be recorded \u2014 the first 8 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does."
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "templateKey": "wildlife-findings-report",
+  "templateVersion": "ed01",
+  "basePdf": "wildlife-findings-report-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Baselines are the measured top of each printed rule plus 3pt, so a value sits on the line rather than through it. Rule positions were read off a 4x raster of the approved page and split into runs, which is how 'Date: __ Time: __' on one rule becomes two fields.",
+  "mapping": {
+    "method": "hand-measured from the approved PDF \u2014 rule tops from a 4x raster, runs split on horizontal gaps",
+    "generated": false
+  },
+  "pageSize": {
+    "width": 612,
+    "height": 792
+  },
+  "fields": {
+    "reported_by": {
+      "page": 0,
+      "x": 133,
+      "y": 552,
+      "size": 10,
+      "width": 390,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "date": {
+      "page": 0,
+      "x": 100,
+      "y": 529,
+      "size": 10,
+      "width": 225
+    },
+    "time": {
+      "page": 0,
+      "x": 360,
+      "y": 529,
+      "size": 10,
+      "width": 166
+    },
+    "location_of_finding": {
+      "page": 0,
+      "x": 164.5,
+      "y": 506,
+      "size": 10,
+      "width": 366,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "detected_species_if_identifiable": {
+      "page": 0,
+      "x": 217,
+      "y": 483,
+      "size": 10,
+      "width": 316,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "additional_information": {
+      "page": 0,
+      "x": 74,
+      "y": 437,
+      "size": 10,
+      "width": 456,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "prepared_by_name": {
+      "page": 0,
+      "x": 133,
+      "y": 299,
+      "size": 9,
+      "width": 216,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "prepared_by_signature": {
+      "page": 0,
+      "x": 403,
+      "y": 299,
+      "type": "image",
+      "width": 132,
+      "height": 18
+    },
+    "received_by_name": {
+      "page": 0,
+      "x": 131,
+      "y": 276,
+      "size": 9,
+      "width": 216,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "received_by_signature": {
+      "page": 0,
+      "x": 401,
+      "y": 276,
+      "type": "image",
+      "width": 136,
+      "height": 18
+    },
+    "date_of_report_submission": {
+      "page": 0,
+      "x": 194.5,
+      "y": 253,
+      "size": 10,
+      "width": 342
+    }
+  }
+}

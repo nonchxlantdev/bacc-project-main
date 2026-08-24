@@ -74,7 +74,11 @@ export async function overlayChecklistPdf({
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const pages = pdfDoc.getPages();
-  const overflow = [];
+  // Grid rows past the number the approved form prints, handed over on `values`
+  // by submissionToOverlayValues. Lifted out before anything is stamped, so the
+  // loop below never meets a key no field map declares.
+  const overflow = [...(values.__tableOverflow ?? [])];
+  delete values.__tableOverflow;
 
   const continuationPageNumber = pages.length + 1;
 
@@ -217,8 +221,21 @@ function signatureBox(field, key, fieldMap, png) {
   const name = key.endsWith('_signature')
     ? fieldMap.fields?.[key.replace(/_signature$/, '_name')]
     : null;
-  // Only lift when they genuinely share the line.
-  const lift = name && name.y === field.y ? (name.size ?? 9) + 1 : 0;
+  // Lift the mark clear of the typed name only when the two are stacked in the
+  // same box — which is how the PMM and VAES forms print a signature slot, name
+  // beneath the rule the signature sits on.
+  //
+  // The Wildlife forms put them side by side instead: "Prepared by: ____
+  // Signature: ____" on one rule, two separate runs. Sharing a y there means
+  // nothing more than sharing a line, so lifting would float the signature
+  // above its own rule to dodge a name that is 250pt to its left. Overlapping
+  // in x is what actually distinguishes the two layouts.
+  const stacked =
+    name &&
+    name.y === field.y &&
+    name.x < field.x + (field.width ?? 0) &&
+    field.x < name.x + (name.width ?? 0);
+  const lift = stacked ? (name.size ?? 9) + 1 : 0;
 
   const boxW = field.width ?? png.width;
   const boxH = Math.max((field.height ?? png.height) - lift, 6);
@@ -294,12 +311,55 @@ export function submissionToOverlayValues(record) {
   // (mark one):"). Same contract as headerFields — markPrefix for a tick,
   // mapKey for text.
   const summary = record.summary ?? {};
+  const tableOverflow = [];
   for (const field of schema?.summaryFields ?? []) {
     const raw = summary[field.key];
     if (raw === undefined || raw === null || raw === '') continue;
+
+    // A log sheet's grid. The approved form prints a fixed number of rows —
+    // eleven bird sightings, thirteen attendees, eight incursions — and each
+    // ruled cell is its own field, `<mapKey>_<row>_<column>`. Rows past the
+    // printed count are carried to a continuation page rather than dropped:
+    // a bird count that found twenty species is not a record of eleven.
+    if (field.type === 'table') {
+      const rows = Array.isArray(raw) ? raw : [];
+      const printed = field.printedRows ?? rows.length;
+      const prefix = field.mapKey ?? snake(field.key);
+      const columns = field.columns ?? [];
+
+      rows.slice(0, printed).forEach((row, i) => {
+        for (const col of columns) {
+          // A signature cell holds a drawn mark, not text. It travels through
+          // the images channel (see signoffFields.tableSignatureImages); typing
+          // its data URI onto the form would print a wall of base64.
+          if (col.type === 'signature') continue;
+          const cell = row?.[col.key];
+          if (cell === undefined || cell === null || cell === '') continue;
+          values[`${prefix}_${String(i + 1).padStart(2, '0')}_${col.key}`] = cell;
+        }
+      });
+
+      rows.slice(printed).forEach((row, i) => {
+        const text = columns
+          .map((col) => {
+            if (col.type === 'signature') {
+              return `${col.label}: ${row?.[col.key] ? 'signed' : '—'}`;
+            }
+            return `${col.label}: ${row?.[col.key] || '—'}`;
+          })
+          .join('   ·   ');
+        tableOverflow.push({ key: `${field.label} — row ${printed + i + 1}`, text });
+      });
+      continue;
+    }
+
     if (field.markPrefix) values[`${field.markPrefix}.${raw}`] = true;
     else values[field.mapKey ?? snake(field.key)] = raw;
   }
+  // Carried on `values` because that is the one thing every caller already
+  // passes to the overlay. The renderer lifts it straight back out; no field
+  // map declares this key, so it can never be stamped onto a page.
+  if (tableOverflow.length) values.__tableOverflow = tableOverflow;
   // The app's single deficiency narrative maps onto whichever block the form
   // designates as its deficiency area.
   const narrative = schema?.deficienciesField?.mapKey;

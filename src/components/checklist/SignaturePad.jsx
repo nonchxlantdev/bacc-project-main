@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export default function SignaturePad({ value, disabled, onChange }) {
+export default function SignaturePad({ value, disabled, onChange, label = 'Signature' }) {
   const canvasRef = useRef(null);
   const drawing = useRef(false);
 
@@ -66,6 +66,12 @@ export default function SignaturePad({ value, disabled, onChange }) {
     <div>
       <canvas
         ref={canvasRef}
+        // A canvas exposes nothing of itself to assistive technology, so
+        // without a name this is an unlabelled drawing surface — and the
+        // signature is the one control on the form that carries a person's
+        // accountability for what they filed.
+        role="img"
+        aria-label={label}
         width={320}
         height={96}
         className="h-24 w-full touch-none rounded border border-navy/20 bg-white"

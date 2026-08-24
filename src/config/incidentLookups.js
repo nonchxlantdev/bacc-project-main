@@ -13,22 +13,17 @@ export const INCIDENT_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-export const ASSIGNED_TEAMS = [
-  { value: 'maintenance', label: 'Maintenance Personnel' },
-  { value: 'cec', label: 'CEC' },
-  { value: 'eec', label: 'EEC' },
-];
-
 /**
- * Default team for a person, used to prefill the Team field when someone is
- * assigned. It is only a starting point — the team select stays editable,
- * because who does the work and which team carries it are not always the same.
+ * Who an incident is handed to. An incident goes to a unit, never to a named
+ * person: the units have no portal accounts, so there is nobody to pick.
+ *
+ * Fixed here rather than configurable because these are standing maintenance
+ * units at the airport, not data BACC edits day to day — a unit appearing or
+ * disappearing is a change to how the airport is organised. Confirm with BACC
+ * whether these three are the complete set before this ships.
  */
-const TEAM_BY_ROLE = {
-  cec: 'cec',
-  electrical_tech: 'eec',
-};
-
-export function defaultTeamFor(user) {
-  return TEAM_BY_ROLE[user?.role] ?? 'maintenance';
-}
+export const ASSIGNED_UNITS = [
+  { value: 'grounds', label: 'Grounds' },
+  { value: 'electrical', label: 'Electrical' },
+  { value: 'plumbing', label: 'Plumbing' },
+];

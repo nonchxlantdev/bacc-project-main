@@ -28,7 +28,7 @@ import { listTemplates } from '../lib/templates.js';
  * because someone searching already knows what they want.
  */
 export default function ChecklistCataloguePage() {
-  const { user, displayName, position, profile } = useAuth();
+  const { user, displayName, profile } = useAuth();
   const navigate = useNavigate();
 
   const [templates, setTemplates] = useState([]);
@@ -68,7 +68,7 @@ export default function ChecklistCataloguePage() {
   async function startNew(templateId) {
     setStartingId(templateId);
     try {
-      navigate(`/checklists/${await startInspection({ templateId, user, displayName, position })}`);
+      navigate(`/checklists/${await startInspection({ templateId, user, displayName, role: profile?.role })}`);
     } catch (err) {
       setError(err.message || 'Could not start that inspection.');
       setStartingId(null);

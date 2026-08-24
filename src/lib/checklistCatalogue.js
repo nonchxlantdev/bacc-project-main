@@ -1,8 +1,10 @@
 import {
+  Bird,
   Flame,
   HardHat,
   ClipboardList,
   FileText,
+  LifeBuoy,
   PlaneTakeoff,
   ShieldCheck,
   Zap,
@@ -35,6 +37,8 @@ const TEAM_STYLES = {
   'Electrical Engineer': { Icon: Zap, tile: 'bg-violet-100 text-violet-700' },
   'General Checklist': { Icon: FileText, tile: 'bg-slate-100 text-slate-700' },
   'Operations Manager': { Icon: ShieldCheck, tile: 'bg-teal-100 text-teal-700' },
+  SMS: { Icon: LifeBuoy, tile: 'bg-indigo-100 text-indigo-700' },
+  Wildlife: { Icon: Bird, tile: 'bg-emerald-100 text-emerald-700' },
 };
 
 const TEAM_BLURBS = {
@@ -45,6 +49,8 @@ const TEAM_BLURBS = {
   'Electrical Engineer': 'Photometric, vault and engineering inspections.',
   'General Checklist': 'Plans and reference documents used across teams.',
   'Operations Manager': 'Activity logs held by Operations.',
+  SMS: 'Aerodrome hazard reports raised under the Safety Management System.',
+  Wildlife: 'Bird counts, wildlife findings and movement-area incursions.',
 };
 
 export function teamStyle(name) {

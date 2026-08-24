@@ -6,6 +6,7 @@ import ApprovalsPage from './pages/ApprovalsPage.jsx';
 import ChecklistDetailPage from './pages/ChecklistDetailPage.jsx';
 import ChecklistCataloguePage from './pages/ChecklistCataloguePage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
+import HelpPage from './pages/HelpPage.jsx';
 import IncidentDetailPage from './pages/IncidentDetailPage.jsx';
 import IncidentListPage from './pages/IncidentListPage.jsx';
 import LocationsPage from './pages/LocationsPage.jsx';
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="help" element={<HelpPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

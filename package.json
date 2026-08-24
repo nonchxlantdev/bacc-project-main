@@ -4,11 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test": "node --test",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "verify:pdf": "node scripts/verify-pdf.mjs",
     "verify:signoffs": "node scripts/verify-signoffs.mjs",
+    "verify:walkthrough": "node scripts/verify-walkthrough.mjs",
     "verify:palette": "node scripts/validate-palette.mjs",
     "verify:content": "node scripts/audit-pmm-content.mjs"
   },
@@ -27,6 +29,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "@vitejs/plugin-react": "^5.0.2",
     "pixelmatch": "^7.2.0",
+    "playwright-core": "^1.49.0",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4.1.12",
     "vite": "^7.1.5",

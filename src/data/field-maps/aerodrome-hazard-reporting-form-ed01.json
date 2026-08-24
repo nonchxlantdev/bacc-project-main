@@ -1,0 +1,103 @@
+{
+  "templateKey": "aerodrome-hazard-reporting-form",
+  "templateVersion": "ed01",
+  "basePdf": "aerodrome-hazard-reporting-form-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Baselines are the measured top of each leader-dot ink run plus 3.5pt, so a value sits just above the printed dots the way it would be written by hand. Ink rows were read off a 4x raster of the approved page \u2014 the dots float above their own font-box baseline, so glyph boxes would have placed every value through them.",
+  "mapping": {
+    "method": "hand-measured from the approved PDF. The leader lines were located by rasterising the page at 4x and finding the thin wide ink bands \u2014 pdfplumber cannot read the 'Your name' line at all, so a text-only pass silently loses a field.",
+    "generated": false
+  },
+  "pageSize": {
+    "width": 612,
+    "height": 792
+  },
+  "fields": {
+    "your_name": {
+      "page": 0,
+      "x": 147,
+      "y": 612.5,
+      "size": 10,
+      "width": 240,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "employer_position_held": {
+      "page": 0,
+      "x": 227.5,
+      "y": 584.5,
+      "size": 10,
+      "width": 285,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "location_observed": {
+      "page": 0,
+      "x": 269,
+      "y": 556.25,
+      "size": 10,
+      "width": 242,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "time_and_date_observed": {
+      "page": 0,
+      "x": 281.5,
+      "y": 524.75,
+      "size": 10,
+      "width": 229,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "what_were_you_doing_at_the_time": {
+      "page": 0,
+      "x": 93,
+      "y": 470.0,
+      "size": 10,
+      "width": 388,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "details_of_the_hazard": {
+      "page": 0,
+      "x": 93,
+      "y": 399.0,
+      "size": 10,
+      "width": 402,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "your_recommendations_to_deal_with_this_hazard": {
+      "page": 0,
+      "x": 93,
+      "y": 222.5,
+      "size": 10,
+      "width": 420,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "reporter_signature": {
+      "page": 0,
+      "x": 178,
+      "y": 71.5,
+      "type": "image",
+      "width": 203,
+      "height": 18
+    },
+    "reporter_date": {
+      "page": 0,
+      "x": 414,
+      "y": 73.0,
+      "size": 9,
+      "width": 64
+    }
+  }
+}

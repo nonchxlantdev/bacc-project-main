@@ -1,0 +1,860 @@
+{
+  "templateKey": "bird-sightings-log-sheet",
+  "templateVersion": "ed01",
+  "basePdf": "bird-sightings-log-sheet-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Every cell is a real ruled cell of the approved grid: column edges and row rules were read with pdfplumber's table detection, and each baseline is the row's top rule less the font size plus 2, so a value starts at the top of its cell.",
+  "mapping": {
+    "method": "generated from the approved PDF's detected table rules",
+    "generated": true,
+    "table": {
+      "rows": 11,
+      "columns": [
+        "family",
+        "species",
+        "individuals",
+        "adult_juvenile",
+        "30m_30m_radius",
+        "activity_p_v_f_c_o",
+        "additional_observations"
+      ]
+    }
+  },
+  "pageSize": {
+    "width": 792.12,
+    "height": 612.12
+  },
+  "fields": {
+    "personnel": {
+      "page": 0,
+      "x": 74,
+      "y": 386.87,
+      "size": 8,
+      "width": 644,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "location": {
+      "page": 0,
+      "x": 170,
+      "y": 356.5,
+      "size": 8,
+      "width": 326,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "start_time": {
+      "page": 0,
+      "x": 634.5,
+      "y": 356.5,
+      "size": 8,
+      "width": 80,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "counting_duration": {
+      "page": 0,
+      "x": 178.5,
+      "y": 331.9,
+      "size": 8,
+      "width": 86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "counting_point": {
+      "page": 0,
+      "x": 378.5,
+      "y": 331.9,
+      "size": 8,
+      "width": 105,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "end_time": {
+      "page": 0,
+      "x": 629,
+      "y": 331.9,
+      "size": 8,
+      "width": 86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 277.26,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 277.26,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 277.26,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 277.26,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 277.26,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 277.26,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 277.26,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 264.54,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 264.54,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 264.54,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 264.54,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 264.54,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 264.54,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 264.54,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 251.76,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 251.76,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 251.76,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 251.76,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 251.76,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 251.76,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 251.76,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 239.04,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 239.04,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 239.04,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 239.04,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 239.04,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 239.04,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 239.04,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 226.26,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 226.26,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 226.26,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 226.26,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 226.26,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 226.26,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 226.26,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 213.54,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 213.54,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 213.54,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 213.54,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 213.54,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 213.54,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 213.54,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 200.76,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 200.76,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 200.76,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 200.76,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 200.76,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 200.76,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 200.76,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 188.04,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 188.04,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 188.04,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 188.04,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 188.04,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 188.04,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 188.04,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 175.26,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 175.26,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 175.26,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 175.26,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 175.26,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 175.26,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 175.26,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 162.54,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 162.54,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 162.54,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 162.54,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 162.54,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 162.54,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 162.54,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_family": {
+      "page": 0,
+      "x": 75.42,
+      "y": 149.76,
+      "size": 7,
+      "width": 42.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_species": {
+      "page": 0,
+      "x": 123.42,
+      "y": 149.76,
+      "size": 7,
+      "width": 43.32,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_individuals": {
+      "page": 0,
+      "x": 172.74,
+      "y": 149.76,
+      "size": 7,
+      "width": 73.08,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_adult_juvenile": {
+      "page": 0,
+      "x": 251.82,
+      "y": 149.76,
+      "size": 7,
+      "width": 81.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_30m_30m_radius": {
+      "page": 0,
+      "x": 339.18,
+      "y": 149.76,
+      "size": 7,
+      "width": 109.68,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_activity_p_v_f_c_o": {
+      "page": 0,
+      "x": 454.86,
+      "y": 149.76,
+      "size": 7,
+      "width": 123.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_additional_observations": {
+      "page": 0,
+      "x": 583.86,
+      "y": 149.76,
+      "size": 7,
+      "width": 131.7,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    }
+  }
+}

@@ -27,6 +27,32 @@ function persist() {
   }
 }
 
+/**
+ * The form catalogue is configuration, not saved data.
+ *
+ * `templates` and `assignment_rules` are derived from TEMPLATE_REGISTRY, but a
+ * saved snapshot froze whatever the registry held on the day it was written. So
+ * adding an approved form left every browser that already held a snapshot
+ * unable to see it — no error, no warning, the form simply was not there. The
+ * SMS hazard report was added, every gate passed, and it was invisible in the
+ * running app, because the tests start from cleared storage and never meet a
+ * stale snapshot.
+ *
+ * Rebuilding these two collections on load fixes that at the cause: a new form
+ * appears on the next refresh, with no version bump and without discarding
+ * anything anyone has filed. Template and rule ids are deterministic and forms
+ * are appended to the registry, so a submission's `template_id` still resolves
+ * to the same form it always did.
+ */
+function withCurrentCatalogue(snapshot) {
+  const fresh = generateSeed();
+  const sameCatalogue =
+    snapshot.templates?.length === fresh.templates.length &&
+    snapshot.assignment_rules?.length === fresh.assignment_rules.length;
+  if (sameCatalogue) return snapshot;
+  return { ...snapshot, templates: fresh.templates, assignment_rules: fresh.assignment_rules };
+}
+
 export function getStore() {
   if (state) return state;
   try {
@@ -34,7 +60,8 @@ export function getStore() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed?.seedVersion === SEED_VERSION) {
-        state = parsed;
+        state = withCurrentCatalogue(parsed);
+        persist();
         return state;
       }
     }

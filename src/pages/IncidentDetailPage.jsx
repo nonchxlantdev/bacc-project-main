@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
 import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
+import HowThisWorks from '../components/incidents/HowThisWorks.jsx';
 import { TeamChip } from './IncidentListPage.jsx';
 import {
   Card,
@@ -33,12 +34,7 @@ import {
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
 import { deficiencyLevels, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
-import {
-  ASSIGNED_TEAMS,
-  INCIDENT_CATEGORIES,
-  INCIDENT_TYPES,
-  defaultTeamFor,
-} from '../config/incidentLookups.js';
+import { ASSIGNED_UNITS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { syncSourceChecklist } from '../lib/checklistSync.js';
@@ -88,7 +84,6 @@ export default function IncidentDetailPage() {
   const [draft, setDraft] = useState(null);
   const [verifyDraft, setVerifyDraft] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [directory, setDirectory] = useState([]);
 
   async function reload() {
     const rec = await getIncident(id);
@@ -121,20 +116,6 @@ export default function IncidentDetailPage() {
     const t = params.get('tab');
     if (t) setTab(t);
   }, [params]);
-
-  // Anyone in the directory can carry an incident — a deficiency does not know
-  // which department will end up fixing it, so the list is not filtered by
-  // role or by where the checklist came from.
-  useEffect(() => {
-    let cancelled = false;
-    getRepos()
-      .users.list()
-      .then((rows) => !cancelled && setDirectory(rows))
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const level = incident ? getDeficiencyLevel(incident.deficiency_level) : null;
   const sla = incident ? slaState(incident.target_date, clockMs) : { kind: 'none' };
@@ -170,7 +151,10 @@ export default function IncidentDetailPage() {
     const next = {
       ...incident,
       status: toStatus,
-      assigned_at: toStatus === 'assigned' ? new Date().toISOString() : incident.assigned_at,
+      // Picking the unit sets this; moving the status only backfills it for an
+      // incident that somehow reached Assigned without one.
+      assigned_at:
+        toStatus === 'assigned' ? incident.assigned_at ?? new Date().toISOString() : incident.assigned_at,
       closed_at: toStatus === 'closed' ? new Date().toISOString() : incident.closed_at,
     };
     await saveIncident(next);
@@ -454,9 +438,8 @@ export default function IncidentDetailPage() {
           />
           <StripField label="Department" value={incident.department || '—'} />
           <StripField
-            label="Assigned To"
-            value={incident.assigned_to_name || 'Unassigned'}
-            sub={incident.assigned_team ? labelOf(ASSIGNED_TEAMS, incident.assigned_team) : null}
+            label="Assigned Unit"
+            value={incident.assigned_unit ? labelOf(ASSIGNED_UNITS, incident.assigned_unit) : 'Unassigned'}
           />
           <StripField label="Due Date" value={fmtDate(incident.target_date)} />
         </div>
@@ -843,6 +826,7 @@ export default function IncidentDetailPage() {
 
         {/* Right rail */}
         <aside className="h-fit space-y-4 xl:sticky xl:top-4">
+          <HowThisWorks incident={incident} />
           <Card title="Status & Workflow">
             <div className="space-y-3">
               <SelectField
@@ -902,50 +886,31 @@ export default function IncidentDetailPage() {
 
           <Card title="Assignment">
             <div className="space-y-3">
+              {/* An incident goes to a unit, not to a person. Grounds,
+                  Electrical and Plumbing have no portal accounts, so there is
+                  no name to pick — the manager who owns the incident is the one
+                  recording progress against it. */}
               <SelectField
-                label="Assigned To"
-                value={incident.assigned_to || ''}
+                label="Assigned Unit"
+                value={incident.assigned_unit || ''}
                 onChange={(v) => {
-                  const person = directory.find((u) => u.id === v);
+                  // Stamped the moment a unit is first named, not when the
+                  // status is later moved to Assigned. Handing the work over is
+                  // the event "Assigned Date" reports, and a manager who picks
+                  // the unit on Monday and updates the status on Wednesday
+                  // should not see Wednesday. Reassigning to a different unit
+                  // does not reset it — the clock the target date runs against
+                  // started when the deficiency left the manager's desk.
                   const next = {
                     ...incident,
-                    assigned_to: v || null,
-                    assigned_to_name: person?.full_name ?? '',
-                    // Picking a person sets a sensible team; the team select
-                    // below still overrides it.
-                    assigned_team: person ? defaultTeamFor(person) : null,
+                    assigned_unit: v || null,
+                    assigned_at: v ? incident.assigned_at ?? new Date().toISOString() : null,
                   };
                   setIncident(next);
                   saveIncident(next);
                 }}
-                options={[
-                  { value: '', label: 'Unassigned' },
-                  ...directory.map((u) => ({
-                    value: u.id,
-                    label: `${u.full_name} — ${u.position}`,
-                  })),
-                ]}
+                options={[{ value: '', label: 'Unassigned' }, ...ASSIGNED_UNITS]}
               />
-              <SelectField
-                label="Team"
-                value={incident.assigned_team || ''}
-                onChange={(v) => {
-                  const next = { ...incident, assigned_team: v || null };
-                  setIncident(next);
-                  saveIncident(next);
-                }}
-                options={[{ value: '', label: 'Unassigned' }, ...ASSIGNED_TEAMS]}
-              />
-              <div>
-                <span className="mb-1 block text-xs text-muted">CC</span>
-                <select
-                  disabled
-                  className="min-h-10 w-full rounded border border-navy/20 bg-stripe px-2 text-sm text-muted"
-                  title="Notification recipients are pending BACC confirmation"
-                >
-                  <option>Select users…</option>
-                </select>
-              </div>
               <div>
                 <span className="mb-1 block text-xs text-muted">Assigned Date</span>
                 <p className="text-sm">{incident.assigned_at ? fmtDateTime(incident.assigned_at) : '—'}</p>

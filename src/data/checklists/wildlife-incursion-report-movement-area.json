@@ -1,0 +1,84 @@
+{
+  "code": "PGIA-AOM-A5-07",
+  "annexLabel": "Annex 07",
+  "documentFamily": "AOM",
+  "title": "Wildlife Incursion Report for the Movement Area",
+  "description": "Records a wildlife incursion into the movement area, any damage or casualties, and what was done about it.",
+  "manualHeader": {
+    "line1": "ANNEX 5",
+    "line2": "AERODROME OPERATIONAL MANUAL\nPHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "Annex 5\nWildlife"
+  },
+  "footer": {
+    "reviewLine": "Review: 1  Edition: 1",
+    "dateLine": "Date: September 08, 2024.  Wildlife"
+  },
+  "frequency": "on_demand",
+  "documentType": "report",
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "date",
+      "label": "Date: _bn",
+      "type": "text",
+      "required": false,
+      "mapKey": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text",
+      "required": false,
+      "mapKey": "time"
+    },
+    {
+      "key": "reportNo",
+      "label": "Report No.",
+      "type": "text",
+      "required": false,
+      "mapKey": "report_no"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "descriptionOfWildlifeIncursion",
+      "label": "Description of Wildlife Incursion",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "description_of_wildlife_incursion"
+    },
+    {
+      "key": "descriptionOfDamagesCasualties",
+      "label": "Description of Damages / Casualties",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "description_of_damages_casualties"
+    },
+    {
+      "key": "measuresTaken",
+      "label": "Measures Taken",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "measures_taken"
+    },
+    {
+      "key": "reportedBy",
+      "label": "Reported by",
+      "type": "text",
+      "required": false,
+      "mapKey": "reported_by"
+    }
+  ],
+  "signoffs": [],
+  "validationRules": [],
+  "notes": [
+    "The date label on the approved form reads 'Date: _bn' \u2014 a stray 'bn' that is printed on BACC's own sheet. It is transcribed as printed; BACC \u00a714 forbids correcting an approved form for tidiness. Raised with BACC as a source-document correction.",
+    "The form carries no signature line at all, only 'Reported by'. No sign-off is declared, rather than inventing one."
+  ]
+}

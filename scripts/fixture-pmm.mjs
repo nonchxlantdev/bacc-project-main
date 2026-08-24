@@ -55,6 +55,17 @@ export async function buildAndVerify({ schema, fieldMap, basePdfBytes, outDir, l
 
   const summary = {};
   for (const f of schema.summaryFields ?? []) {
+    // A log sheet's grid. Fill every printed row and two beyond it, so the
+    // fixture exercises both the ruled cells and the continuation page — an
+    // unfilled grid would let a mis-measured cell pass the placement gate
+    // simply by never being stamped.
+    if (f.type === 'table') {
+      const printed = f.printedRows ?? 0;
+      summary[f.key] = Array.from({ length: printed + 2 }, (_, r) =>
+        Object.fromEntries((f.columns ?? []).map((c) => [c.key, `${c.label} ${r + 1}`])),
+      );
+      continue;
+    }
     summary[f.key] = f.options?.length
       ? f.options[f.options.length - 1].value
       : 'Deficiency recorded during this inspection; OM notified and corrective action scheduled with the contractor.';

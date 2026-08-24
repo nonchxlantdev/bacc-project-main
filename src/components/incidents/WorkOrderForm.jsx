@@ -1,5 +1,5 @@
 import SignoffBlock from '../checklist/SignoffBlock.jsx';
-import { ASSIGNED_TEAMS } from '../../config/incidentLookups.js';
+import { ASSIGNED_UNITS } from '../../config/incidentLookups.js';
 import { workOrderStatusLabel, workOrderVerifiedBlockers } from '../../lib/incidentLifecycle.js';
 
 export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, onExport, readOnly }) {
@@ -48,7 +48,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
               className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
             >
               <option value="">Select…</option>
-              {ASSIGNED_TEAMS.map((opt) => (
+              {ASSIGNED_UNITS.map((opt) => (
                 <option key={opt.value} value={opt.label}>
                   {opt.label}
                 </option>

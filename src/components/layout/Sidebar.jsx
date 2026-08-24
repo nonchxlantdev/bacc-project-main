@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
+  CircleHelp,
   ClipboardCheck,
   Inbox,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const NAV = [
   { to: '/locations', label: 'Locations', icon: MapPin },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/help', label: 'Help', icon: CircleHelp },
 ];
 
 export default function Sidebar({ open = false, onClose }) {

@@ -40,6 +40,7 @@ const ROLE_LABELS = {
   duty_manager: 'Duty Manager',
   inspector: 'Maintenance Inspectors',
   electrical_tech: 'Electrical Technicians',
+  sms: 'Safety Management System',
 };
 
 const ALL_RECIPIENTS = Object.keys(ROLE_LABELS);

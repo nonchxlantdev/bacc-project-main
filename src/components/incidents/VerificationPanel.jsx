@@ -1,6 +1,7 @@
 import { Camera, Check, ImagePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SYNC_SAT_ON_VERIFICATION } from '../../lib/checklistSync.js';
+import { VERIFICATION_HINT } from '../../content/incidentGuide.js';
 import { fmtDate, fmtDateTime } from '../../lib/airportFormat.js';
 import { Card, RadioButton } from './detailUi.jsx';
 
@@ -10,6 +11,12 @@ import { Card, RadioButton } from './detailUi.jsx';
  * The line under the table states what the inspector originally recorded, who
  * verified it and when. Confirming SAT here also sets the item back to SAT on
  * the source checklist — see lib/checklistSync.js for that rule.
+ *
+ * That consequence is stated once, in VERIFICATION_HINT, directly above the two
+ * controls that trigger it. It used to be said again in the footer and again in
+ * the note form; three statements of one fact in one card is how a card stops
+ * being read. The alternative wording for when the write-back is switched off
+ * stays in both places, because that case has no hint to carry it.
  */
 export default function VerificationPanel({
   incident,
@@ -77,6 +84,10 @@ export default function VerificationPanel({
         </table>
       </div>
 
+      <p className="mt-2 rounded-md border border-navy/15 bg-stripe px-3 py-2 text-xs leading-relaxed text-muted">
+        {VERIFICATION_HINT}
+      </p>
+
       <p className="mt-3 border-t border-navy/10 pt-3 text-xs text-muted">
         Recorded <strong className="font-semibold text-alert">NO SAT</strong> on{' '}
         {fmtDate(incident.source_inspection_date)} in {incident.source_template_code}.
@@ -90,9 +101,8 @@ export default function VerificationPanel({
         )}
         {incident.reinspection_submission_id && ' Closure evidence: linked re-inspection.'}
         <br />
-        {SYNC_SAT_ON_VERIFICATION
-          ? 'Confirming SAT updates the item on the source checklist to SAT.'
-          : 'The submitted checklist is a locked record and is never modified — verification is stored against the incident.'}
+        {!SYNC_SAT_ON_VERIFICATION &&
+          'The submitted checklist is a locked record and is never modified — verification is stored against the incident.'}
       </p>
 
       {incident.verification?.photo_url && (
@@ -108,9 +118,7 @@ export default function VerificationPanel({
           <p className="text-sm font-semibold text-navy">Verify {code} back to SAT</p>
           <p className="mt-0.5 text-xs text-muted">
             Records that corrective action was completed and the item re-inspected.
-            {SYNC_SAT_ON_VERIFICATION
-              ? ' The item on the source checklist is updated to SAT.'
-              : ' The original checklist stays untouched.'}
+            {!SYNC_SAT_ON_VERIFICATION && ' The original checklist stays untouched.'}
           </p>
           <textarea
             rows={2}

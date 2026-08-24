@@ -1,0 +1,79 @@
+{
+  "templateKey": "wildlife-incursion-report-movement-area",
+  "templateVersion": "ed01",
+  "basePdf": "wildlife-incursion-report-movement-area-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Baselines are the measured top of each printed rule plus 3pt, so a value sits on the line rather than through it. Rule positions were read off a 4x raster of the approved page and split into runs, which is how 'Date: __ Time: __' on one rule becomes two fields.",
+  "mapping": {
+    "method": "hand-measured from the approved PDF \u2014 rule tops from a 4x raster, runs split on horizontal gaps",
+    "generated": false
+  },
+  "pageSize": {
+    "width": 612,
+    "height": 792
+  },
+  "fields": {
+    "date": {
+      "page": 0,
+      "x": 117.5,
+      "y": 591,
+      "size": 10,
+      "width": 126
+    },
+    "time": {
+      "page": 0,
+      "x": 278,
+      "y": 591,
+      "size": 10,
+      "width": 126
+    },
+    "report_no": {
+      "page": 0,
+      "x": 463.5,
+      "y": 591,
+      "size": 10,
+      "width": 46
+    },
+    "description_of_wildlife_incursion": {
+      "page": 0,
+      "x": 74,
+      "y": 545,
+      "size": 10,
+      "width": 461,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "description_of_damages_casualties": {
+      "page": 0,
+      "x": 74,
+      "y": 418.5,
+      "size": 10,
+      "width": 463,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "measures_taken": {
+      "page": 0,
+      "x": 74,
+      "y": 292,
+      "size": 10,
+      "width": 463,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "reported_by": {
+      "page": 0,
+      "x": 133,
+      "y": 119.5,
+      "size": 10,
+      "width": 222,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    }
+  }
+}

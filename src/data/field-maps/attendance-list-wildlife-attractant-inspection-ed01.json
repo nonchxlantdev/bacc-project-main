@@ -1,0 +1,692 @@
+{
+  "templateKey": "attendance-list-wildlife-attractant-inspection",
+  "templateVersion": "ed01",
+  "basePdf": "attendance-list-wildlife-attractant-inspection-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Every cell is a real ruled cell of the approved grid: column edges and row rules were read with pdfplumber's table detection, and each baseline is the row's top rule less the font size plus 2, so a value starts at the top of its cell.",
+  "mapping": {
+    "method": "generated from the approved PDF's detected table rules; the Signature column is an image box inset in each ruled cell",
+    "generated": true,
+    "table": {
+      "rows": 13,
+      "columns": [
+        "no",
+        "name",
+        "e_mail",
+        "phone",
+        "signature"
+      ]
+    }
+  },
+  "pageSize": {
+    "width": 612.0,
+    "height": 792.0
+  },
+  "fields": {
+    "site_of_interest": {
+      "page": 0,
+      "x": 142.5,
+      "y": 590,
+      "size": 9,
+      "width": 206,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "date": {
+      "page": 0,
+      "x": 413,
+      "y": 590,
+      "size": 9,
+      "width": 76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "time_start": {
+      "page": 0,
+      "x": 126,
+      "y": 566.75,
+      "size": 9,
+      "width": 96,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "time_end": {
+      "page": 0,
+      "x": 274.5,
+      "y": 566.75,
+      "size": 9,
+      "width": 106,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 515.38,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 515.38,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 515.38,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 515.38,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 504.08,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.3
+    },
+    "row_02_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 491.08,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 491.08,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 491.08,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 491.08,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 479.84,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.24
+    },
+    "row_03_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 466.84,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 466.84,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 466.84,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 466.84,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 455.78,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.06
+    },
+    "row_04_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 442.78,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 442.78,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 442.78,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 442.78,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 431.66,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_05_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 418.66,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 418.66,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 418.66,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 418.66,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 407.42,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.24
+    },
+    "row_06_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 394.42,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 394.42,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 394.42,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 394.42,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 383.3,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_07_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 370.3,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 370.3,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 370.3,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 370.3,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 359.18,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_08_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 346.18,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 346.18,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 346.18,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 346.18,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 335.12,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.06
+    },
+    "row_09_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 322.12,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 322.12,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 322.12,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 322.12,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_09_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 311.0,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_10_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 298.0,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 298.0,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 298.0,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 298.0,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_10_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 286.88,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_11_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 273.88,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 273.88,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 273.88,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 273.88,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_11_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 262.82,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.06
+    },
+    "row_12_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 249.82,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_12_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 249.82,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_12_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 249.82,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_12_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 249.82,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_12_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 238.7,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    },
+    "row_13_no": {
+      "page": 0,
+      "x": 75.42,
+      "y": 225.7,
+      "size": 9,
+      "width": 20.76,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_13_name": {
+      "page": 0,
+      "x": 102.18,
+      "y": 225.7,
+      "size": 9,
+      "width": 133.8,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_13_e_mail": {
+      "page": 0,
+      "x": 241.98,
+      "y": 225.7,
+      "size": 9,
+      "width": 140.1,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_13_phone": {
+      "page": 0,
+      "x": 388.08,
+      "y": 225.7,
+      "size": 9,
+      "width": 78.0,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_13_signature": {
+      "page": 0,
+      "x": 472.08,
+      "y": 214.58,
+      "type": "image",
+      "width": 64.5,
+      "height": 20.12
+    }
+  }
+}

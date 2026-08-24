@@ -1,0 +1,95 @@
+{
+  "code": "PGIA-AOM-A5-06",
+  "annexLabel": "Annex 06",
+  "documentFamily": "AOM",
+  "title": "Wildlife Findings Report",
+  "description": "Records a wildlife finding on the aerodrome \u2014 who saw it, where, and what species if identifiable.",
+  "manualHeader": {
+    "line1": "ANNEX 5",
+    "line2": "AERODROME OPERATIONAL MANUAL\nPHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "Annex 5\nWildlife"
+  },
+  "footer": {
+    "reviewLine": "Review: 1  Edition: 1",
+    "dateLine": "Date: September 08, 2024.  Wildlife"
+  },
+  "frequency": "on_demand",
+  "documentType": "report",
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "reportedBy",
+      "label": "Reported by",
+      "type": "text",
+      "required": false,
+      "mapKey": "reported_by"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "text",
+      "required": false,
+      "mapKey": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text",
+      "required": false,
+      "mapKey": "time"
+    },
+    {
+      "key": "locationOfFinding",
+      "label": "Location of Finding",
+      "type": "text",
+      "required": false,
+      "mapKey": "location_of_finding"
+    },
+    {
+      "key": "detectedSpeciesIfIdentifiable",
+      "label": "Detected Species (if identifiable)",
+      "type": "text",
+      "required": false,
+      "mapKey": "detected_species_if_identifiable"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "additionalInformation",
+      "label": "Additional Information",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "additional_information"
+    },
+    {
+      "key": "dateOfReportSubmission",
+      "label": "Date of Report Submission",
+      "type": "text",
+      "required": false,
+      "mapKey": "date_of_report_submission"
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "prepared_by",
+      "label": "Prepared by",
+      "required": false
+    },
+    {
+      "role": "received_by",
+      "label": "Received by",
+      "required": false
+    }
+  ],
+  "validationRules": [],
+  "notes": [
+    "The approved form prints no date beside either signature \u2014 one 'Date of Report Submission' covers the sheet \u2014 so no per-signature date field exists. BACC \u00a714 forbids adding one.",
+    "'Prepared by' and 'Received by' print their name and signature side by side on a single rule, not stacked. The exporter detects that by the two boxes not overlapping horizontally and leaves the signature on its own rule."
+  ]
+}

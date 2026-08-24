@@ -51,5 +51,42 @@ export function signatureImages(record, fieldMap) {
     const key = signatureFieldKey(signoff.role);
     if (fields[key]?.type === 'image') images[key] = signoff.signature_data_uri;
   }
+  return { ...images, ...tableSignatureImages(record, fieldMap) };
+}
+
+/**
+ * Signatures drawn inside a log sheet's grid.
+ *
+ * The Attendance List asks every attendee to sign their own row, which is a
+ * signature like any other and is captured the same way — drawn, not typed. It
+ * simply does not arrive through `signoffs`, because it belongs to a row rather
+ * than to the sheet.
+ *
+ * Only cells the field map declares as an image are returned, so a signature
+ * captured against a column the approved form has no space for is kept on the
+ * record and never stamped.
+ */
+export function tableSignatureImages(record, fieldMap) {
+  const fields = fieldMap?.fields ?? {};
+  const schema = record?.schema ?? record?.content_schema ?? null;
+  const summary = record?.summary ?? {};
+  const images = {};
+
+  for (const field of schema?.summaryFields ?? []) {
+    if (field.type !== 'table') continue;
+    const rows = summary[field.key];
+    if (!Array.isArray(rows)) continue;
+    const prefix = field.mapKey ?? field.key;
+    const signatureColumns = (field.columns ?? []).filter((col) => col.type === 'signature');
+
+    rows.slice(0, field.printedRows ?? rows.length).forEach((row, i) => {
+      for (const col of signatureColumns) {
+        const uri = row?.[col.key];
+        if (!uri || typeof uri !== 'string' || !uri.startsWith('data:image')) continue;
+        const key = `${prefix}_${String(i + 1).padStart(2, '0')}_${col.key}`;
+        if (fields[key]?.type === 'image') images[key] = uri;
+      }
+    });
+  }
   return images;
 }

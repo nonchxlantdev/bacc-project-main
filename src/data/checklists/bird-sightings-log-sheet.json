@@ -1,0 +1,129 @@
+{
+  "code": "PGIA-AOM-A5-01",
+  "annexLabel": "Annex 01",
+  "documentFamily": "AOM",
+  "title": "Bird Sightings Log Sheet",
+  "description": "Counts of birds seen at a counting point, by family and species, with activity code.",
+  "manualHeader": {
+    "line1": "ANNEX 5",
+    "line2": "AERODROME OPERATIONAL MANUAL\nPHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "Annex 5\nWildlife"
+  },
+  "footer": {
+    "reviewLine": "Review: 1  Edition: 1",
+    "dateLine": "Date: September 08, 2024.  Wildlife"
+  },
+  "frequency": "on_demand",
+  "documentType": "log",
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "personnel",
+      "label": "Personnel",
+      "type": "text",
+      "required": false,
+      "mapKey": "personnel"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "text",
+      "required": false,
+      "mapKey": "date"
+    },
+    {
+      "key": "location",
+      "label": "Location",
+      "type": "text",
+      "required": false,
+      "mapKey": "location"
+    },
+    {
+      "key": "startTime",
+      "label": "Start Time",
+      "type": "text",
+      "required": false,
+      "mapKey": "start_time"
+    },
+    {
+      "key": "countingDuration",
+      "label": "Counting Duration",
+      "type": "text",
+      "required": false,
+      "mapKey": "counting_duration"
+    },
+    {
+      "key": "countingPoint",
+      "label": "Counting Point",
+      "type": "text",
+      "required": false,
+      "mapKey": "counting_point"
+    },
+    {
+      "key": "endTime",
+      "label": "End Time",
+      "type": "text",
+      "required": false,
+      "mapKey": "end_time"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "rows",
+      "label": "Bird Sightings Log Sheet",
+      "type": "table",
+      "required": false,
+      "mapKey": "row",
+      "printedRows": 11,
+      "columns": [
+        {
+          "key": "family",
+          "label": "Family"
+        },
+        {
+          "key": "species",
+          "label": "Species"
+        },
+        {
+          "key": "individuals",
+          "label": "# Individuals"
+        },
+        {
+          "key": "adult_juvenile",
+          "label": "Adult/Juvenile"
+        },
+        {
+          "key": "30m_30m_radius",
+          "label": "<30m; >30m Radius"
+        },
+        {
+          "key": "activity_p_v_f_c_o",
+          "label": "Activity (P, V, F, C, O)"
+        },
+        {
+          "key": "additional_observations",
+          "label": "Additional Observations"
+        }
+      ]
+    }
+  ],
+  "signoffs": [],
+  "validationRules": [],
+  "notes": [
+    "Activity Codes: P - Perching, V - Flying, F - Foraging, C - Singing, O \u2013 Other",
+    "The approved grid prints 11 rows. More may be recorded \u2014 the first 11 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does.",
+    "The approved sheet prints its date as 'Date:  /  /' with roughly three points between the slashes \u2014 space for a hand-written figure, far too narrow to stamp legibly. The date is recorded on the record and shown in the portal, and the printed sheet keeps its hand-written slot rather than having type driven through BACC's artwork. Raised with BACC as a source-document question."
+  ]
+}

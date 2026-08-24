@@ -38,19 +38,19 @@ export function createMockRepositories() {
       },
     },
     templates: {
-      async list(profile) {
-        const templates = getStore().templates.map((tpl) => ({
+      // Everyone sees every form. The assignment rules below still say who each
+      // form belongs to and how often it runs, but they are not a permission —
+      // BACC's rule is that any member of staff can see any checklist on file,
+      // and an inspector who cannot open the form next to theirs cannot cover
+      // for the person who normally fills it.
+      //
+      // `profile` is kept in the signature because callers pass it and because
+      // this is where a restriction would go if BACC ever asks for one.
+      async list() {
+        return getStore().templates.map((tpl) => ({
           ...tpl,
           assignment_rules: getStore().assignment_rules.filter((r) => r.template_id === tpl.id),
         }));
-        if (!profile || ['om', 'coo', 'admin'].includes(profile.role)) return templates;
-        return templates.filter((tpl) =>
-          tpl.assignment_rules.some(
-            (rule) =>
-              (!rule.department || rule.department === profile.department) &&
-              (!rule.role || rule.role === profile.role),
-          ),
-        );
       },
       async get(idOrCode) {
         const templates = getStore().templates;

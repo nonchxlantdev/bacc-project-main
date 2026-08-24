@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 /**
  * Presentational primitives for the incident screen.
  *
@@ -73,10 +75,18 @@ export function Metric({ label, value }) {
 }
 
 export function SelectField({ label, value, onChange, options }) {
+  // The label was a bare <span>, which looks right and names nothing: the
+  // select had no accessible name, so a screen reader announced the incident's
+  // status and assignee controls as unlabelled combo boxes. A real <label> with
+  // a generated id ties the two together without changing how it looks.
+  const id = useId();
   return (
     <div>
-      <span className="mb-1 block text-xs text-muted">{label}</span>
+      <label htmlFor={id} className="mb-1 block text-xs text-muted">
+        {label}
+      </label>
       <select
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"

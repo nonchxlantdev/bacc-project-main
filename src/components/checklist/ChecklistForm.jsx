@@ -2,10 +2,12 @@ import { AlertTriangle, Check, ChevronDown, Info, Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { missingRequiredHeaderKeys, unresolvedNoSatCodes } from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
+import { ROLE_TITLES } from '../../lib/roleStaffing.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
 import ResolutionChip from './ResolutionChip.jsx';
+import LogTable from './LogTable.jsx';
 import DrawingAttach from './DrawingAttach.jsx';
 import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
@@ -372,13 +374,16 @@ export default function ChecklistForm({
  */
 function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsChange }) {
   const isChoice = field.type === 'yes_no' || field.type === 'radio';
+  const isTable = field.type === 'table';
   return (
     <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
       <label className="block text-[13px] font-semibold uppercase tracking-wide text-navy">
         {field.label}
       </label>
       {field.hint && <p className="mt-1 text-xs italic text-muted">{field.hint}</p>}
-      {isChoice ? (
+      {isTable ? (
+        <LogTable field={field} value={value} disabled={disabled} onChange={onChange} />
+      ) : isChoice ? (
         <div className="mt-2 flex flex-wrap gap-2">
           {(field.options ?? []).map((opt) => {
             const active = value === opt.value;
@@ -460,47 +465,148 @@ function HeaderFields({ schema, header, disabled, onChange }) {
   return (
     <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
       <div className={stacked ? 'grid gap-4' : 'grid gap-4 md:grid-cols-2 xl:grid-cols-4'}>
-        {fields.map((field) => (
-          <label key={field.key} className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-              {field.label}
-              {field.required ? ' *' : ''}
-            </span>
-            {field.type === 'yes_no' ? (
-              <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
-            ) : field.type === 'radio' ? (
-              <div className="space-y-2">
-                {(field.options ?? []).map((opt) => (
-                  <label key={opt.value} className="flex min-h-8 items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={field.key}
-                      disabled={disabled}
-                      checked={header[field.key] === opt.value}
-                      onChange={() => onChange({ [field.key]: opt.value })}
-                      className="h-4 w-4 accent-primary"
-                    />
-                    {opt.label}
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <input
-                type={INPUT_TYPES[field.type] ?? 'text'}
-                disabled={disabled || field.key === 'conductedBy'}
-                value={header[field.key] ?? ''}
-                onChange={(e) => onChange({ [field.key]: e.target.value })}
-                className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
-              />
-            )}
-          </label>
-        ))}
+        {fields.map((field) => {
+          // "Conducted by (Name / Position)" is one field on the approved form
+          // and stays one field in the record — but it is two answers, and the
+          // position half is a post with a fixed name. Two keys carry it
+          // (conductedBy, conductedByNamePosition), so it is found by its label.
+          const composed = isConductedBy(field);
+          const Wrapper = composed ? 'div' : 'label';
+          return (
+            <Wrapper key={field.key} className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {field.label}
+                {field.required ? ' *' : ''}
+              </span>
+              {composed ? (
+                <ConductedByField
+                  field={field}
+                  value={header[field.key] ?? ''}
+                  disabled={disabled}
+                  onChange={onChange}
+                />
+              ) : field.type === 'yes_no' ? (
+                <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
+              ) : field.type === 'radio' ? (
+                <div className="space-y-2">
+                  {(field.options ?? []).map((opt) => (
+                    <label key={opt.value} className="flex min-h-8 items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name={field.key}
+                        disabled={disabled}
+                        checked={header[field.key] === opt.value}
+                        onChange={() => onChange({ [field.key]: opt.value })}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <input
+                  type={INPUT_TYPES[field.type] ?? 'text'}
+                  disabled={disabled}
+                  value={header[field.key] ?? ''}
+                  onChange={(e) => onChange({ [field.key]: e.target.value })}
+                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
+                />
+              )}
+            </Wrapper>
+          );
+        })}
       </div>
     </section>
   );
 }
 
 const INPUT_TYPES = { date: 'date', time: 'time', number: 'number' };
+
+/** The approved forms name this field the same way whatever key carries it. */
+function isConductedBy(field) {
+  return /^conducted by/i.test(field?.label ?? '');
+}
+
+/** The post names as printed on the approved forms, in picking order. */
+const CONDUCTED_BY_TITLES = [...new Set(Object.values(ROLE_TITLES))].sort((a, b) => a.localeCompare(b));
+
+/**
+ * Split "Name / Position" the way a person wrote it.
+ *
+ * The first slash separates the halves; anything after it is the position, so
+ * a post whose own name contains a slash survives the round trip.
+ */
+export function splitNamePosition(value) {
+  const raw = String(value ?? '');
+  const cut = raw.indexOf('/');
+  if (cut < 0) return { name: raw.trim(), title: '' };
+  return { name: raw.slice(0, cut).trim(), title: raw.slice(cut + 1).trim() };
+}
+
+export function joinNamePosition(name, title) {
+  return [name.trim(), title.trim()].filter(Boolean).join(' / ');
+}
+
+/**
+ * Two controls, one stored value.
+ *
+ * BACC §14 fixes the approved form's field, its label and the string that is
+ * stamped onto the exported PDF — so the record still holds a single
+ * "Name / Position". What changes is only how it is typed: the position half is
+ * a post with a canonical name, and picking it beats retyping it whenever the
+ * person who conducted the inspection is not the account holder.
+ *
+ * The halves are held locally so a half-finished entry stays put while it is
+ * being made, and re-read from the value whenever the record changes underneath
+ * — loading a draft saved before this control existed, or one typed by hand.
+ */
+function ConductedByField({ field, value, disabled, onChange }) {
+  const [parts, setParts] = useState(() => splitNamePosition(value));
+
+  useEffect(() => {
+    setParts((prev) => (joinNamePosition(prev.name, prev.title) === (value ?? '') ? prev : splitNamePosition(value)));
+  }, [value]);
+
+  function commit(next) {
+    setParts(next);
+    onChange({ [field.key]: joinNamePosition(next.name, next.title) });
+  }
+
+  // A position typed before this control existed is not on the list. Dropping
+  // it would quietly rewrite what an inspector recorded, so it is offered as
+  // one more option instead.
+  const titles = CONDUCTED_BY_TITLES.includes(parts.title) || !parts.title
+    ? CONDUCTED_BY_TITLES
+    : [...CONDUCTED_BY_TITLES, parts.title];
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      <input
+        type="text"
+        aria-label="Conducted by — name"
+        placeholder="Name"
+        disabled={disabled}
+        value={parts.name}
+        onChange={(e) => commit({ ...parts, name: e.target.value })}
+        className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
+      />
+      <select
+        aria-label="Conducted by — title"
+        disabled={disabled}
+        value={parts.title}
+        onChange={(e) => commit({ ...parts, title: e.target.value })}
+        className="min-h-10 w-full rounded border border-navy/20 bg-white px-3 py-2 text-sm"
+      >
+        <option value="">Select a title…</option>
+        {titles.map((title) => (
+          <option key={title} value={title}>
+            {title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 /**
  * Yes / No header field. Some approved forms attach an operational consequence

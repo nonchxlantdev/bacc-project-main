@@ -25,6 +25,7 @@ import { getTemplate } from '../lib/templates.js';
 import { airportYmd } from '../lib/belizeTime.js';
 import { getRepos } from '../data/repositories/index.js';
 import { baseFormUrl } from '../lib/baseForms.js';
+import { ROLE_TITLES } from '../lib/roleStaffing.js';
 import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
@@ -68,7 +69,7 @@ export default function ChecklistDetailPage() {
         const header = emptyHeaderState(template.schema, {
           date: airportYmd(clock.nowMs),
           inspectionType: 'monthly_routine',
-          conductedBy: `${displayName} / ${position}`,
+          conductedBy: [displayName, ROLE_TITLES[profile?.role]].filter(Boolean).join(' / '),
         });
         const draft = buildDraftRecord({
           template,
@@ -114,7 +115,7 @@ export default function ChecklistDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, searchParams, user, displayName, position, navigate]);
+  }, [id, searchParams, user, displayName, profile?.role, navigate]);
 
   const schema = record?.schema;
   // A reference sheet (Annex L) is pre-printed end to end. There is nothing to
@@ -184,10 +185,9 @@ export default function ChecklistDetailPage() {
       submitted_at: signedAt,
       inspection_type: record.header.inspectionType,
       inspection_date: record.header.date,
-      header: {
-        ...record.header,
-        conductedBy: `${displayName} / ${position}`,
-      },
+      // "Conducted by" is whoever the inspector says conducted it — it is
+      // prefilled from the account and now editable, so submitting must not
+      // stamp the account holder back over a colleague's name and title.
       signoffs: [inspectorSignoff, om].filter(Boolean),
       locked: true,
     };

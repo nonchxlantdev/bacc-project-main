@@ -1,3 +1,4 @@
+import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
 import { airportYmd } from './belizeTime.js';
 
 export function newWorkOrderId() {
@@ -7,7 +8,10 @@ export function newWorkOrderId() {
 export function buildWorkOrderFromIncident(incident, user, profile) {
   const today = airportYmd(Date.now());
   const year = Number(today.slice(0, 4));
-  const cecRequired = /cec/i.test(incident.assigned_team || incident.assigned_to_name || '');
+  // The Annex H form asks for a name, and the incident only knows a unit — so
+  // the unit's label is the name, which is also who the work order is handed to.
+  const unitName = ASSIGNED_UNITS.find((u) => u.value === incident.assigned_unit)?.label ?? '';
+  const cecRequired = /cec/i.test(unitName);
   return {
     id: newWorkOrderId(),
     incident_id: incident.id,
@@ -15,8 +19,7 @@ export function buildWorkOrderFromIncident(incident, user, profile) {
     date_issued: today,
     issued_by: user?.id ?? null,
     issued_by_name: profile?.full_name || user?.email || '',
-    assigned_to_name: incident.assigned_to_name || incident.assigned_team || '',
-    assigned_to_user: incident.assigned_to || null,
+    assigned_to_name: unitName,
     noc_reference_no: incident.noc_no || incident.incident_ref,
     deficiency_level: incident.deficiency_level,
     description_of_work: incident.title || incident.description,

@@ -59,6 +59,18 @@ import annexBOperationalControlInspection from '../checklists/annex-b-operationa
 import annexBOperationalControlInspectionMap from '../field-maps/annex-b-operational-control-inspection-checklist-ed01.json';
 import annexCTechnicalOversightFieldRecord from '../checklists/annex-c-technical-oversight-inspection-field-record.json';
 import annexCTechnicalOversightFieldRecordMap from '../field-maps/annex-c-technical-oversight-inspection-field-record-ed01.json';
+import birdSightingsLogSheet from '../checklists/bird-sightings-log-sheet.json';
+import birdSightingsLogSheetMap from '../field-maps/bird-sightings-log-sheet-ed01.json';
+import attendanceListWildlifeAttractantInspection from '../checklists/attendance-list-wildlife-attractant-inspection.json';
+import attendanceListWildlifeAttractantInspectionMap from '../field-maps/attendance-list-wildlife-attractant-inspection-ed01.json';
+import monthlyWildlifeIncursionLogMovementArea from '../checklists/monthly-wildlife-incursion-log-movement-area.json';
+import monthlyWildlifeIncursionLogMovementAreaMap from '../field-maps/monthly-wildlife-incursion-log-movement-area-ed01.json';
+import wildlifeFindingsReport from '../checklists/wildlife-findings-report.json';
+import wildlifeFindingsReportMap from '../field-maps/wildlife-findings-report-ed01.json';
+import wildlifeIncursionReportMovementArea from '../checklists/wildlife-incursion-report-movement-area.json';
+import wildlifeIncursionReportMovementAreaMap from '../field-maps/wildlife-incursion-report-movement-area-ed01.json';
+import aerodromeHazardReportingForm from '../checklists/aerodrome-hazard-reporting-form.json';
+import aerodromeHazardReportingFormMap from '../field-maps/aerodrome-hazard-reporting-form-ed01.json';
 import annexEAerodromeSignInspection from '../checklists/annex-e-aerodrome-sign-inspection-checklist.json';
 import annexEAerodromeSignInspectionMap from '../field-maps/annex-e-aerodrome-sign-inspection-checklist-ed01.json';
 import annexFUnpavedAreaRoutineInspection from '../checklists/annex-f-unpaved-area-routine-inspection-checklist.json';
@@ -77,7 +89,8 @@ import annexLReferenceDocumentsMap from '../field-maps/annex-l-reference-documen
  * to add or refresh one, then paste its entry here. Every coordinate in the
  * referenced field map is a measured glyph position from the approved PDF.
  *
- * `assignments` drives who sees the form and on what cadence (BACC §4).
+ * `assignments` drives who a form belongs to and on what cadence. It is not a
+ * permission — everyone can open every form.
  * `role` matches a seeded user role; `frequency` matches the scheduler's
  * cadence vocabulary. `on_demand` means startable but never auto-scheduled.
  */
@@ -622,6 +635,106 @@ export const TEMPLATE_REGISTRY = [
     fieldMap: annexLReferenceDocumentsMap,
     assignments: [{ department: 'Operations', role: 'om', frequency: 'on_demand' }],
   },
+  {
+    key: 'aerodrome-hazard-reporting-form',
+    group: 'SMS',
+    code: aerodromeHazardReportingForm.code,
+    version: 'ed01',
+    title: aerodromeHazardReportingForm.title,
+    annexLabel: aerodromeHazardReportingForm.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operations Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'report',
+    schema: aerodromeHazardReportingForm,
+    fieldMap: aerodromeHazardReportingFormMap,
+    // A hazard is reported when someone sees one, so nothing is scheduled. The
+    // form names SMS as its owner, which until now held no form at all.
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
+  {
+    key: 'wildlife-findings-report',
+    group: 'Wildlife',
+    code: wildlifeFindingsReport.code,
+    version: 'ed01',
+    title: wildlifeFindingsReport.title,
+    annexLabel: wildlifeFindingsReport.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operational Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'report',
+    schema: wildlifeFindingsReport,
+    fieldMap: wildlifeFindingsReportMap,
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
+  {
+    key: 'wildlife-incursion-report-movement-area',
+    group: 'Wildlife',
+    code: wildlifeIncursionReportMovementArea.code,
+    version: 'ed01',
+    title: wildlifeIncursionReportMovementArea.title,
+    annexLabel: wildlifeIncursionReportMovementArea.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operational Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'report',
+    schema: wildlifeIncursionReportMovementArea,
+    fieldMap: wildlifeIncursionReportMovementAreaMap,
+    // BACC's staff list names nobody for wildlife. SMS is the nearest real post
+    // and holds it until BACC says otherwise.
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
+  {
+    key: 'bird-sightings-log-sheet',
+    group: 'Wildlife',
+    code: birdSightingsLogSheet.code,
+    version: 'ed01',
+    title: birdSightingsLogSheet.title,
+    annexLabel: birdSightingsLogSheet.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operational Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'log',
+    schema: birdSightingsLogSheet,
+    fieldMap: birdSightingsLogSheetMap,
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
+  {
+    key: 'attendance-list-wildlife-attractant-inspection',
+    group: 'Wildlife',
+    code: attendanceListWildlifeAttractantInspection.code,
+    version: 'ed01',
+    title: attendanceListWildlifeAttractantInspection.title,
+    annexLabel: attendanceListWildlifeAttractantInspection.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operational Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'log',
+    schema: attendanceListWildlifeAttractantInspection,
+    fieldMap: attendanceListWildlifeAttractantInspectionMap,
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
+  {
+    key: 'monthly-wildlife-incursion-log-movement-area',
+    group: 'Wildlife',
+    code: monthlyWildlifeIncursionLogMovementArea.code,
+    version: 'ed01',
+    title: monthlyWildlifeIncursionLogMovementArea.title,
+    annexLabel: monthlyWildlifeIncursionLogMovementArea.annexLabel,
+    family: 'AOM',
+    manual: 'Aerodrome Operational Manual',
+    department: 'Operations',
+    defaultFrequency: 'on_demand',
+    documentType: 'log',
+    schema: monthlyWildlifeIncursionLogMovementArea,
+    fieldMap: monthlyWildlifeIncursionLogMovementAreaMap,
+    assignments: [{ department: 'Operations', role: 'sms', frequency: 'on_demand' }],
+  },
 ];
 
 /**
@@ -648,12 +761,15 @@ export const GROUP_ORDER = [
   'Electrical Engineer',
   'General Checklist',
   'Operations Manager',
+  'SMS',
+  'Wildlife',
 ];
 
-/** Human labels for the two approved document families. */
+/** Human labels for the approved document families. */
 export const FAMILY_LABELS = {
   PMM: 'Maintenance Paved & Unpaved (Annex 1-1)',
   VAES: 'Visual Aids & Electrical Systems (Annex 1-2)',
+  AOM: 'Aerodrome Operations Manual (Annexes 2-1)',
 };
 
 export const FREQUENCY_LABELS = {
@@ -682,18 +798,10 @@ export function groupForCode(code) {
   return TEMPLATE_REGISTRY.find((t) => t.code === code)?.group ?? null;
 }
 
-/**
- * Templates a given profile may open. An Electrical Maintenance Technician
- * should never be offered the drainage checklist, and vice versa — with 31
- * forms an unfiltered list is how a tool stops being used.
- * Administrators and the OM/COO see everything.
+/*
+ * `templatesForProfile` used to live here — a second, uncalled copy of the
+ * role-and-department filter that `templates.list` applied. It is deleted
+ * rather than corrected: BACC's rule is that everyone can see every checklist
+ * on file, and a dead function asserting the opposite is a trap for whoever
+ * wires up the next template list.
  */
-export function templatesForProfile(profile) {
-  if (!profile) return [];
-  const role = profile.role;
-  const department = profile.department;
-  if (['admin', 'om', 'coo'].includes(role)) return TEMPLATE_REGISTRY;
-  return TEMPLATE_REGISTRY.filter((t) =>
-    t.assignments.some((a) => a.role === role || (a.department && a.department === department)),
-  );
-}

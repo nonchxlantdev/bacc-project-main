@@ -42,12 +42,13 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-muted">BACC operations portal — PMM and VAES checklist demo</p>
         {!configured && (
           <p className="mt-3 rounded bg-stripe px-3 py-2 text-xs text-muted">
-            Demo mode. Two accounts, chosen to contrast permissions — the Operations Manager sees every form,
-            the Electrical Maintenance Technician sees only what is assigned to Engineering. Password is not checked.
+            Demo mode. Pick any account below to sign in as that person. Everyone can open every checklist;
+            what differs is whose name goes on it. The password is not checked — real sign-in arrives with
+            Supabase.
           </p>
         )}
         {!configured && demoUsers.length > 0 && (
-          <div className="mt-4 grid gap-2">
+          <div className="mt-4 grid max-h-64 gap-2 overflow-y-auto pr-1">
             {demoUsers.map((row) => (
               <button
                 key={row.id}

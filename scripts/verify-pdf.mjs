@@ -79,7 +79,12 @@ for (const file of generated) {
     failed.push(key);
     continue;
   }
-  const build = family === 'PMM' ? buildPmm : buildVaes;
+  // VAES is the specialised filler — it knows the Appendix C layout. Everything
+  // else goes through the PMM one, which fills header fields, summary blocks and
+  // sign-offs generically and copes with a form that has no item table at all
+  // (Annex I, and now the SMS hazard report). Routing the default the other way
+  // round meant any newly added family landed in the narrower builder.
+  const build = family === 'VAES' ? buildVaes : buildPmm;
   const res = await build({
     schema: JSON.parse(readFileSync(schemaPath, 'utf8')),
     fieldMap,

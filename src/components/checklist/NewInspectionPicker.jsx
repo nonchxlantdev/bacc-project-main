@@ -6,7 +6,8 @@ import { filterTemplates, groupTemplates } from '../../lib/checklistCatalogue.js
 /**
  * Pick a form to start. With 30 approved forms a single "New inspection" button
  * is meaningless, and an unfiltered list of 30 is worse — the list passed in is
- * already limited to what this user's role and department may open (BACC §4).
+ * every approved form, for anyone. Assignment rules say who a form belongs to,
+ * not who may open it.
  *
  * Grouped by the owning team, matching how BACC files the approved forms, and
  * filterable by cadence because "what am I due to do today" is the real question.

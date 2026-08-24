@@ -1,0 +1,529 @@
+{
+  "templateKey": "monthly-wildlife-incursion-log-movement-area",
+  "templateVersion": "ed01",
+  "basePdf": "monthly-wildlife-incursion-log-movement-area-ed01.pdf",
+  "documentFamily": "AOM",
+  "origin": "pdf-points-bottom-left",
+  "originNote": "PDF points, bottom-left origin (pdf-lib). Every cell is a real ruled cell of the approved grid: column edges and row rules were read with pdfplumber's table detection, and each baseline is the row's top rule less the font size plus 2, so a value starts at the top of its cell.",
+  "mapping": {
+    "method": "generated from the approved PDF's detected table rules",
+    "generated": true,
+    "table": {
+      "rows": 8,
+      "columns": [
+        "date_and_time",
+        "description",
+        "damages",
+        "causes",
+        "measures_taken",
+        "observations"
+      ]
+    }
+  },
+  "pageSize": {
+    "width": 612.0,
+    "height": 792.0
+  },
+  "fields": {
+    "reported_by": {
+      "page": 0,
+      "x": 132.5,
+      "y": 602.5,
+      "size": 9,
+      "width": 226,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "date": {
+      "page": 0,
+      "x": 391,
+      "y": 602.5,
+      "size": 9,
+      "width": 126,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 527.98,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 527.98,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 527.98,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 527.98,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 527.98,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_01_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 527.98,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 472.78,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 472.78,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 472.78,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 472.78,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 472.78,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_02_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 472.78,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 417.52,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 417.52,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 417.52,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 417.52,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 417.52,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_03_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 417.52,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 362.26,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 362.26,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 362.26,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 362.26,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 362.26,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_04_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 362.26,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 307.0,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 307.0,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 307.0,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 307.0,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 307.0,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_05_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 307.0,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 251.74,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 251.74,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 251.74,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 251.74,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 251.74,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_06_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 251.74,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 196.48,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 196.48,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 196.48,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 196.48,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 196.48,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_07_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 196.48,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_date_and_time": {
+      "page": 0,
+      "x": 75.42,
+      "y": 141.28,
+      "size": 9,
+      "width": 69.36,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_description": {
+      "page": 0,
+      "x": 150.78,
+      "y": 141.28,
+      "size": 9,
+      "width": 108.9,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_damages": {
+      "page": 0,
+      "x": 265.68,
+      "y": 141.28,
+      "size": 9,
+      "width": 64.86,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_causes": {
+      "page": 0,
+      "x": 336.54,
+      "y": 141.28,
+      "size": 9,
+      "width": 64.92,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_measures_taken": {
+      "page": 0,
+      "x": 407.46,
+      "y": 141.28,
+      "size": 9,
+      "width": 86.16,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
+    "row_08_observations": {
+      "page": 0,
+      "x": 499.62,
+      "y": 141.28,
+      "size": 9,
+      "width": 79.02,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    }
+  }
+}

@@ -9,6 +9,7 @@ import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
 import StatusPill from '../components/checklist/StatusPill.jsx';
 import { getRepos } from '../data/repositories/index.js';
 import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
+import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
 import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
 import { fmtDate } from '../lib/airportFormat.js';
 
@@ -16,6 +17,8 @@ const RECENT_LIMIT = 6;
 
 /** Anything not yet signed off is still someone's problem. */
 const OPEN_INCIDENT_STATUSES = new Set(['open', 'assigned', 'in_progress', 'resolved']);
+
+const unitLabel = (value) => ASSIGNED_UNITS.find((u) => u.value === value)?.label ?? '';
 
 export default function DashboardPage() {
   const { displayName } = useAuth();
@@ -130,7 +133,7 @@ export default function DashboardPage() {
                     <span className="mt-0.5 block truncate text-xs text-muted">
                       {incidentStatusLabel(row.status)}
                       {level ? ` · ${level.label}` : ''}
-                      {row.assigned_to_name ? ` · ${row.assigned_to_name}` : ' · Unassigned'}
+                      {row.assigned_unit ? ` · ${unitLabel(row.assigned_unit)}` : ' · Unassigned'}
                     </span>
                   </span>
                   <span className="shrink-0 text-xs text-muted">{fmtDate(row.target_date)}</span>
@@ -142,23 +145,32 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        {/* A bar chart of nothing is a zero-height frame under a heading, which
+            reads as a broken card rather than an empty one. On a portal with
+            nothing filed yet — which is how every new environment starts — say
+            so instead. */}
         <ChartCard
           title="Department overview"
-          subtitle="Inspection submissions in the seeded window"
+          subtitle="Inspection submissions by department"
           table={
-            <SimpleTable
-              columns={[
-                { key: 'label', label: 'Department' },
-                { key: 'count', label: 'Submissions' },
-              ]}
-              rows={dept}
-            />
+            dept.length === 0 ? (
+              <ChartEmpty />
+            ) : (
+              <SimpleTable
+                columns={[
+                  { key: 'label', label: 'Department' },
+                  { key: 'count', label: 'Submissions' },
+                ]}
+                rows={dept}
+              />
+            )
           }
         >
-          <HorizontalBarChart items={dept} />
+          {dept.length === 0 ? <ChartEmpty /> : <HorizontalBarChart items={dept} />}
         </ChartCard>
 
         <Panel title="Recent activity">
+          {activity.length === 0 && <Empty>Nothing has happened yet.</Empty>}
           {activity.map((row) => (
             // The whole entry is the target, not just the link text — a 16px
             // line of text is not a tappable thing on a phone.
@@ -220,4 +232,11 @@ function RowLink({ to, children }) {
 
 function Empty({ children }) {
   return <li className="py-6 text-center text-sm text-muted">{children}</li>;
+}
+
+/** Same message in both the chart and the table view of the card. */
+function ChartEmpty() {
+  return (
+    <p className="py-6 text-center text-sm text-muted">No inspections have been submitted yet.</p>
+  );
 }

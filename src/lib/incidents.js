@@ -100,9 +100,7 @@ export async function createIncidentFromChecklist({
     reported_by_name: profile?.full_name || user?.email || 'Inspector',
     reported_at: now,
     department: profile?.department || null,
-    assigned_to: null,
-    assigned_team: null,
-    assigned_to_name: '',
+    assigned_unit: null,
     assigned_at: null,
     // Null until BACC set a response time for this level in Settings — nothing
     // counts down to a date that was never agreed.

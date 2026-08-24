@@ -116,6 +116,11 @@ function ResultToggle({ itemCode, label, checked, disabled, onChange, tone }) {
       <input
         type="radio"
         name={`${itemCode}-result`}
+        // The visible "SAT" / "NO SAT" text is hidden from `md` up, where the
+        // approved form's column headers carry the meaning instead — so at
+        // desktop widths this control would otherwise have no name at all, for
+        // a screen reader as much as for a test.
+        aria-label={`Mark ${itemCode} ${label}`}
         className="sr-only"
         disabled={disabled}
         checked={checked}

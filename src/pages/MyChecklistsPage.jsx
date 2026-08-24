@@ -16,7 +16,7 @@ const TYPE_LABELS = {
 
 /** This user's own inspections — drafts they can still finish, and the record. */
 export default function MyChecklistsPage() {
-  const { user, displayName, position, profile } = useAuth();
+  const { user, displayName, profile } = useAuth();
   const navigate = useNavigate();
 
   const [rows, setRows] = useState([]);
@@ -43,7 +43,7 @@ export default function MyChecklistsPage() {
   async function startNew(templateId) {
     setStartingId(templateId);
     try {
-      navigate(`/checklists/${await startInspection({ templateId, user, displayName, position })}`);
+      navigate(`/checklists/${await startInspection({ templateId, user, displayName, role: profile?.role })}`);
     } catch (err) {
       setError(err.message || 'Could not start that inspection.');
       setStartingId(null);

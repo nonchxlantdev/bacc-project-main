@@ -58,8 +58,8 @@ export function incidentTransitionBlockers(
 ) {
   const blockers = [];
   if (toStatus === 'assigned' || (toStatus === 'in_progress' && incident.status === 'open')) {
-    if (!incident.assigned_to && !incident.assigned_team && !incident.assigned_to_name) {
-      blockers.push('Assign a person or team before leaving Open.');
+    if (!incident.assigned_unit) {
+      blockers.push('Assign a unit before leaving Open.');
     }
     if (!incident.target_date) {
       blockers.push('Set a target date before leaving Open.');

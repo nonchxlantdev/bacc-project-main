@@ -2,6 +2,7 @@ import { Download, Plus, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
+import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
 import { GROUP_ORDER } from '../data/templates/registry.js';
 import { INCIDENT_STATUSES, incidentStatusLabel } from '../lib/incidentLifecycle.js';
 import { listIncidents } from '../lib/incidents.js';
@@ -15,6 +16,9 @@ const UNGROUPED = 'Other';
 // Status sorts along the workflow, not alphabetically — "Assigned" coming
 // before "In Progress" is meaningful; coming before "Open" is not.
 const STATUS_ORDER = INCIDENT_STATUSES.map((s) => s.value);
+
+/** '' for an unassigned incident, so it both searches and sorts as empty. */
+const unitLabel = (value) => ASSIGNED_UNITS.find((u) => u.value === value)?.label ?? '';
 
 /**
  * Every incident traces back to a NO SAT on an approved form, and that form
@@ -59,7 +63,7 @@ export default function IncidentListPage() {
         row.source_template_code,
         row.source_group,
         row.department,
-        row.assigned_to_name,
+        unitLabel(row.assigned_unit),
         row.location_label,
       ]
         .filter(Boolean)
@@ -74,7 +78,7 @@ export default function IncidentListPage() {
       ref: { get: (r) => r.incident_ref, kind: 'text' },
       team: { get: (r) => r.source_group ?? '', kind: 'text' },
       title: { get: (r) => r.title, kind: 'text' },
-      assignee: { get: (r) => r.assigned_to_name ?? '', kind: 'text' },
+      unit: { get: (r) => unitLabel(r.assigned_unit), kind: 'text' },
       level: { get: (r) => r.deficiency_level, kind: 'number' },
       status: { get: (r) => STATUS_ORDER.indexOf(r.status), kind: 'number' },
       target: { get: (r) => r.target_date, kind: 'date' },
@@ -209,7 +213,7 @@ export default function IncidentListPage() {
               <SortableTh label="Incident ID" sortKey="ref" sort={sort} onToggle={toggle} hint="A–Z" />
               <SortableTh label="Team" sortKey="team" sort={sort} onToggle={toggle} hint="A–Z" />
               <SortableTh label="Title" sortKey="title" sort={sort} onToggle={toggle} hint="A–Z" />
-              <SortableTh label="Assigned to" sortKey="assignee" sort={sort} onToggle={toggle} hint="A–Z" />
+              <SortableTh label="Unit" sortKey="unit" sort={sort} onToggle={toggle} hint="A–Z" />
               <SortableTh label="Level" sortKey="level" sort={sort} onToggle={toggle} hint="1 first" />
               <SortableTh label="Status" sortKey="status" sort={sort} onToggle={toggle} hint="workflow order" />
               <SortableTh label="Target" sortKey="target" sort={sort} onToggle={toggle} hint="earliest first" />
@@ -253,8 +257,8 @@ export default function IncidentListPage() {
                   <td data-label="Title" className="px-4 py-2 font-medium text-navy">
                     {row.title}
                   </td>
-                  <td data-label="Assigned to" className="px-4 py-2 text-muted">
-                    {row.assigned_to_name || <span className="text-alert">Unassigned</span>}
+                  <td data-label="Unit" className="px-4 py-2 text-muted">
+                    {unitLabel(row.assigned_unit) || <span className="text-alert">Unassigned</span>}
                     {row.department && <span className="mt-0.5 block text-xs">{row.department}</span>}
                   </td>
                   <td data-label="Level" className="px-4 py-2">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, LogOut, Menu } from 'lucide-react';
+import { Bell, CircleHelp, LogOut, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNotifications } from '../../hooks/useRepos.js';
@@ -67,6 +67,13 @@ export default function TopBar({ online, onMenuClick }) {
           aria-label={online ? 'Online' : 'Offline'}
           className={`h-2 w-2 shrink-0 rounded-full sm:hidden ${online ? 'bg-teal' : 'bg-alert'}`}
         />
+        <Link
+          to="/help"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white"
+          aria-label="Help"
+        >
+          <CircleHelp className="h-4 w-4" />
+        </Link>
         <Link
           to="/notifications"
           className="relative flex h-11 w-11 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white"

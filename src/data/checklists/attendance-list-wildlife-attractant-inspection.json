@@ -1,0 +1,94 @@
+{
+  "code": "PGIA-AOM-A5-04",
+  "annexLabel": "Annex 04",
+  "documentFamily": "AOM",
+  "title": "Attendance List for Wildlife Attractant Inspection",
+  "description": "Who attended a wildlife attractant inspection, with contact details and signature.",
+  "manualHeader": {
+    "line1": "ANNEX 5",
+    "line2": "AERODROME OPERATIONAL MANUAL\nPHILIP S.W. GOLDSON INTERNATIONAL AIRPORT",
+    "pageRef": "Annex 5\nWildlife"
+  },
+  "footer": {
+    "reviewLine": "Review: 1  Edition: 1",
+    "dateLine": "Date: September 08, 2024.  Wildlife"
+  },
+  "frequency": "on_demand",
+  "documentType": "log",
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "siteOfInterest",
+      "label": "Site of Interest",
+      "type": "text",
+      "required": false,
+      "mapKey": "site_of_interest"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "text",
+      "required": false,
+      "mapKey": "date"
+    },
+    {
+      "key": "timeStart",
+      "label": "Time Start",
+      "type": "text",
+      "required": false,
+      "mapKey": "time_start"
+    },
+    {
+      "key": "timeEnd",
+      "label": "Time End",
+      "type": "text",
+      "required": false,
+      "mapKey": "time_end"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "rows",
+      "label": "Attendance List for Wildlife Attractant Inspection",
+      "type": "table",
+      "required": false,
+      "mapKey": "row",
+      "printedRows": 13,
+      "columns": [
+        {
+          "key": "no",
+          "label": "No."
+        },
+        {
+          "key": "name",
+          "label": "Name"
+        },
+        {
+          "key": "e_mail",
+          "label": "E-Mail"
+        },
+        {
+          "key": "phone",
+          "label": "Phone"
+        },
+        {
+          "key": "signature",
+          "label": "Signature",
+          "type": "signature"
+        }
+      ]
+    }
+  ],
+  "signoffs": [],
+  "validationRules": [],
+  "notes": [
+    "The approved grid prints 13 rows. More may be recorded \u2014 the first 13 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does.",
+    "Each attendee signs their own row. A signature is a signature wherever it appears, so the column is declared type 'signature' and its cells are image boxes in the field map \u2014 drawn on screen, stamped as a mark, never typed."
+  ]
+}

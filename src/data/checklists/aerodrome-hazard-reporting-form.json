@@ -1,0 +1,97 @@
+{
+  "code": "EGSO-PR-001",
+  "annexLabel": "Annexes 2-1",
+  "documentFamily": "AOM",
+  "title": "Aerodrome Hazard Reporting Form",
+  "description": "Report any aerodrome hazard that has caused or could cause an accident or incident. May be submitted anonymously.",
+  "manualHeader": {
+    "line1": "SMS",
+    "line2": "AOM",
+    "pageRef": "Annexes 2-1\nOPERATIONS MANAGEMENT"
+  },
+  "footer": {
+    "reviewLine": "EGSO-PR-001",
+    "dateLine": "July 9, 2018. Page A1-3."
+  },
+  "frequency": "on_demand",
+  "documentType": "report",
+  "anonymousAllowed": true,
+  "responseType": {
+    "columns": [],
+    "labels": {},
+    "remarksLabel": ""
+  },
+  "preprintedStatements": [
+    "This form should be used to report any aerodrome hazard that has caused or could cause an accident or incident. Send to the SMAS as soon as possible after the hazard is identified. You can submit the form anonymously (if required) by omitting relevant details."
+  ],
+  "headerLayout": "stacked",
+  "headerFields": [
+    {
+      "key": "yourName",
+      "label": "Your name",
+      "type": "text",
+      "required": false,
+      "mapKey": "your_name"
+    },
+    {
+      "key": "employerPositionHeld",
+      "label": "Your employer/position held",
+      "type": "text",
+      "required": false,
+      "mapKey": "employer_position_held"
+    },
+    {
+      "key": "locationObserved",
+      "label": "Location the hazard was observed",
+      "type": "text",
+      "required": false,
+      "mapKey": "location_observed"
+    },
+    {
+      "key": "timeAndDateObserved",
+      "label": "Time and date the hazard was observed",
+      "type": "text",
+      "required": false,
+      "mapKey": "time_and_date_observed"
+    },
+    {
+      "key": "whatWereYouDoingAtTheTime",
+      "label": "What were you doing at the time",
+      "type": "text",
+      "required": false,
+      "mapKey": "what_were_you_doing_at_the_time"
+    }
+  ],
+  "sections": [],
+  "summaryFields": [
+    {
+      "key": "detailsOfTheHazard",
+      "label": "Details of the hazard (attach additional pages if insufficient room)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "details_of_the_hazard"
+    },
+    {
+      "key": "yourRecommendationsToDealWithThisHazard",
+      "label": "Your recommendations (if any) to deal with this hazard (attach additional pages if insufficient room)",
+      "type": "textarea",
+      "required": false,
+      "mapKey": "your_recommendations_to_deal_with_this_hazard"
+    }
+  ],
+  "signoffs": [
+    {
+      "role": "reporter",
+      "label": "Signature",
+      "dateLabel": "Date",
+      "required": false
+    }
+  ],
+  "validationRules": [],
+  "notes": [
+    "The form permits anonymous submission, so no field on it is required \u2014 including the signature. Nothing here may be made mandatory without BACC changing the approved form.",
+    "The form prints five ruled lines for each of the two free-text blocks and says 'attach additional pages if insufficient room'. The exporter fills the first ruled line and carries the remainder onto a continuation page, which is the paper behaviour the form itself describes.",
+    "There is no name slot beside the signature. The approved form asks only for a signature and a date, and BACC \u00a714 forbids adding a field it does not have.",
+    "The 'Your name' line is the field a reporter leaves blank to stay anonymous. Its label is not recoverable by text extraction from the approved PDF \u2014 only by rasterising the page \u2014 so it was nearly lost when this form was mapped. Anything re-mapping this form must measure it the same way."
+  ]
+}
