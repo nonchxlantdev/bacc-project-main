@@ -17,6 +17,7 @@ import {
 import { startInspection } from '../lib/startInspection.js';
 import { listAllSubmissions } from '../lib/submissions.js';
 import { listTemplates } from '../lib/templates.js';
+import Select from '../components/ui/Select.jsx';
 
 /**
  * The approved-form catalogue, filed the way BACC file it: one folder per
@@ -113,6 +114,22 @@ export default function ChecklistCataloguePage() {
     return Object.keys(FREQUENCY_LABELS).filter((f) => present.has(f));
   }, [templates]);
 
+  const familyOptions = useMemo(
+    () => [
+      { value: '', label: 'All manuals' },
+      ...Object.entries(FAMILY_LABELS).map(([key, label]) => ({ value: key, label })),
+    ],
+    [],
+  );
+
+  const frequencyOptions = useMemo(
+    () => [
+      { value: '', label: 'Any frequency' },
+      ...frequencies.map((f) => ({ value: f, label: FREQUENCY_LABELS[f] })),
+    ],
+    [frequencies],
+  );
+
   const filtered = Boolean(query || family || frequency);
 
   function clearFilters() {
@@ -165,20 +182,20 @@ export default function ChecklistCataloguePage() {
             className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
           />
         </div>
-        <Select value={family} onChange={setFamily} label="Filter by manual" empty="All manuals">
-          {Object.entries(FAMILY_LABELS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </Select>
-        <Select value={frequency} onChange={setFrequency} label="Filter by frequency" empty="Any frequency">
-          {frequencies.map((f) => (
-            <option key={f} value={f}>
-              {FREQUENCY_LABELS[f]}
-            </option>
-          ))}
-        </Select>
+        <Select
+          label="Filter by manual"
+          value={family}
+          onChange={setFamily}
+          options={familyOptions}
+          className="min-w-0 flex-1 sm:w-56 sm:flex-none"
+        />
+        <Select
+          label="Filter by frequency"
+          value={frequency}
+          onChange={setFrequency}
+          options={frequencyOptions}
+          className="min-w-0 flex-1 sm:w-48 sm:flex-none"
+        />
         {filtered && (
           <button
             type="button"
@@ -223,20 +240,6 @@ export default function ChecklistCataloguePage() {
         />
       )}
     </div>
-  );
-}
-
-function Select({ value, onChange, label, empty, children }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      aria-label={label}
-      className="min-h-11 min-w-0 flex-1 rounded border border-navy/20 px-2 text-sm sm:min-h-10 sm:flex-none"
-    >
-      <option value="">{empty}</option>
-      {children}
-    </select>
   );
 }
 

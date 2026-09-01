@@ -1,7 +1,23 @@
-import { AlertTriangle, Check, ChevronDown, Info, Plus, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Briefcase,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  CloudRain,
+  FileText,
+  Hash,
+  Info,
+  Plus,
+  ShieldCheck,
+  User,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { missingRequiredHeaderKeys, unresolvedNoSatCodes } from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
+import { selfSignoffRole } from '../../lib/storedSignature.js';
 import { ROLE_TITLES } from '../../lib/roleStaffing.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
@@ -11,6 +27,7 @@ import LogTable from './LogTable.jsx';
 import DrawingAttach from './DrawingAttach.jsx';
 import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
+import Select from '../ui/Select.jsx';
 
 export default function ChecklistForm({
   schema,
@@ -36,7 +53,7 @@ export default function ChecklistForm({
   onSignoffChange,
   onCreateIncident,
   storedSignatureUri,
-  onApplyInspectorStoredSignature,
+  onApplySelfStoredSignature,
 }) {
   const unresolved = useMemo(() => unresolvedNoSatCodes(schema, items), [schema, items]);
   const missingHeader = useMemo(() => missingRequiredHeaderKeys(schema, header), [schema, header]);
@@ -250,6 +267,11 @@ export default function ChecklistForm({
         <div className="grid gap-4 md:grid-cols-2">
           {(schema.signoffs ?? []).map((def) => {
             const signed = signoffs?.find((s) => s.role === def.role);
+            // Only the self block (the form's own signer — first in
+            // schema.signoffs, whatever that annex calls the role) offers
+            // "use my saved signature"; a colleague's or approver's block
+            // never gets stamped with the current account's signature.
+            const isSelf = def.role === selfSignoffRole(schema);
             return (
               <SignoffBlock
                 key={def.role}
@@ -263,9 +285,7 @@ export default function ChecklistForm({
                 storedSignatureUri={storedSignatureUri}
                 readOnly={readOnly}
                 onChange={(patch) => onSignoffChange?.(def.role, patch)}
-                onApplyStored={
-                  def.role === 'inspector' ? onApplyInspectorStoredSignature : undefined
-                }
+                onApplyStored={isSelf ? onApplySelfStoredSignature : undefined}
               />
             );
           })}
@@ -489,6 +509,29 @@ const YES_NO_OPTIONS = [
   { value: 'no', label: 'No' },
 ];
 
+// Which icon reads a field at a glance. This is deliberately keyword/type
+// driven rather than a per-annex lookup table — 36 schemas between them use
+// dozens of distinct header field labels (weather, NOTAM ref, field
+// technician, movement area clearance ref...) and hardcoding an icon per
+// label would need updating every time a new annex is added. Type wins
+// first since it is exact; label keywords are a best-effort fallback for
+// the generic "text" fields, and anything unmatched gets a plain document
+// icon rather than guessing wrong.
+function fieldIcon(field) {
+  if (field.type === 'date') return Calendar;
+  if (field.type === 'time') return Clock;
+  const label = (field.label ?? '').toLowerCase();
+  if (/rain|weather|wind|visibility/.test(label)) return CloudRain;
+  if (/ref\.|reference|no\.|number|license/i.test(field.label ?? '')) return Hash;
+  return FileText;
+}
+
+/** A small icon inline at the left of a text-style control, matching the
+ * card layout everywhere else in this header. */
+function FieldIcon({ Icon }) {
+  return <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />;
+}
+
 function HeaderFields({ schema, header, disabled, onChange }) {
   const fields = schema.headerFields ?? [];
   if (!fields.length) return null;
@@ -502,62 +545,106 @@ function HeaderFields({ schema, header, disabled, onChange }) {
   const numbered = fields.filter((f) => /^\s*\d+\./.test(f.label ?? '')).length >= 3;
   const stacked = schema.headerLayout === 'stacked' || numbered;
   return (
-    <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-      <div className={stacked ? 'grid gap-4' : 'grid gap-4 md:grid-cols-2 xl:grid-cols-4'}>
-        {fields.map((field) => {
-          // "Conducted by (Name / Position)" is one field on the approved form
-          // and stays one field in the record — but it is two answers, and the
-          // position half is a post with a fixed name. Two keys carry it
-          // (conductedBy, conductedByNamePosition), so it is found by its label.
-          const composed = isConductedBy(field);
-          const Wrapper = composed ? 'div' : 'label';
-          return (
-            // The name/title pair needs real width to keep the position title
-            // ("Electrical Maintenance Technician", "Civil Engineering
-            // Consultant"...) from truncating in its half of the control — a
-            // single grid cell is too narrow once the header runs 4-up.
-            <Wrapper key={field.key} className={composed ? 'block md:col-span-2' : 'block'}>
-              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {field.label}
-                {field.required ? ' *' : ''}
-              </span>
-              {composed ? (
-                <ConductedByField
-                  field={field}
-                  value={header[field.key] ?? ''}
-                  disabled={disabled}
-                  onChange={onChange}
-                />
-              ) : field.type === 'yes_no' ? (
-                <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
-              ) : field.type === 'radio' ? (
-                <div className="space-y-2">
-                  {(field.options ?? []).map((opt) => (
-                    <label key={opt.value} className="flex min-h-8 items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name={field.key}
-                        disabled={disabled}
-                        checked={header[field.key] === opt.value}
-                        onChange={() => onChange({ [field.key]: opt.value })}
-                        className="h-4 w-4 accent-primary"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  type={INPUT_TYPES[field.type] ?? 'text'}
-                  disabled={disabled}
-                  value={header[field.key] ?? ''}
-                  onChange={(e) => onChange({ [field.key]: e.target.value })}
-                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
-                />
-              )}
-            </Wrapper>
-          );
-        })}
+    <section className="overflow-hidden rounded-md border border-navy/15 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-navy/10 px-4 py-4 sm:px-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Calendar className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <h2 className="text-base font-bold text-navy">Inspection Details</h2>
+            <p className="text-sm text-muted">Provide the basic information for this inspection.</p>
+          </div>
+        </div>
+        <Info className="mt-1 h-5 w-5 shrink-0 text-primary/60" aria-hidden />
+      </div>
+
+      <div className="p-4 sm:p-5">
+        {/* auto-fit rather than a fixed 2/3/4-up breakpoint ladder: a 2-field
+            form and a 14-field form (Annex K) each get however many columns
+            actually fit, instead of every annex being forced into the same
+            column count regardless of how many fields it has. */}
+        <div className={stacked ? 'grid gap-4' : 'grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4'}>
+          {fields.map((field) => {
+            // "Conducted by (Name / Position)" is one field on the approved form
+            // and stays one field in the record — but it is two answers, and the
+            // position half is a post with a fixed name. Two keys carry it
+            // (conductedBy, conductedByNamePosition), so it is found by its label.
+            const composed = isConductedBy(field);
+            const Wrapper = composed ? 'div' : 'label';
+            const Icon = fieldIcon(field);
+            return (
+              // The name/title pair needs real width to keep the position title
+              // ("Electrical Maintenance Technician", "Civil Engineering
+              // Consultant"...) from truncating in its half of the control — a
+              // single grid cell is too narrow once the header runs several-up.
+              <Wrapper key={field.key} className={composed ? 'block sm:col-span-2' : 'block'}>
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  {field.label}
+                  {field.required ? ' *' : ''}
+                </span>
+                {composed ? (
+                  <ConductedByField
+                    field={field}
+                    value={header[field.key] ?? ''}
+                    disabled={disabled}
+                    onChange={onChange}
+                  />
+                ) : field.type === 'yes_no' ? (
+                  <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
+                ) : field.type === 'radio' ? (
+                  <div className="space-y-2">
+                    {(field.options ?? []).map((opt) => {
+                      const checked = header[field.key] === opt.value;
+                      return (
+                        <label
+                          key={opt.value}
+                          className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+                            checked
+                              ? 'border-primary bg-primary/5 text-navy'
+                              : 'border-navy/20 text-ink hover:border-primary/40'
+                          } ${disabled ? 'cursor-default opacity-70' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name={field.key}
+                            disabled={disabled}
+                            checked={checked}
+                            onChange={() => onChange({ [field.key]: opt.value })}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          {opt.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <FieldIcon Icon={Icon} />
+                    <input
+                      type={INPUT_TYPES[field.type] ?? 'text'}
+                      disabled={disabled}
+                      value={header[field.key] ?? ''}
+                      onChange={(e) => onChange({ [field.key]: e.target.value })}
+                      className="min-h-10 w-full rounded border border-navy/20 py-2 pl-9 pr-3 text-sm read-only:bg-stripe"
+                    />
+                  </div>
+                )}
+              </Wrapper>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-start justify-between gap-3 border-t border-navy/10 bg-stripe px-4 py-3 sm:px-5">
+        <div className="flex items-start gap-2">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+          <div>
+            <p className="text-xs font-semibold text-navy">All fields marked with * are required.</p>
+            <p className="text-xs text-muted">Please ensure all information is accurate before proceeding.</p>
+          </div>
+        </div>
+        <ShieldCheck className="h-5 w-5 shrink-0 text-navy/20" aria-hidden />
       </div>
     </section>
   );
@@ -622,6 +709,14 @@ function ConductedByField({ field, value, disabled, onChange }) {
     ? CONDUCTED_BY_TITLES
     : [...CONDUCTED_BY_TITLES, parts.title];
 
+  const titleOptions = useMemo(
+    () => [
+      { value: '', label: 'Select a title…', Icon: Briefcase },
+      ...titles.map((title) => ({ value: title, label: title, Icon: Briefcase })),
+    ],
+    [titles],
+  );
+
   return (
     // A name ("Glenrick Spain") is reliably shorter than the longest approved
     // titles ("Electrical Maintenance Technician", "Civil Engineering
@@ -629,29 +724,26 @@ function ConductedByField({ field, value, disabled, onChange }) {
     // split still truncated the longest titles even after the wrapper above
     // was widened to span two header columns.
     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
-      <input
-        type="text"
-        aria-label="Conducted by — name"
-        placeholder="Name"
-        disabled={disabled}
-        value={parts.name}
-        onChange={(e) => commit({ ...parts, name: e.target.value })}
-        className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
-      />
-      <select
-        aria-label="Conducted by — title"
-        disabled={disabled}
+      <div className="relative">
+        <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+        <input
+          type="text"
+          aria-label="Conducted by — name"
+          placeholder="Name"
+          disabled={disabled}
+          value={parts.name}
+          onChange={(e) => commit({ ...parts, name: e.target.value })}
+          className="min-h-10 w-full rounded border border-navy/20 py-2 pl-9 pr-3 text-sm read-only:bg-stripe"
+        />
+      </div>
+      <Select
+        label="Conducted by — title"
         value={parts.title}
-        onChange={(e) => commit({ ...parts, title: e.target.value })}
-        className="min-h-10 w-full rounded border border-navy/20 bg-white px-2 py-2 text-sm"
-      >
-        <option value="">Select a title…</option>
-        {titles.map((title) => (
-          <option key={title} value={title}>
-            {title}
-          </option>
-        ))}
-      </select>
+        onChange={(title) => commit({ ...parts, title })}
+        options={titleOptions}
+        disabled={disabled}
+        className="w-full"
+      />
     </div>
   );
 }

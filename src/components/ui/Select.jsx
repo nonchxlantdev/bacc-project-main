@@ -28,6 +28,7 @@ export default function Select({
   label,
   className = '',
   align = 'left',
+  disabled = false,
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -66,6 +67,7 @@ export default function Select({
   }
 
   function onKeyDown(e) {
+    if (disabled) return;
     if (!open) {
       if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
         e.preventDefault();
@@ -126,11 +128,12 @@ export default function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
-        onClick={() => setOpen((v) => !v)}
+        disabled={disabled}
+        onClick={() => !disabled && setOpen((v) => !v)}
         onKeyDown={onKeyDown}
-        className={`flex min-h-11 w-full items-center gap-2 rounded border bg-white px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10 ${
-          open ? 'border-primary' : 'border-navy/20 hover:border-navy/40'
-        }`}
+        className={`flex min-h-11 w-full items-center gap-2 rounded-md border bg-white px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10 ${
+          disabled ? 'cursor-not-allowed opacity-60' : ''
+        } ${open ? 'border-primary' : 'border-navy/20 hover:border-navy/40'}`}
       >
         {SelectedIcon && <SelectedIcon className="h-4 w-4 shrink-0 text-primary" aria-hidden />}
         <span className="min-w-0 flex-1 truncate text-navy">{selected?.label ?? ''}</span>

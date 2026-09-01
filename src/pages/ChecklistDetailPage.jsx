@@ -30,7 +30,7 @@ import { ROLE_TITLES } from '../lib/roleStaffing.js';
 import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
-import { applyStoredSignature, shouldShowSignaturePrompt } from '../lib/storedSignature.js';
+import { applyStoredSignature, selfSignoffRole, shouldShowSignaturePrompt } from '../lib/storedSignature.js';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
@@ -156,7 +156,7 @@ export default function ChecklistDetailPage() {
     }
   }
 
-  function applyInspectorStoredSignature() {
+  function applySelfStoredSignature() {
     patchRecord((prev) =>
       applyStoredSignature({
         record: prev,
@@ -228,24 +228,39 @@ export default function ChecklistDetailPage() {
     }
 
     const signedAt = new Date().toISOString();
-    const inspectorSignoff = {
-      role: 'inspector',
-      name: displayName,
-      position,
-      signature_data_uri: record.signoffs?.find((s) => s.role === 'inspector')?.signature_data_uri,
-      signed_at: signedAt,
-    };
-    const om = record.signoffs?.find((s) => s.role === 'om_acknowledgment');
+    // Every other sign-off block (OM, COO, a supervisor, whatever this
+    // annex calls its second/third approver) was already collected live as
+    // the person typed into it — see ChecklistForm's onSignoffChange. This
+    // used to rebuild `signoffs` from scratch around two hardcoded role
+    // names ('inspector' and 'om_acknowledgment'), which only actually
+    // exist together on Annex D; submitting any of the other 34 annexes
+    // silently threw away whatever the person had already filled in for
+    // roles like cec/om/coo or responsible/supervisor. Only the self
+    // sign-off (the first one on the form, see selfSignoffRole) gets
+    // stamped here; every other collected sign-off passes through as-is.
+    const selfRole = selfSignoffRole(schema);
+    const existingSelf = record.signoffs?.find((s) => s.role === selfRole);
+    const selfSignoff = selfRole
+      ? {
+          role: selfRole,
+          // "Conducted by" is whoever the person says conducted it — it is
+          // prefilled from the account and editable, so submitting must not
+          // stamp the account holder back over a colleague's name and
+          // title once one has actually been entered on this block.
+          name: existingSelf?.name || displayName,
+          position: existingSelf?.position || position,
+          signature_data_uri: existingSelf?.signature_data_uri,
+          signed_at: signedAt,
+        }
+      : null;
+    const otherSignoffs = (record.signoffs ?? []).filter((s) => s.role !== selfRole);
     const next = {
       ...record,
       status: 'submitted',
       submitted_at: signedAt,
       inspection_type: record.header.inspectionType,
       inspection_date: record.header.date,
-      // "Conducted by" is whoever the inspector says conducted it — it is
-      // prefilled from the account and now editable, so submitting must not
-      // stamp the account holder back over a colleague's name and title.
-      signoffs: [inspectorSignoff, om].filter(Boolean),
+      signoffs: selfSignoff ? [selfSignoff, ...otherSignoffs] : record.signoffs,
       locked: true,
     };
     await save(next);
@@ -704,7 +719,7 @@ export default function ChecklistDetailPage() {
           })
         }
         storedSignatureUri={profile?.stored_signature_data_uri ?? null}
-        onApplyInspectorStoredSignature={applyInspectorStoredSignature}
+        onApplySelfStoredSignature={applySelfStoredSignature}
       />
       )}
 
@@ -712,7 +727,7 @@ export default function ChecklistDetailPage() {
         open={signaturePromptOpen}
         storedPreviewUri={profile?.stored_signature_data_uri ?? null}
         onUseSaved={async (dismissForever) => {
-          applyInspectorStoredSignature();
+          applySelfStoredSignature();
           await persistHideSignaturePrompt(dismissForever);
           setSignaturePromptOpen(false);
         }}

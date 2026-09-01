@@ -101,18 +101,6 @@ export function SelectField({ label, value, onChange, options }) {
   );
 }
 
-export function MenuItem({ onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="block w-full px-3 py-2 text-left text-sm text-navy hover:bg-stripe"
-    >
-      {children}
-    </button>
-  );
-}
-
 /** Resolve a stored lookup value to its human label, falling back to the raw value. */
 export function labelOf(list, value) {
   return list.find((row) => row.value === value)?.label || value || '—';

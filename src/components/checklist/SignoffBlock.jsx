@@ -15,8 +15,11 @@ export default function SignoffBlock({
   onApplyStored,
 }) {
   const [confirmReplace, setConfirmReplace] = useState(false);
-  const canUseStored =
-    role === 'inspector' && !readOnly && storedSignatureUri && typeof onApplyStored === 'function';
+  // Which role (if any) gets this button is decided by the caller — see
+  // ChecklistForm's `isSelf` check, which passes onApplyStored only for the
+  // form's own signer, whatever that role is named on this annex. This
+  // block doesn't need to know the role name at all.
+  const canUseStored = !readOnly && storedSignatureUri && typeof onApplyStored === 'function';
 
   function handleApplyStored() {
     if (signatureDataUri && signatureDataUri !== storedSignatureUri && !confirmReplace) {

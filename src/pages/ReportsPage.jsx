@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Check, Clock, SlidersHorizontal } from 'lucide-react';
 import { useReports } from '../hooks/useRepos.js';
-import { useDismissable } from '../components/ui/useDismissable.js';
+import Dropdown from '../components/ui/Dropdown.jsx';
 import { downloadCsv, rowsToCsv } from '../lib/csv.js';
 import { fmtDate } from '../lib/airportFormat.js';
 
@@ -231,14 +231,10 @@ export default function ReportsPage() {
  * when the menu is closed.
  */
 function SectionPicker({ open, onOpenChange, visible, onToggle }) {
-  const ref = useDismissable(open, useCallback(() => onOpenChange(false), [onOpenChange]));
   return (
-    <div ref={ref} className="relative flex-1 sm:flex-none">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => onOpenChange(!open)}
+    <Dropdown open={open} onOpenChange={onOpenChange} align="left" className="flex-1 sm:flex-none">
+      <Dropdown.Toggle
+        haspopup="true"
         className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium text-navy transition hover:bg-stripe focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           open ? 'border-primary' : 'border-navy/20'
         }`}
@@ -248,43 +244,45 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
         <span className="rounded-full bg-navy/10 px-1.5 text-xs font-semibold tabular-nums">
           {visible.size}/{SECTIONS.length}
         </span>
-      </button>
+      </Dropdown.Toggle>
 
       {/* Anchored left: this is the leftmost control in the toolbar, so a
           right-anchored panel would hang off the content edge. */}
-      {open && (
-          <div className="absolute left-0 z-40 mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-md border border-navy/15 bg-white p-1.5 shadow-lg">
-            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
-              Show on this page
-            </p>
-            {SECTIONS.map((section) => {
-              const on = visible.has(section.id);
-              const last = on && visible.size === 1;
-              return (
-                <label
-                  key={section.id}
-                  className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 sm:min-h-0 ${
-                    last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-stripe'
-                  }`}
-                  title={last ? 'At least one report must stay visible' : undefined}
-                >
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    disabled={last}
-                    onChange={() => onToggle(section.id)}
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-navy">{section.label}</span>
-                    <span className="block text-xs text-muted">{section.hint}</span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-      )}
-    </div>
+      <Dropdown.Menu
+        panel
+        align="left"
+        className="z-40 w-[min(18rem,calc(100vw-2rem))] border-navy/15 p-1.5"
+      >
+        <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
+          Show on this page
+        </p>
+        {SECTIONS.map((section) => {
+          const on = visible.has(section.id);
+          const last = on && visible.size === 1;
+          return (
+            <label
+              key={section.id}
+              className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 sm:min-h-0 ${
+                last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-stripe'
+              }`}
+              title={last ? 'At least one report must stay visible' : undefined}
+            >
+              <input
+                type="checkbox"
+                checked={on}
+                disabled={last}
+                onChange={() => onToggle(section.id)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-navy">{section.label}</span>
+                <span className="block text-xs text-muted">{section.hint}</span>
+              </span>
+            </label>
+          );
+        })}
+      </Dropdown.Menu>
+    </Dropdown>
   );
 }
 

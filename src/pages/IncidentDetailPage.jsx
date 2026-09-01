@@ -25,7 +25,6 @@ import { TeamChip } from './IncidentListPage.jsx';
 import {
   Card,
   Field,
-  MenuItem,
   Metric,
   Row,
   SelectField,
@@ -33,6 +32,7 @@ import {
   labelOf,
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
+import Dropdown from '../components/ui/Dropdown.jsx';
 import { deficiencyLevels, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
@@ -78,7 +78,6 @@ export default function IncidentDetailPage() {
   const [reinspections, setReinspections] = useState([]);
   const [locationView, setLocationView] = useState('map');
   const [statusOpen, setStatusOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [clockMs, setClockMs] = useState(() => Date.now());
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
@@ -389,23 +388,16 @@ export default function IncidentDetailPage() {
             </button>
           )}
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setMoreOpen((v) => !v)}
-              aria-expanded={moreOpen}
-              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid"
-            >
+          <Dropdown align="right">
+            <Dropdown.Toggle className="inline-flex min-h-10 items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid">
               More Actions <ChevronDown size={16} aria-hidden />
-            </button>
-            {moreOpen && (
-              <div className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-md border border-navy/15 bg-white py-1 shadow-lg">
-                <MenuItem onClick={() => { setMoreOpen(false); setTab('updates'); }}>Add an update</MenuItem>
-                <MenuItem onClick={() => { setMoreOpen(false); setTab('photos'); }}>Attach a photo</MenuItem>
-                <MenuItem onClick={() => { setMoreOpen(false); setTab('history'); }}>View history</MenuItem>
-              </div>
-            )}
-          </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="w-56 border-navy/15 py-1">
+              <Dropdown.Item onClick={() => setTab('updates')}>Add an update</Dropdown.Item>
+              <Dropdown.Item onClick={() => setTab('photos')}>Attach a photo</Dropdown.Item>
+              <Dropdown.Item onClick={() => setTab('history')}>View history</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
 

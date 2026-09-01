@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ClipboardCheck, Search, X } from 'lucide-react';
 import { FREQUENCY_LABELS } from '../../data/templates/registry.js';
 import { filterTemplates, groupTemplates } from '../../lib/checklistCatalogue.js';
+import Select from '../ui/Select.jsx';
 
 /**
  * Pick a form to start. With 30 approved forms a single "New inspection" button
@@ -24,6 +25,14 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
   const grouped = useMemo(
     () => groupTemplates(filterTemplates(templates, { query, frequency })),
     [templates, query, frequency],
+  );
+
+  const frequencyOptions = useMemo(
+    () => [
+      { value: '', label: 'Any frequency' },
+      ...frequencies.map((f) => ({ value: f, label: FREQUENCY_LABELS[f] })),
+    ],
+    [frequencies],
   );
 
   const total = grouped.reduce((n, [, list]) => n + list.length, 0);
@@ -60,19 +69,13 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
               className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
             />
           </div>
-          <select
+          <Select
+            label="Filter by frequency"
             value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-            aria-label="Filter by frequency"
-            className="min-h-11 shrink-0 rounded border border-navy/20 px-2 text-sm sm:min-h-10"
-          >
-            <option value="">Any frequency</option>
-            {frequencies.map((f) => (
-              <option key={f} value={f}>
-                {FREQUENCY_LABELS[f]}
-              </option>
-            ))}
-          </select>
+            onChange={setFrequency}
+            options={frequencyOptions}
+            className="min-w-0 shrink-0 sm:w-44"
+          />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
