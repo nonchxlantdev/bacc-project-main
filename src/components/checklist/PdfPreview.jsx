@@ -4,13 +4,13 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
   return (
     <section
       id="pdf-preview"
-      className="scroll-mt-4 overflow-hidden rounded-md border border-navy/15 bg-white shadow-sm"
+      className="scroll-mt-4 overflow-hidden rounded-md border border-line/15 bg-surface shadow-card"
     >
-      <div className="flex flex-col gap-2 border-b border-navy/10 bg-stripe px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 border-b border-line/10 bg-stripe px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-navy" />
+          <FileText className="h-4 w-4 text-ink" />
           <div>
-            <h2 className="text-sm font-semibold text-navy">Approved-format PDF preview</h2>
+            <h2 className="text-sm font-semibold text-ink">Approved-format PDF preview</h2>
             <p className="text-xs text-muted">
               Overlay onto the controlled base form — not an HTML print.
             </p>
@@ -24,7 +24,7 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-navy/20 bg-white px-3 py-1.5 text-xs font-semibold text-navy disabled:opacity-50 sm:min-h-9"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-3 py-1.5 text-xs font-semibold text-ink disabled:opacity-50 sm:min-h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Rendering…' : 'Refresh preview'}
@@ -48,7 +48,7 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-navy/20 bg-white px-4 py-2 text-sm font-semibold text-navy disabled:opacity-50 sm:min-h-9"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50 sm:min-h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Rendering…' : 'Show preview'}

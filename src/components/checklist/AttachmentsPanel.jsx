@@ -38,9 +38,9 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
   }
 
   return (
-    <section className="rounded-lg border border-navy/10 bg-white shadow-sm">
-      <header className="border-b border-navy/10 px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-bold text-navy">
+    <section className="rounded-lg border border-line/12 bg-surface shadow-card">
+      <header className="border-b border-line/10 px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
           <FileImage className="h-4 w-4 text-primary" aria-hidden />
           {spec.label}
           {attachments.length > 0 && (
@@ -61,13 +61,13 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
         {attachments.length > 0 && (
           <ul className="grid gap-3 sm:grid-cols-2">
             {attachments.map((item) => (
-              <li key={item.id} className="overflow-hidden rounded-md border border-navy/15">
+              <li key={item.id} className="overflow-hidden rounded-md border border-line/15">
                 <img
                   src={item.dataUri}
                   alt={item.label}
                   className="h-40 w-full bg-stripe object-contain"
                 />
-                <div className="flex items-center gap-2 border-t border-navy/10 p-2">
+                <div className="flex items-center gap-2 border-t border-line/10 p-2">
                   <input
                     value={item.label}
                     disabled={disabled}
@@ -80,7 +80,7 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
                         ),
                       )
                     }
-                    className="min-h-9 min-w-0 flex-1 rounded border border-navy/15 px-2 text-[13px]"
+                    className="min-h-9 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-[13px] text-ink"
                   />
                   {!disabled && (
                     <button
@@ -104,7 +104,7 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
               type="button"
               disabled={atLimit}
               onClick={() => inputRef.current?.click()}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-dashed border-navy/30 px-4 text-sm font-medium text-primary hover:border-primary disabled:opacity-50 sm:min-h-10"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-dashed border-line/30 px-4 text-sm font-medium text-primary hover:border-primary disabled:opacity-50 sm:min-h-10"
             >
               <Upload className="h-4 w-4" />
               {atLimit ? `Limit of ${spec.max} reached` : 'Attach drawing'}

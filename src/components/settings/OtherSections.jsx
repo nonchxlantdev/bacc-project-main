@@ -111,7 +111,7 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
         )}
       </Row>
       <Row label="Signature prompt" effect="When you open a draft checklist, offer to apply your saved signature.">
-        <label className="flex min-h-11 items-center gap-2 text-sm text-navy sm:min-h-10">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-ink sm:min-h-10">
           <input
             type="checkbox"
             checked={Boolean(draft.hide_signature_prompt)}
@@ -184,9 +184,9 @@ export function AlertsSection({ draft, onChange }) {
         )}
         <div className="space-y-4">
           {Object.entries(draft.events).map(([key, event]) => (
-            <article key={key} className="rounded-md border border-navy/15 p-4">
+            <article key={key} className="rounded-md border border-line/15 p-4">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-navy">{EVENTS[key]?.label ?? key}</p>
+                <p className="text-sm font-semibold text-ink">{EVENTS[key]?.label ?? key}</p>
                 {event.emailRequired && (
                   <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary">
                     Email required
@@ -239,7 +239,7 @@ export function AlertsSection({ draft, onChange }) {
                         className={`min-h-9 rounded-full border px-3 text-xs font-medium transition ${
                           on
                             ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-navy/20 text-muted hover:border-navy/40'
+                            : 'border-line/20 text-muted hover:border-line/40'
                         }`}
                       >
                         {ROLE_LABELS[recipient]}
@@ -383,7 +383,7 @@ export function LookupsSection({ draft, onChange }) {
       <Panel
         title="NOC number"
         description="The reference in the “NOC No.” column of the Annex G register."
-        footer={<p className="text-xs text-muted">Next number would read <strong className="font-semibold text-navy">{example || '—'}</strong></p>}
+        footer={<p className="text-xs text-muted">Next number would read <strong className="font-semibold text-ink">{example || '—'}</strong></p>}
       >
         <Note title="No example on the approved register.">
           If a numbering series is already in use at PGIA, continue it here rather than starting a

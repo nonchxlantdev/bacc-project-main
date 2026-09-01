@@ -144,7 +144,7 @@ export default function ChecklistCataloguePage() {
           the forms themselves: the Create New Inspection tile on the team grid,
           or the Start button on each row once a team is open. */}
       <header>
-        <h1 className="text-xl font-bold text-navy sm:text-2xl">All Checklists</h1>
+        <h1 className="text-xl font-bold text-ink sm:text-2xl">All Checklists</h1>
         <p className="text-sm text-muted">
           Every approved form you are permitted to open, grouped the way BACC files them.
         </p>
@@ -163,8 +163,14 @@ export default function ChecklistCataloguePage() {
           label="Overdue"
           value={kpis.overdue}
           note={kpis.missed ? `${kpis.missed} also missed` : null}
+          tone={kpis.overdue > 0 ? 'alert' : 'ok'}
         />
-        <StatTile label="Due Soon" value={kpis.dueSoon} note="Next 7 days" />
+        <StatTile
+          label="Due Soon"
+          value={kpis.dueSoon}
+          note="Next 7 days"
+          tone={kpis.dueSoon > 0 ? 'caution' : 'ok'}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -179,7 +185,7 @@ export default function ChecklistCataloguePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search forms, manuals or departments…"
-            className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
           />
         </div>
         <Select
@@ -200,7 +206,7 @@ export default function ChecklistCataloguePage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-navy/20 px-3 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -209,7 +215,7 @@ export default function ChecklistCataloguePage() {
       </div>
 
       {loading ? (
-        <p className="rounded-lg border border-navy/10 bg-white px-4 py-10 text-center text-muted shadow-sm">
+        <p className="rounded-lg border border-line/12 bg-surface px-4 py-10 text-center text-muted shadow-card">
           Loading…
         </p>
       ) : showForms ? (
@@ -253,7 +259,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex min-h-11 items-center gap-1 rounded border border-navy/20 px-2.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-9"
+            className="inline-flex min-h-11 items-center gap-1 rounded border border-line/20 px-2.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-9"
           >
             <ChevronLeft className="h-4 w-4" />
             All teams
@@ -264,7 +270,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
             <Icon className="h-4.5 w-4.5" aria-hidden />
           </span>
         )}
-        <h2 className="min-w-0 truncate text-base font-bold text-navy sm:text-lg">{heading}</h2>
+        <h2 className="min-w-0 truncate text-base font-bold text-ink sm:text-lg">{heading}</h2>
         {team && (
           <span className="shrink-0 text-sm text-muted">
             {forms.length} {forms.length === 1 ? 'form' : 'forms'}
@@ -272,9 +278,9 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
-          <thead className="bg-navy text-white">
+          <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
               <th className="px-4 py-2 font-semibold">Form</th>
               <th className="px-4 py-2 font-semibold">Number</th>
@@ -293,9 +299,9 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
               </tr>
             )}
             {forms.map((t, i) => (
-              <tr key={t.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+              <tr key={t.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                 <td data-label="Form" className="px-4 py-2">
-                  <span className="flex items-center gap-2 font-medium text-navy">
+                  <span className="flex items-center gap-2 font-medium text-ink">
                     <ClipboardCheck size={15} className="shrink-0 text-primary" aria-hidden />
                     {t.annex_label ? `${t.annex_label} — ` : ''}
                     {t.title}
@@ -318,7 +324,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
                     type="button"
                     onClick={() => onStart(t.id)}
                     disabled={startingId === t.id}
-                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-stripe disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
+                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-surface-2 disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
                   >
                     {startingId === t.id ? 'Opening…' : 'Start'}
                   </button>

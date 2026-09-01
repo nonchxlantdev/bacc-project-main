@@ -137,7 +137,7 @@ export default function ChecklistForm({
   return (
     <div className={`grid gap-5 ${hasItems ? 'lg:grid-cols-[minmax(0,1fr)_19rem]' : ''}`}>
       <div className="space-y-4">
-        {(unresolved.length > 0 || missingHeader.length > 0) && (
+        {(unresolved.length > 0 || (!readOnly && missingHeader.length > 0)) && (
           <div className="flex gap-3 rounded-md border border-alert bg-alert-soft px-4 py-3 text-sm text-alert">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
@@ -146,7 +146,7 @@ export default function ChecklistForm({
                   NO SAT items need remarks before submission: <strong>{unresolved.join(', ')}</strong>
                 </p>
               )}
-              {missingHeader.length > 0 && (
+              {!readOnly && missingHeader.length > 0 && (
                 <p className="mt-1">
                   Required header fields are empty:{' '}
                   {missingHeader
@@ -178,7 +178,7 @@ export default function ChecklistForm({
             <section
               id={`section-${sectionIndex}`}
               key={section.title}
-              className="scroll-mt-3 overflow-hidden rounded-md border border-navy/15 bg-white shadow-sm"
+              className="scroll-mt-3 overflow-hidden rounded-md border border-line/15 bg-surface shadow-card"
             >
               <SectionHeader
                 title={section.title}
@@ -205,7 +205,7 @@ export default function ChecklistForm({
                     />
                   ))}
                   {hasNextClosed && (
-                    <div className="flex justify-center border-t border-navy/10 bg-white py-2">
+                    <div className="flex justify-center border-t border-line/10 bg-surface py-2">
                       <button
                         type="button"
                         onClick={() => openNext(sectionIndex)}
@@ -240,8 +240,8 @@ export default function ChecklistForm({
         {/* Forms mapped before summaryFields existed (Annex D) keep the single
             deficiency box they have always had. */}
         {schema.deficienciesField && !(schema.summaryFields ?? []).length && (
-          <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-            <label className="mb-2 block text-[13px] font-semibold uppercase tracking-wide text-navy">
+          <section className="rounded-md border border-line/15 bg-surface p-4 shadow-card">
+            <label className="mb-2 block text-[13px] font-semibold uppercase tracking-wide text-muted">
               {schema.deficienciesField.label}
             </label>
             <textarea
@@ -249,14 +249,14 @@ export default function ChecklistForm({
               disabled={readOnly}
               value={deficiencies ?? ''}
               onChange={(e) => onDeficienciesChange(e.target.value)}
-              className="w-full rounded border border-navy/20 px-3 py-2 text-sm leading-relaxed"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm leading-relaxed text-ink"
             />
           </section>
         )}
 
         {(schema.preprintedStatements ?? []).map((block) => (
-          <section key={block.key} className="rounded-md border border-navy/15 bg-stripe p-4">
-            <p className="text-[13px] font-semibold uppercase tracking-wide text-navy">{block.label}</p>
+          <section key={block.key} className="rounded-md border border-line/15 bg-stripe p-4">
+            <p className="text-[13px] font-semibold uppercase tracking-wide text-muted">{block.label}</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">{block.text}</p>
             <p className="mt-2 text-xs text-muted">
               Pre-printed on the approved form — nothing is written into it.
@@ -291,7 +291,7 @@ export default function ChecklistForm({
           })}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-navy/10 pt-3 text-xs text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line/10 pt-3 text-xs text-muted">
           <p>
             {schema.footer?.reviewLine}
             {schema.footer?.dateLine ? ` | ${schema.footer.dateLine}` : ''}
@@ -318,15 +318,15 @@ export default function ChecklistForm({
         />
       )}
       <aside
-        className={`border-navy/15 bg-white lg:sticky lg:top-4 lg:h-fit lg:rounded-md lg:border lg:shadow-sm max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:max-h-[min(52vh,420px)] max-lg:overflow-y-auto max-lg:rounded-t-xl max-lg:border-t max-lg:pb-[env(safe-area-inset-bottom)] max-lg:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
+        className={`border-line/15 bg-surface lg:sticky lg:top-4 lg:h-fit lg:rounded-md lg:border lg:shadow-card max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:max-h-[min(52vh,420px)] max-lg:overflow-y-auto max-lg:rounded-t-xl max-lg:border-t max-lg:pb-[env(safe-area-inset-bottom)] max-lg:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
           hasItems ? '' : 'hidden'
         } ${selectedItem ? '' : 'max-lg:hidden'}`}
       >
         {selectedItem ? (
           <div>
             <div
-              className={`sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-white px-4 py-2 lg:hidden ${
-                selectedRow?.result === 'no_sat' ? 'border-alert bg-alert-soft text-alert' : 'border-navy/10'
+              className={`sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-surface px-4 py-2 lg:hidden ${
+                selectedRow?.result === 'no_sat' ? 'border-alert bg-alert-soft text-alert' : 'border-line/10'
               }`}
             >
               <span className="flex min-w-0 items-start gap-2 text-sm font-semibold">
@@ -342,7 +342,7 @@ export default function ChecklistForm({
                 type="button"
                 onClick={() => onSelectItem(null)}
                 aria-label="Close item detail"
-                className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:bg-stripe"
+                className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-2"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -352,7 +352,7 @@ export default function ChecklistForm({
                 <div>
                   {resolution ? (
                     <div className="mb-3">
-                      <p className="mb-1 text-sm font-medium text-navy">Deficiency status</p>
+                      <p className="mb-1 text-sm font-medium text-ink">Deficiency status</p>
                       <ResolutionChip resolution={resolution} />
                       <p className="mt-2 text-xs text-muted">{resolution.detail}</p>
                     </div>
@@ -361,7 +361,7 @@ export default function ChecklistForm({
                       This item has been marked NO SAT. Please provide remarks and select an action.
                     </p>
                   )}
-                  <p className="mb-2 text-sm font-medium text-navy">
+                  <p className="mb-2 text-sm font-medium text-ink">
                     {resolution ? 'Incident' : 'Create Incident from this item?'}
                   </p>
                   <button
@@ -396,8 +396,8 @@ export default function ChecklistForm({
                     value={selectedRow?.remarks ?? ''}
                     placeholder={selectedRow?.result === 'no_sat' ? 'Required for NO SAT' : 'Remarks / location'}
                     onChange={(e) => onItemChange(selectedItem.code, { remarks: e.target.value })}
-                    className={`mt-1 w-full rounded border px-3 py-2 text-sm ${
-                      unresolved.includes(selectedItem.code) ? 'border-alert' : 'border-navy/20'
+                    className={`mt-1 w-full rounded border bg-surface px-3 py-2 text-sm text-ink ${
+                      unresolved.includes(selectedItem.code) ? 'border-alert' : 'border-line/20'
                     }`}
                   />
                 )}
@@ -412,7 +412,7 @@ export default function ChecklistForm({
                 <Detail label="Location" value={selectedRow?.remarks?.trim() || '—'} />
               </dl>
 
-              <p className="flex gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-navy">
+              <p className="flex gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-ink">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 All NO SAT items must have remarks. Creating an incident helps ensure timely corrective action.
               </p>
@@ -435,8 +435,8 @@ function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsCh
   const isChoice = field.type === 'yes_no' || field.type === 'radio';
   const isTable = field.type === 'table';
   return (
-    <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-      <label className="block text-[13px] font-semibold uppercase tracking-wide text-navy">
+    <section className="rounded-md border border-line/15 bg-surface p-4 shadow-card">
+      <label className="block text-[13px] font-semibold uppercase tracking-wide text-muted">
         {field.label}
       </label>
       {field.hint && <p className="mt-1 text-xs italic text-muted">{field.hint}</p>}
@@ -456,7 +456,7 @@ function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsCh
                 className={`min-h-11 rounded border px-3 text-sm font-semibold transition disabled:opacity-60 ${
                   active
                     ? 'border-primary bg-primary text-white'
-                    : 'border-navy/20 bg-white text-navy hover:border-primary hover:text-primary'
+                    : 'border-line/20 bg-surface text-ink hover:border-primary hover:text-primary'
                 }`}
               >
                 {opt.label}
@@ -471,7 +471,7 @@ function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsCh
             disabled={disabled}
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
-            className="mt-2 w-full rounded border border-navy/20 px-3 py-2 text-sm leading-relaxed"
+            className="mt-2 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm leading-relaxed text-ink"
           />
           {field.tightOnForm && (
             <p className="mt-1 text-xs text-muted">
@@ -499,7 +499,7 @@ function Detail({ label, value }) {
   return (
     <div className="flex justify-between gap-3">
       <dt className="shrink-0 text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium text-navy">{value}</dd>
+      <dd className="min-w-0 break-words text-right font-medium text-ink">{value}</dd>
     </div>
   );
 }
@@ -545,18 +545,17 @@ function HeaderFields({ schema, header, disabled, onChange }) {
   const numbered = fields.filter((f) => /^\s*\d+\./.test(f.label ?? '')).length >= 3;
   const stacked = schema.headerLayout === 'stacked' || numbered;
   return (
-    <section className="overflow-hidden rounded-md border border-navy/15 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-navy/10 px-4 py-4 sm:px-5">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Calendar className="h-5 w-5" aria-hidden />
-          </span>
-          <div>
-            <h2 className="text-base font-bold text-navy">Inspection Details</h2>
-            <p className="text-sm text-muted">Provide the basic information for this inspection.</p>
-          </div>
-        </div>
-        <Info className="mt-1 h-5 w-5 shrink-0 text-primary/60" aria-hidden />
+    // No `overflow-hidden` here (unlike the other card wrappers in this file):
+    // this card's "Conducted by — title" field opens a dropdown that has to be
+    // able to float past the card's own bottom edge. Only the footer strip
+    // below has a fill that would otherwise show square corners, so it gets
+    // its own `rounded-b-md` instead of relying on the section to clip it.
+    <section className="rounded-md border border-line/15 bg-surface shadow-card">
+      <div className="flex items-start gap-3 border-b border-line/10 px-4 py-4 sm:px-5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Calendar className="h-5 w-5" aria-hidden />
+        </span>
+        <h2 className="text-base font-bold text-ink">Inspection Details</h2>
       </div>
 
       <div className="p-4 sm:p-5">
@@ -573,12 +572,19 @@ function HeaderFields({ schema, header, disabled, onChange }) {
             const composed = isConductedBy(field);
             const Wrapper = composed ? 'div' : 'label';
             const Icon = fieldIcon(field);
+            // A radio field's 2-4 option pills wrap onto as many rows as they
+            // need, not a single line like Date/Text. Left in the same ~220px
+            // auto-fit column as those neighbors, that has too little room:
+            // pills stack one per row and tower over the short fields beside
+            // them. Same fix as the composed name/title pair below — give it
+            // the width its content needs so the pills sit two-plus to a row.
+            const wide = composed || field.type === 'radio';
             return (
               // The name/title pair needs real width to keep the position title
               // ("Electrical Maintenance Technician", "Civil Engineering
               // Consultant"...) from truncating in its half of the control — a
               // single grid cell is too narrow once the header runs several-up.
-              <Wrapper key={field.key} className={composed ? 'block sm:col-span-2' : 'block'}>
+              <Wrapper key={field.key} className={wide ? 'block sm:col-span-2' : 'block'}>
                 <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
                   {field.label}
                   {field.required ? ' *' : ''}
@@ -593,16 +599,19 @@ function HeaderFields({ schema, header, disabled, onChange }) {
                 ) : field.type === 'yes_no' ? (
                   <YesNoField field={field} value={header[field.key]} disabled={disabled} onChange={onChange} />
                 ) : field.type === 'radio' ? (
-                  <div className="space-y-2">
+                  // Wraps into a row of pills rather than stacking full-width —
+                  // a 2-4 option field (Inspection Type, Quarter…) otherwise
+                  // towers over the single-line Date/Text fields beside it.
+                  <div className="flex flex-wrap gap-2">
                     {(field.options ?? []).map((opt) => {
                       const checked = header[field.key] === opt.value;
                       return (
                         <label
                           key={opt.value}
-                          className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+                          className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
                             checked
-                              ? 'border-primary bg-primary/5 text-navy'
-                              : 'border-navy/20 text-ink hover:border-primary/40'
+                              ? 'border-primary bg-primary/5 text-ink'
+                              : 'border-line/20 text-ink hover:border-primary/40'
                           } ${disabled ? 'cursor-default opacity-70' : ''}`}
                         >
                           <input
@@ -626,7 +635,7 @@ function HeaderFields({ schema, header, disabled, onChange }) {
                       disabled={disabled}
                       value={header[field.key] ?? ''}
                       onChange={(e) => onChange({ [field.key]: e.target.value })}
-                      className="min-h-10 w-full rounded border border-navy/20 py-2 pl-9 pr-3 text-sm read-only:bg-stripe"
+                      className="min-h-10 w-full rounded border border-line/20 bg-surface py-2 pl-9 pr-3 text-sm text-ink read-only:bg-stripe"
                     />
                   </div>
                 )}
@@ -636,15 +645,15 @@ function HeaderFields({ schema, header, disabled, onChange }) {
         </div>
       </div>
 
-      <div className="flex items-start justify-between gap-3 border-t border-navy/10 bg-stripe px-4 py-3 sm:px-5">
+      <div className="flex items-start justify-between gap-3 rounded-b-md border-t border-line/10 bg-stripe px-4 py-3 sm:px-5">
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
           <div>
-            <p className="text-xs font-semibold text-navy">All fields marked with * are required.</p>
+            <p className="text-xs font-semibold text-ink">All fields marked with * are required.</p>
             <p className="text-xs text-muted">Please ensure all information is accurate before proceeding.</p>
           </div>
         </div>
-        <ShieldCheck className="h-5 w-5 shrink-0 text-navy/20" aria-hidden />
+        <ShieldCheck className="h-5 w-5 shrink-0 text-ink/15" aria-hidden />
       </div>
     </section>
   );
@@ -733,7 +742,7 @@ function ConductedByField({ field, value, disabled, onChange }) {
           disabled={disabled}
           value={parts.name}
           onChange={(e) => commit({ ...parts, name: e.target.value })}
-          className="min-h-10 w-full rounded border border-navy/20 py-2 pl-9 pr-3 text-sm read-only:bg-stripe"
+          className="min-h-10 w-full rounded border border-line/20 bg-surface py-2 pl-9 pr-3 text-sm text-ink read-only:bg-stripe"
         />
       </div>
       <Select
@@ -773,7 +782,7 @@ function YesNoField({ field, value, disabled, onChange }) {
               className={`min-h-10 flex-1 rounded border px-3 text-sm font-semibold transition disabled:opacity-60 ${
                 active
                   ? 'border-primary bg-primary text-white'
-                  : 'border-navy/20 bg-white text-navy hover:border-primary hover:text-primary'
+                  : 'border-line/20 bg-surface text-ink hover:border-primary hover:text-primary'
               }`}
             >
               {opt.label}

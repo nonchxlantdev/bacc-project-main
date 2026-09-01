@@ -9,7 +9,7 @@ export default function PhotoUpload({ itemCode, previewUrl, disabled, onSelect, 
       <p className="text-xs font-semibold uppercase tracking-wide text-muted">Photo evidence</p>
       {previewUrl ? (
         <>
-          <div className="relative overflow-hidden rounded-md border border-navy/15">
+          <div className="relative overflow-hidden rounded-md border border-line/15">
             <img src={previewUrl} alt={`${itemCode} evidence`} className="h-36 w-full object-cover" />
             {!disabled && (
               <button
@@ -31,7 +31,7 @@ export default function PhotoUpload({ itemCode, previewUrl, disabled, onSelect, 
           type="button"
           disabled={disabled}
           onClick={() => inputRef.current?.click()}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-navy/30 bg-stripe px-3 py-6 text-sm text-muted hover:border-primary hover:text-primary disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-line/30 bg-stripe px-3 py-6 text-sm text-muted hover:border-primary hover:text-primary disabled:opacity-50"
         >
           <Camera className="h-4 w-4" />
           Attach photo

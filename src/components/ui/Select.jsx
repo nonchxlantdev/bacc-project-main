@@ -131,12 +131,12 @@ export default function Select({
         disabled={disabled}
         onClick={() => !disabled && setOpen((v) => !v)}
         onKeyDown={onKeyDown}
-        className={`flex min-h-11 w-full items-center gap-2 rounded-md border bg-white px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10 ${
+        className={`flex min-h-11 w-full items-center gap-2 rounded-md border bg-surface px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10 ${
           disabled ? 'cursor-not-allowed opacity-60' : ''
-        } ${open ? 'border-primary' : 'border-navy/20 hover:border-navy/40'}`}
+        } ${open ? 'border-primary' : 'border-line/20 hover:border-line/40'}`}
       >
         {SelectedIcon && <SelectedIcon className="h-4 w-4 shrink-0 text-primary" aria-hidden />}
-        <span className="min-w-0 flex-1 truncate text-navy">{selected?.label ?? ''}</span>
+        <span className="min-w-0 flex-1 truncate text-ink">{selected?.label ?? ''}</span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`}
           aria-hidden
@@ -151,7 +151,7 @@ export default function Select({
           aria-label={label}
           aria-activedescendant={`${id}-${active}`}
           onKeyDown={onKeyDown}
-          className={`absolute z-40 mt-1 max-h-72 min-w-full overflow-y-auto rounded-md border border-navy/15 bg-white py-1 shadow-lg ${
+          className={`absolute z-40 mt-1 max-h-72 min-w-full overflow-y-auto rounded-md border border-line/15 bg-surface py-1 shadow-card ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >
@@ -168,12 +168,12 @@ export default function Select({
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(i)}
                 className={`flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm sm:min-h-9 ${
-                  i === active ? 'bg-stripe' : ''
+                  i === active ? 'bg-surface-2' : ''
                 }`}
               >
                 {OptionIcon && <OptionIcon className="h-4 w-4 shrink-0 text-primary" aria-hidden />}
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate ${isSelected ? 'font-semibold text-navy' : 'text-ink'}`}>
+                  <span className={`block truncate ${isSelected ? 'font-semibold text-ink' : 'text-ink'}`}>
                     {option.label}
                   </span>
                   {option.hint && <span className="block truncate text-xs text-muted">{option.hint}</span>}

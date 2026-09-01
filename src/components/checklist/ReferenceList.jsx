@@ -18,8 +18,8 @@ export default function ReferenceList({ schema }) {
   if (!groups.length) return null;
 
   return (
-    <section className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-      <header className="border-b border-navy/10 bg-navy px-4 py-3 text-white">
+    <section className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
+      <header className="border-b border-line/10 bg-gradient-to-r from-navy to-navy-mid px-4 py-3 text-white">
         <h2 className="flex items-center gap-2 text-sm font-bold">
           <FileText className="h-4 w-4" aria-hidden />
           {schema.sectionHeading ?? schema.title}
@@ -29,17 +29,17 @@ export default function ReferenceList({ schema }) {
         </p>
       </header>
 
-      <div className="divide-y divide-navy/10">
+      <div className="divide-y divide-line/10">
         {groups.map((group) => (
           <section key={group.heading}>
-            <h3 className="bg-stripe px-4 py-2.5 text-[13px] font-bold text-navy">{group.heading}</h3>
-            <dl className="divide-y divide-navy/5">
+            <h3 className="bg-stripe px-4 py-2.5 text-[13px] font-bold text-ink">{group.heading}</h3>
+            <dl className="divide-y divide-line/8">
               {group.entries.map((entry, i) => (
                 <div
                   key={`${entry.ref}-${i}`}
                   className="grid gap-1 px-4 py-3 sm:grid-cols-[14rem_minmax(0,1fr)] sm:gap-5"
                 >
-                  <dt className="text-[13px] font-semibold text-navy">{entry.ref}</dt>
+                  <dt className="text-[13px] font-semibold text-ink">{entry.ref}</dt>
                   <dd className="text-[13px] leading-relaxed text-ink">{entry.text}</dd>
                 </div>
               ))}

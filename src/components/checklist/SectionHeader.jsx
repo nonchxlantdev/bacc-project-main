@@ -7,7 +7,7 @@ export default function SectionHeader({ title, itemCount, open, onToggle }) {
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      className="flex min-h-11 w-full items-center gap-3 bg-navy px-4 text-left text-white"
+      className="flex min-h-11 w-full items-center gap-3 bg-gradient-to-r from-navy to-navy-mid px-4 text-left text-white"
     >
       <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? '' : '-rotate-90'}`} />
       <span className="flex-1 text-[13px] font-semibold uppercase tracking-wide">{title}</span>
@@ -23,7 +23,7 @@ export default function SectionHeader({ title, itemCount, open, onToggle }) {
 export function ColumnHead() {
   return (
     <div
-      className={`${CHECKLIST_GRID} hidden border-b border-navy/10 bg-stripe text-[11px] font-semibold uppercase tracking-wide text-navy`}
+      className={`${CHECKLIST_GRID} hidden border-b border-line/12 bg-surface-2 text-[11px] font-semibold uppercase tracking-wide text-muted`}
     >
       <div className="px-3 py-2">Item</div>
       <div className="px-3 py-2">Description</div>

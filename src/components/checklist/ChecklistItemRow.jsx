@@ -1,4 +1,4 @@
-import { Camera, Check } from 'lucide-react';
+import { Camera, Check, X } from 'lucide-react';
 import { CHECKLIST_GRID } from './checklistGrid.js';
 
 /**
@@ -29,15 +29,15 @@ export default function ChecklistItemRow({
   return (
     <div
       id={`checklist-item-${item.code}`}
-      className={`${CHECKLIST_GRID} flex flex-col border-b border-navy/10 md:min-h-12 md:items-stretch scroll-mt-24 ${
-        noSat ? 'border-l-4 border-l-alert bg-alert-soft' : selected ? 'bg-primary/5' : striped ? 'bg-stripe' : 'bg-white'
+      className={`${CHECKLIST_GRID} flex flex-col border-b border-line/10 md:min-h-12 md:items-stretch scroll-mt-24 ${
+        noSat ? 'border-l-4 border-l-alert bg-alert-soft' : selected ? 'bg-primary/5' : striped ? 'bg-stripe' : 'bg-surface'
       }`}
     >
       <div className="flex items-baseline gap-2 pt-2 md:contents">
         <button
           type="button"
           onClick={() => onSelect(item.code)}
-          className="shrink-0 pl-3 text-left text-[13px] font-bold text-navy md:px-3 md:py-2.5 md:pl-3"
+          className="shrink-0 pl-3 text-left text-[13px] font-bold text-ink md:px-3 md:py-2.5 md:pl-3"
         >
           {item.code}
         </button>
@@ -73,14 +73,14 @@ export default function ChecklistItemRow({
         />
       </div>
 
-      <div className="flex items-center gap-1 px-3 pb-2.5 pt-2 md:border-l md:border-navy/10 md:p-1.5">
+      <div className="flex items-center gap-1 px-3 pb-2.5 pt-2 md:border-l md:border-line/10 md:p-1.5">
         <input
           value={row?.remarks ?? ''}
           disabled={disabled}
           placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
           onChange={(e) => onChange({ remarks: e.target.value })}
-          className={`min-h-11 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] md:min-h-9 ${
-            remarksError ? 'border-alert bg-white' : 'border-navy/15 bg-white'
+          className={`min-h-11 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] text-ink md:min-h-9 ${
+            remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
           }`}
         />
         <button
@@ -90,7 +90,7 @@ export default function ChecklistItemRow({
             onPhotoClick?.(item.code);
           }}
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded md:h-8 md:w-8 ${
-            hasPhoto ? 'text-primary' : 'text-muted hover:text-navy'
+            hasPhoto ? 'text-primary' : 'text-muted hover:text-ink'
           }`}
           aria-label={`Photo for ${item.code}`}
         >
@@ -105,12 +105,12 @@ function ResultToggle({ itemCode, label, checked, disabled, onChange, tone }) {
   const sat = tone === 'sat';
   return (
     <label
-      className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded border bg-white text-[13px] font-semibold md:min-h-0 md:flex-none md:gap-0 md:rounded-none md:border-0 md:border-l md:border-navy/10 md:bg-transparent ${
+      className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded border bg-surface text-[13px] font-semibold md:min-h-0 md:flex-none md:gap-0 md:rounded-none md:border-0 md:border-l md:border-line/10 md:bg-transparent ${
         checked
           ? sat
             ? 'border-success text-success md:text-inherit'
             : 'border-alert text-alert md:text-inherit'
-          : 'border-navy/20 text-muted md:text-inherit'
+          : 'border-line/20 text-muted md:text-inherit'
       }`}
     >
       <input
@@ -126,17 +126,19 @@ function ResultToggle({ itemCode, label, checked, disabled, onChange, tone }) {
         checked={checked}
         onChange={onChange}
       />
+      {/* Approved-mockup treatment: an empty ringed circle until marked, then
+          a solid glowing fill with a white (or, for SAT, near-black) icon —
+          not a tinted ring with a small icon/dot floating inside it. */}
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+        className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
           checked
             ? sat
-              ? 'border-success bg-success-soft'
-              : 'border-alert bg-white'
-            : 'border-navy/25 bg-white'
+              ? 'border-teal bg-teal text-[#04241c] shadow-glow-teal'
+              : 'border-alert bg-alert text-white shadow-glow-alert'
+            : 'border-line/25 bg-surface text-transparent'
         }`}
       >
-        {checked && sat && <Check className="h-3.5 w-3.5 text-success" strokeWidth={3} />}
-        {checked && !sat && <span className="h-2.5 w-2.5 rounded-full bg-alert" />}
+        {sat ? <Check className="h-4 w-4" strokeWidth={3} /> : <X className="h-4 w-4" strokeWidth={3} />}
       </span>
       <span className="md:hidden">{label}</span>
     </label>

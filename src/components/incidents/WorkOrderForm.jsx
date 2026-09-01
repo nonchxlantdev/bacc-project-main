@@ -16,11 +16,11 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">Annex H · PGIA-PMM-F08</p>
-          <h3 className="text-lg font-bold text-navy">{wo.work_order_number}</h3>
+          <h3 className="text-lg font-bold text-ink">{wo.work_order_number}</h3>
           <p className="text-sm text-muted">{workOrderStatusLabel(wo.status)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={onSave} className="rounded-md border border-navy/20 bg-white px-3 py-2 text-sm">
+          <button type="button" onClick={onSave} className="rounded-md border border-line/20 bg-surface px-3 py-2 text-sm text-ink">
             Save
           </button>
           <button type="button" onClick={onExport} className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white">
@@ -29,8 +29,8 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
         </div>
       </div>
 
-      <section className="rounded-md border border-navy/15 bg-white p-4">
-        <h4 className="mb-3 text-sm font-semibold text-navy">Issue block</h4>
+      <section className="rounded-md border border-line/15 bg-surface p-4">
+        <h4 className="mb-3 text-sm font-semibold text-ink">Issue block</h4>
         <div className="grid gap-3 md:grid-cols-2">
           <Text label="Date Issued" type="date" value={wo.date_issued} disabled={locked} onChange={(v) => patch({ date_issued: v })} />
           <Text label="Issued by OM or COO (Name)" value={wo.issued_by_name} disabled={locked} onChange={(v) => patch({ issued_by_name: v })} />
@@ -45,7 +45,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
                   cec_clearance_required: /cec/i.test(e.target.value),
                 })
               }
-              className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+              className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
             >
               <option value="">Select…</option>
               {ASSIGNED_UNITS.map((opt) => (
@@ -66,7 +66,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
               rows={3}
               value={wo.description_of_work}
               onChange={(e) => patch({ description_of_work: e.target.value })}
-              className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
             />
           </label>
           <Text label="Location" value={wo.location_text} disabled={locked} onChange={(v) => patch({ location_text: v })} />
@@ -89,8 +89,8 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
         </div>
       </section>
 
-      <section className="rounded-md border border-navy/15 bg-white p-4">
-        <h4 className="mb-3 text-sm font-semibold text-navy">Work Completion Record</h4>
+      <section className="rounded-md border border-line/15 bg-surface p-4">
+        <h4 className="mb-3 text-sm font-semibold text-ink">Work Completion Record</h4>
         <div className="grid gap-3 md:grid-cols-2">
           <Text
             label="Date Works Completed"
@@ -109,7 +109,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
               rows={3}
               value={wo.description_of_work_performed}
               onChange={(e) => patch({ description_of_work_performed: e.target.value })}
-              className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
             />
           </label>
           <label className="md:col-span-2">
@@ -121,7 +121,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
               rows={2}
               value={wo.materials_used}
               onChange={(e) => patch({ materials_used: e.target.value })}
-              className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
             />
           </label>
           <label className="md:col-span-2">
@@ -133,7 +133,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
               rows={2}
               value={wo.test_verification_results}
               onChange={(e) => patch({ test_verification_results: e.target.value })}
-              className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
             />
           </label>
           <YesNo
@@ -195,7 +195,7 @@ export default function WorkOrderForm({ workOrder, onChange, onSave, onVerify, o
       </div>
 
       {!locked && (
-        <div className="rounded-md border border-navy/10 bg-stripe p-4">
+        <div className="rounded-md border border-line/10 bg-stripe p-4">
           {blockers.length > 0 && (
             <ul className="mb-3 list-disc pl-5 text-sm text-alert">
               {blockers.map((b) => (
@@ -235,7 +235,7 @@ function Text({ label, value, onChange, type = 'text', disabled }) {
         disabled={disabled}
         value={value ?? ''}
         onChange={(e) => onChange?.(e.target.value)}
-        className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm disabled:bg-stripe"
+        className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink disabled:bg-stripe"
       />
     </label>
   );

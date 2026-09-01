@@ -119,7 +119,7 @@ export default function IncidentListPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy sm:text-2xl">Incidents</h1>
+          <h1 className="text-xl font-bold text-ink sm:text-2xl">Incidents</h1>
           <p className="text-sm text-muted">
             Each incident is one NOC register row (Annex G), raised from a NO SAT item and owned by
             the team whose form it came from.
@@ -130,7 +130,7 @@ export default function IncidentListPage() {
             type="button"
             disabled={!online || exporting}
             onClick={exportRegister}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-4 py-2 text-sm font-medium text-navy disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-4 py-2 text-sm font-medium text-ink disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export NOC register'}
@@ -158,7 +158,7 @@ export default function IncidentListPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by reference, item, team or person…"
-            className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
           />
         </div>
         <Select
@@ -198,7 +198,7 @@ export default function IncidentListPage() {
               setTeam('');
               setStatus('');
             }}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-navy/20 px-3 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -206,9 +206,9 @@ export default function IncidentListPage() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-line/10 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
-          <thead className="bg-navy text-white">
+          <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
               <SortableTh label="Incident ID" sortKey="ref" sort={sort} onToggle={toggle} hint="A–Z" />
               <SortableTh label="Team" sortKey="team" sort={sort} onToggle={toggle} hint="A–Z" />
@@ -244,7 +244,7 @@ export default function IncidentListPage() {
             {sorted.map((row, i) => {
               const level = getDeficiencyLevel(row.deficiency_level);
               return (
-                <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+                <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                   <td data-label="Incident ID" className="px-4 py-2">
                     <Link to={`/incidents/${row.id}`} className="font-medium text-primary hover:underline">
                       {row.incident_ref}
@@ -254,7 +254,7 @@ export default function IncidentListPage() {
                   <td data-label="Team" className="px-4 py-2">
                     <TeamChip name={row.source_group} code={row.source_template_code} />
                   </td>
-                  <td data-label="Title" className="px-4 py-2 font-medium text-navy">
+                  <td data-label="Title" className="px-4 py-2 font-medium text-ink">
                     {row.title}
                   </td>
                   <td data-label="Unit" className="px-4 py-2 text-muted">
@@ -295,7 +295,7 @@ export function TeamChip({ name, code }) {
         <Icon className="h-3.5 w-3.5" aria-hidden />
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-xs font-semibold text-navy">{name}</span>
+        <span className="block truncate text-xs font-semibold text-ink">{name}</span>
         {code && <span className="block truncate text-[11px] text-muted">{code}</span>}
       </span>
     </span>

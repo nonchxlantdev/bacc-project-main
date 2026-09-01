@@ -3,23 +3,23 @@ import { useState } from 'react';
 export default function ChartCard({ title, subtitle, table, children }) {
   const [mode, setMode] = useState('chart');
   return (
-    <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
+    <section className="rounded-lg border border-line/12 bg-surface p-4 shadow-card">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-navy">{title}</h2>
+          <h2 className="text-sm font-semibold text-ink">{title}</h2>
           {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
         </div>
-        <div className="flex rounded border border-navy/15 text-xs">
+        <div className="flex rounded border border-line/20 text-xs">
           <button
             type="button"
-            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'chart' ? 'bg-navy text-white' : 'text-navy'}`}
+            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'chart' ? 'bg-navy text-white' : 'text-muted'}`}
             onClick={() => setMode('chart')}
           >
             Chart
           </button>
           <button
             type="button"
-            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'table' ? 'bg-navy text-white' : 'text-navy'}`}
+            className={`min-h-10 px-3 lg:min-h-0 lg:px-2 lg:py-1 ${mode === 'table' ? 'bg-navy text-white' : 'text-muted'}`}
             onClick={() => setMode('table')}
           >
             Table
@@ -46,7 +46,7 @@ export function SimpleTable({ columns, rows }) {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.id || i} className={i % 2 === 0 ? 'bg-stripe' : ''}>
+            <tr key={row.id || i} className={i % 2 === 0 ? 'bg-surface-2' : ''}>
               {columns.map((col) => (
                 <td key={col.key} className="px-2 py-1.5 text-ink">
                   {col.render ? col.render(row) : row[col.key]}

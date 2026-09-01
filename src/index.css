@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Hooks Tailwind's `dark:` variant to our own explicit [data-theme="dark"]
+   attribute (set by ThemeContext) instead of the OS `prefers-color-scheme`.
+   The person's choice — not their device's — decides which theme renders,
+   and it's the same attribute the token overrides below key off of. Most
+   theme-driven changes should need no `dark:` utility at all: they happen
+   for free wherever a component already uses one of the named tokens below,
+   since those tokens are what actually flip. Reach for `dark:` only for the
+   rare rule that can't be expressed as a token swap (e.g. a shadow's blur). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --color-navy: #0b1e3d;
   --color-navy-mid: #0e2447;
@@ -7,14 +17,85 @@
   --color-primary: #1e5fa8;
   --color-primary-hover: #184e8a;
   --color-teal: #2fbfa0;
+  --color-caution: #d99a2b;
+  --color-caution-soft: #fbf1e0;
   --color-alert: #d64545;
   --color-alert-soft: #fdecec;
   --color-success: #2e9e5b;
   --color-success-soft: #e7f6ee;
+
+  /* Surface/text roles — these are the tokens that actually change value
+     between themes (redefined under [data-theme="dark"] below). Keep them
+     separate from the brand hues above (navy/primary/teal/caution/alert/
+     success), which stay the same color in both themes: a brand hue means
+     the same thing regardless of theme, a surface role does not.
+       --color-stripe   the page canvas, behind every card
+       --color-surface  a card/panel's own background (was hardcoded
+                         `bg-white` throughout — that literal never responds
+                         to a theme change, so migrating a card to `bg-surface`
+                         is what makes it react to dark mode at all)
+       --color-surface-2  a recessed surface inside a card: hover states,
+                         read-only fields, track backgrounds
+       --color-line      card borders and dividers (was hardcoded
+                         `border-navy/NN` — fine in light mode, but a navy
+                         border at low opacity on a navy dark-mode card is
+                         invisible, so this needs its own token too) */
   --color-stripe: #f3f6fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f6fa;
   --color-ink: #1a2332;
   --color-muted: #5b6b80;
-  --font-sans: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --color-line: #0b1e3d;
+
+  /* "Segoe UI" ahead of Barlow here was the actual bug behind "even the font
+     doesn't look like this": Barlow was loaded (see index.html) and already
+     used correctly for --font-display, but body text — every paragraph,
+     label, button and input in the app — fell back to the OS font instead of
+     ever reaching it. Barlow first is what the approved mockup specifies. */
+  --font-sans: "Barlow", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Segoe UI", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Beacon glows — the runway/PAPI-light-style status indicators used for
+     stat tiles, SAT/NO SAT toggles, and the sidebar's active-item marker. */
+  --shadow-glow-teal: 0 0 0 3px rgba(47, 191, 160, 0.14), 0 0 14px rgba(47, 191, 160, 0.55);
+  --shadow-glow-caution: 0 0 0 3px rgba(217, 154, 43, 0.16), 0 0 14px rgba(217, 154, 43, 0.55);
+  --shadow-glow-alert: 0 0 0 3px rgba(214, 69, 69, 0.16), 0 0 14px rgba(214, 69, 69, 0.55);
+
+  /* The approved mockup's card shadow: a tight contact shadow plus a wide,
+     soft one underneath, so panels read as gently lifted off the page canvas
+     instead of merely outlined. Tailwind's own `shadow-sm` (flat, one layer)
+     was standing in for this everywhere — swapped for `shadow-card` below. */
+  --shadow-card: 0 1px 2px rgba(11, 30, 61, 0.06), 0 8px 24px -12px rgba(11, 30, 61, 0.18);
+}
+
+/* Dark theme — redefines only the surface/text tokens above, never the
+   brand hues. Set by ThemeContext via `document.documentElement.dataset.theme`
+   and persisted to localStorage; there is no `prefers-color-scheme` fallback
+   on purpose — this is a work tool used for regulatory sign-off, so what it
+   looks like should be a deliberate choice the person made, not something
+   that silently changes because their OS theme did. */
+[data-theme='dark'] {
+  --color-stripe: var(--color-navy-deep);
+  --color-surface: var(--color-navy);
+  --color-surface-2: var(--color-navy-mid);
+  --color-ink: #eef3fa;
+  --color-muted: #8fa2bd;
+  --color-line: #8fa2bd;
+
+  /* The "soft" badge/highlight backgrounds (NO SAT rows, status chips) are
+     light tints in light mode. Left alone they'd stay bright pastel patches
+     on a dark surface — this reworks each into a translucent tint of the
+     same hue instead, so `text-ink`/`text-alert`/etc. sitting on top stay
+     legible without every call site needing its own dark-mode override. */
+  --color-alert-soft: rgba(214, 69, 69, 0.16);
+  --color-success-soft: rgba(46, 158, 91, 0.16);
+  --color-caution-soft: rgba(217, 154, 43, 0.18);
+
+  /* A soft light-mode shadow reads as a smudge on a dark card, so the dark
+     mockup uses a crisp hairline highlight plus a much deeper, wider drop
+     instead — the same "lifted panel" effect, tuned for a dark ground. */
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.4), 0 20px 48px -20px rgba(0, 0, 0, 0.7);
 }
 
 html,
@@ -29,6 +110,19 @@ body {
   background: var(--color-stripe);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Every heading reaches for the condensed display face by default — the
+   approved mockup sets this once on h1/h2/h3 rather than per component, and
+   components should stay plain semantic headings rather than each opting in
+   with a `font-display` utility class. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  text-wrap: balance;
 }
 
 button,
@@ -69,7 +163,7 @@ textarea {
 
   .table-stack tr {
     padding: 0.375rem 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-navy) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-line) 12%, transparent);
   }
 
   .table-stack tr:last-child {

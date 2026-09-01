@@ -3,13 +3,13 @@ const STYLES = {
   no_sat: 'bg-alert-soft text-alert',
   draft: 'bg-stripe text-muted',
   submitted: 'bg-primary/10 text-primary',
-  acknowledged: 'bg-teal/15 text-navy',
+  acknowledged: 'bg-teal/15 text-ink',
   pending_sync: 'bg-stripe text-muted',
   pending: 'bg-primary/10 text-primary',
   overdue: 'bg-alert-soft text-alert',
   missed: 'bg-stripe text-muted',
   open: 'bg-primary/10 text-primary',
-  verified: 'bg-teal/15 text-navy',
+  verified: 'bg-teal/15 text-ink',
 };
 
 const LABELS = {

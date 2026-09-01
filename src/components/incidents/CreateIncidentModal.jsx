@@ -105,10 +105,10 @@ export default function CreateIncidentModal({
     <div className="fixed inset-0 z-50 flex items-stretch justify-center overflow-y-auto bg-navy/50 sm:items-start sm:p-4 sm:pt-10">
       <form
         onSubmit={onSubmit}
-        className="flex max-h-none w-full max-w-5xl flex-col bg-white shadow-xl sm:max-h-[90dvh] sm:rounded-lg"
+        className="flex max-h-none w-full max-w-5xl flex-col bg-surface shadow-xl sm:max-h-[90dvh] sm:rounded-lg"
       >
-        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-navy/10 bg-white px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
-          <h2 className="text-lg font-bold text-navy">Create Incident</h2>
+        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-line/10 bg-surface px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
+          <h2 className="text-lg font-bold text-ink">Create Incident</h2>
           <button
             type="button"
             onClick={onClose}
@@ -126,13 +126,13 @@ export default function CreateIncidentModal({
 
         <div className="grid min-h-0 flex-1 gap-5 overflow-y-auto p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-navy">Incident Information</h3>
+            <h3 className="text-sm font-semibold text-ink">Incident Information</h3>
             <Field label="Title" required>
               <input
                 required
                 value={form.title}
                 onChange={(e) => patch({ title: e.target.value })}
-                className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
               />
             </Field>
             <Field label="Description / Remarks" required>
@@ -142,7 +142,7 @@ export default function CreateIncidentModal({
                 rows={5}
                 value={form.description}
                 onChange={(e) => patch({ description: e.target.value.slice(0, DESCRIPTION_MAX) })}
-                className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
               />
               <p className="mt-1 text-right text-xs text-muted">
                 {form.description.length}/{DESCRIPTION_MAX}
@@ -154,7 +154,7 @@ export default function CreateIncidentModal({
                   required
                   value={form.deficiency_level}
                   onChange={(e) => patch({ deficiency_level: e.target.value ? Number(e.target.value) : '' })}
-                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                 >
                   <option value="">Select…</option>
                   {deficiencyLevels().map((lvl) => (
@@ -169,7 +169,7 @@ export default function CreateIncidentModal({
                   required
                   value={form.category}
                   onChange={(e) => patch({ category: e.target.value })}
-                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                 >
                   {INCIDENT_CATEGORIES.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -182,7 +182,7 @@ export default function CreateIncidentModal({
                 <select
                   value={form.incident_type}
                   onChange={(e) => patch({ incident_type: e.target.value })}
-                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                 >
                   {INCIDENT_TYPES.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -196,7 +196,7 @@ export default function CreateIncidentModal({
                   required
                   value={form.location_label}
                   onChange={(e) => patch({ location_label: e.target.value })}
-                  className="min-h-10 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                 />
               </Field>
             </div>
@@ -214,7 +214,7 @@ export default function CreateIncidentModal({
                       setError(err.message);
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-navy/20 px-3 py-2 text-sm"
+                  className="inline-flex items-center gap-2 rounded-md border border-line/20 px-3 py-2 text-sm text-ink"
                 >
                   <Navigation className="h-4 w-4" />
                   Use Current Location
@@ -228,7 +228,7 @@ export default function CreateIncidentModal({
                       location_captured_at: new Date().toISOString(),
                     });
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-navy/20 px-3 py-2 text-sm"
+                  className="inline-flex items-center gap-2 rounded-md border border-line/20 px-3 py-2 text-sm text-ink"
                 >
                   <MapPin className="h-4 w-4" />
                   Pin on Map
@@ -263,7 +263,7 @@ export default function CreateIncidentModal({
                 <img
                   src={form.attachments[0].previewUrl || form.attachments[0].photo_url}
                   alt="Item evidence"
-                  className="h-28 rounded-md border border-navy/15 object-cover"
+                  className="h-28 rounded-md border border-line/15 object-cover"
                 />
               ) : (
                 <p className="text-sm text-muted">No photo on the checklist item. You can add photos after creating the incident.</p>
@@ -271,8 +271,8 @@ export default function CreateIncidentModal({
             </div>
           </div>
 
-          <aside className="space-y-3 rounded-md border border-navy/10 bg-stripe p-4">
-            <h3 className="text-sm font-semibold text-navy">Source Checklist Item</h3>
+          <aside className="space-y-3 rounded-md border border-line/10 bg-stripe p-4">
+            <h3 className="text-sm font-semibold text-ink">Source Checklist Item</h3>
             <ReadOnly label="Form" value={source.source_template_code} />
             <ReadOnly label="Checklist" value={schema?.title} />
             <ReadOnly label="Section" value={source.source_section} />
@@ -283,7 +283,7 @@ export default function CreateIncidentModal({
             <ReadOnly label="Inspection Date" value={source.source_inspection_date} />
             <ReadOnly label="Inspector" value={source.inspector_name} />
             <ReadOnly label="Remarks / Location" value={row?.remarks || '—'} />
-            <p className="flex gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-navy">
+            <p className="flex gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-ink">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               {EXPLAINER}
             </p>
@@ -292,7 +292,7 @@ export default function CreateIncidentModal({
 
         {error && <p className="px-5 pb-2 text-sm text-alert">{error}</p>}
 
-        <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-navy/10 bg-white px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:pb-4">
+        <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-line/10 bg-surface px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:pb-4">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={proceed} onChange={(e) => setProceed(e.target.checked)} className="h-4 w-4" />
             Proceed to Incident Management after creating this incident
@@ -301,7 +301,7 @@ export default function CreateIncidentModal({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-11 flex-1 rounded-md border border-navy/20 px-4 py-2 text-sm sm:flex-none"
+              className="min-h-11 flex-1 rounded-md border border-line/20 px-4 py-2 text-sm text-ink sm:flex-none"
             >
               Cancel
             </button>
@@ -335,7 +335,7 @@ function ReadOnly({ label, value }) {
   return (
     <div className="text-sm">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
-      <p className="text-navy">{value || '—'}</p>
+      <p className="text-ink">{value || '—'}</p>
     </div>
   );
 }

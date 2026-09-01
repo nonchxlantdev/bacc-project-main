@@ -121,7 +121,7 @@ function ToggleIcon({
   return (
     <Toggle
       aria-label={label}
-      className={`flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-stripe hover:text-navy ${className}`.trim()}
+      className={`flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink ${className}`.trim()}
       {...props}
     >
       <Icon className="h-4 w-4" aria-hidden />
@@ -141,7 +141,7 @@ function Menu({
 
   const side = (alignProp ?? align) === 'left' ? 'left-0' : 'right-0';
   const base =
-    'absolute z-30 overflow-hidden rounded-md border border-navy/10 bg-white text-ink shadow-lg';
+    'absolute z-30 overflow-hidden rounded-md border border-line/15 bg-surface text-ink shadow-lg';
   const menuProps = panel ? {} : { role: 'menu' };
 
   return (
@@ -156,14 +156,14 @@ function Menu({
 
 function Header({ children, className = '' }) {
   return (
-    <div className={`border-b border-navy/10 px-3 py-2 ${className}`.trim()}>
+    <div className={`border-b border-line/15 px-3 py-2 ${className}`.trim()}>
       {children}
     </div>
   );
 }
 
 function Divider() {
-  return <div className="border-t border-navy/10" role="separator" />;
+  return <div className="border-t border-line/15" role="separator" />;
 }
 
 function Item({
@@ -178,7 +178,7 @@ function Item({
 }) {
   const { close } = useDropdown();
 
-  const classes = `flex w-full min-h-11 items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-stripe ${
+  const classes = `flex w-full min-h-11 items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-surface-2 ${
     destructive ? 'text-alert' : 'text-ink'
   } ${className}`.trim();
 

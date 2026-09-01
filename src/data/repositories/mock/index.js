@@ -468,6 +468,15 @@ export function createMockRepositories() {
         resetStore();
         return { demoNow: getStore().demoNow };
       },
+      async loadShowcase() {
+        const { loadShowcaseData } = await import('./store.js');
+        loadShowcaseData();
+        return {
+          submissions: getStore().submissions.length,
+          incidents: getStore().incidents.length,
+          approvals: getStore().approvals.filter((a) => a.status === 'pending').length,
+        };
+      },
     },
     notifications: {
       async listForUser(userId) {

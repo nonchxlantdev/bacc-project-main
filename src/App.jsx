@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/layout/AppShell.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { SettingsProvider } from './context/SettingsContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 import ApprovalsPage from './pages/ApprovalsPage.jsx';
 import ChecklistDetailPage from './pages/ChecklistDetailPage.jsx';
 import ChecklistCataloguePage from './pages/ChecklistCataloguePage.jsx';
@@ -19,6 +20,7 @@ import UsersPage from './pages/UsersPage.jsx';
 
 export default function App() {
   return (
+    <ThemeProvider>
     <SettingsProvider>
       <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
@@ -45,5 +47,6 @@ export default function App() {
       </BrowserRouter>
       </AuthProvider>
     </SettingsProvider>
+    </ThemeProvider>
   );
 }

@@ -39,10 +39,10 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-navy/40 sm:items-start sm:p-8">
-      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-xl bg-white shadow-xl sm:max-h-[85dvh] sm:rounded-lg">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-navy/10 px-4 py-4 sm:px-5">
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-xl bg-surface shadow-xl sm:max-h-[85dvh] sm:rounded-lg">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line/12 px-4 py-4 sm:px-5">
           <div>
-            <h2 className="text-lg font-bold text-navy">New Inspection</h2>
+            <h2 className="text-lg font-bold text-ink">New Inspection</h2>
             <p className="mt-0.5 text-sm text-muted">
               Forms you are assigned to complete. {total} available.
             </p>
@@ -51,13 +51,13 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-stripe hover:text-navy"
+            className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-surface-2 hover:text-ink"
           >
             <X size={18} aria-hidden />
           </button>
         </div>
 
-        <div className="flex flex-col gap-2 border-b border-navy/10 px-4 py-3 sm:flex-row sm:px-5">
+        <div className="flex flex-col gap-2 border-b border-line/12 px-4 py-3 sm:flex-row sm:px-5">
           <div className="relative min-w-0 flex-1">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
             <input
@@ -66,7 +66,7 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by form number, title or team…"
-              className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
+              className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
             />
           </div>
           <Select
@@ -89,7 +89,7 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
 
           {grouped.map(([groupName, list]) => (
             <section key={groupName} className="mb-4 last:mb-0">
-              <h3 className="sticky top-0 z-10 -mx-1 mb-2 bg-white px-1 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <h3 className="sticky top-0 z-10 -mx-1 mb-2 bg-surface px-1 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                 {groupName}
                 <span className="ml-1.5 font-normal normal-case tracking-normal">· {list.length}</span>
               </h3>
@@ -100,11 +100,11 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
                       type="button"
                       disabled={Boolean(busyKey)}
                       onClick={() => onPick(t)}
-                      className="flex w-full items-start gap-3 rounded-md border border-navy/15 px-3 py-2.5 text-left hover:border-primary hover:bg-stripe disabled:opacity-60"
+                      className="flex w-full items-start gap-3 rounded-md border border-line/15 px-3 py-2.5 text-left hover:border-primary hover:bg-surface-2 disabled:opacity-60"
                     >
                       <ClipboardCheck size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-navy">
+                        <span className="block text-sm font-semibold text-ink">
                           {t.annex_label ? `${t.annex_label} — ` : ''}
                           {t.title}
                         </span>

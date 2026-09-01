@@ -56,14 +56,14 @@ export default function SignaturePromptModal({
       <div
         role="dialog"
         aria-labelledby="signature-prompt-title"
-        className="flex max-h-[min(92dvh,720px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl motion-safe:animate-[modal-pop_240ms_cubic-bezier(0.16,1,0.3,1)] sm:rounded-2xl"
+        className="flex max-h-[min(92dvh,720px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl bg-surface shadow-2xl motion-safe:animate-[modal-pop_240ms_cubic-bezier(0.16,1,0.3,1)] sm:rounded-2xl"
       >
         <div className="relative shrink-0 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
           <button
             type="button"
             onClick={finishManual}
             aria-label="Close"
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-stripe hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:right-5 sm:top-5"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:right-5 sm:top-5"
           >
             <X className="h-5 w-5" />
           </button>
@@ -73,7 +73,7 @@ export default function SignaturePromptModal({
               <PenLine className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <div className="min-w-0">
-              <h2 id="signature-prompt-title" className="text-xl font-bold text-navy">
+              <h2 id="signature-prompt-title" className="text-xl font-bold text-ink">
                 {title}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>
@@ -91,7 +91,7 @@ export default function SignaturePromptModal({
                   className="mx-auto h-28 max-w-full object-contain"
                 />
               </div>
-              <label className="mt-4 flex items-center gap-2.5 text-sm text-navy">
+              <label className="mt-4 flex items-center gap-2.5 text-sm text-ink">
                 <input
                   type="checkbox"
                   checked={dismissForever}
@@ -111,7 +111,7 @@ export default function SignaturePromptModal({
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 border-t border-navy/10 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:px-6">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-line/10 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:px-6">
           {hasStored ? (
             <>
               <button
@@ -125,7 +125,7 @@ export default function SignaturePromptModal({
               <button
                 type="button"
                 onClick={finishManual}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-navy/15 bg-white px-4 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-stripe active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line/15 bg-surface px-4 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-surface-2 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
               >
                 <PenLine className="h-3.5 w-3.5 shrink-0" />
                 Sign manually
@@ -146,7 +146,7 @@ export default function SignaturePromptModal({
                 type="button"
                 disabled={!draftUri}
                 onClick={() => draftUri && onSaveToProfile?.({ signature_data_uri: draftUri, apply: false })}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-stripe active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line/15 bg-surface px-3 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-surface-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
               >
                 <UserRound className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-center">Save to my profile only</span>
@@ -154,7 +154,7 @@ export default function SignaturePromptModal({
               <button
                 type="button"
                 onClick={finishManual}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-stripe active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line/15 bg-surface px-3 py-2 text-sm font-semibold text-primary transition-all duration-150 hover:border-primary/30 hover:bg-surface-2 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
               >
                 <PenLine className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-center">Sign manually on this form</span>

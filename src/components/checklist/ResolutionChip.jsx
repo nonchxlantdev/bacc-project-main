@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 
 const TONES = {
   cleared: 'border-success bg-success-soft text-success',
-  pending: 'border-primary/40 bg-primary/10 text-navy',
+  pending: 'border-primary/40 bg-primary/10 text-ink',
   open: 'border-alert bg-alert-soft text-alert',
 };
 

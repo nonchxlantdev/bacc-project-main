@@ -312,7 +312,7 @@ export default function IncidentDetailPage() {
 
   const geoBlock = (
     <>
-      <div className="grid grid-cols-2 gap-y-3 border-t border-navy/10 px-4 py-3 text-sm sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-y-3 border-t border-line/10 px-4 py-3 text-sm sm:grid-cols-4">
         <Metric label="Latitude" value={fmtCoord(incident.latitude)} />
         <Metric label="Longitude" value={fmtCoord(incident.longitude)} />
         <Metric
@@ -324,7 +324,7 @@ export default function IncidentDetailPage() {
       <div className="mx-4 mb-4 flex gap-2 rounded-md border border-primary/25 bg-primary/5 px-3 py-2.5">
         <AlertTriangle size={15} className="mt-0.5 shrink-0 text-primary" aria-hidden />
         <div className="text-xs">
-          <p className="font-semibold text-navy">
+          <p className="font-semibold text-ink">
             {incident.location_capture_method === 'gps'
               ? 'Location captured from device GPS'
               : 'Location captured by pin on map'}
@@ -340,7 +340,7 @@ export default function IncidentDetailPage() {
       {/* Page heading + actions */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy sm:text-2xl">Incident Management</h1>
+          <h1 className="text-xl font-bold text-ink sm:text-2xl">Incident Management</h1>
           <p className="mt-1 text-sm text-muted">
             <Link to="/incidents" className="hover:text-primary hover:underline">
               Incidents
@@ -353,7 +353,7 @@ export default function IncidentDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/incidents')}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
           >
             <ArrowLeft size={16} aria-hidden />
             <span className="sm:hidden">Back</span>
@@ -365,7 +365,7 @@ export default function IncidentDetailPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
               >
                 <X size={16} aria-hidden /> Cancel
               </button>
@@ -382,7 +382,7 @@ export default function IncidentDetailPage() {
             <button
               type="button"
               onClick={startEdit}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-navy/20 bg-white px-3.5 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10 sm:justify-start"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
             >
               <Pencil size={16} aria-hidden /> Edit Incident
             </button>
@@ -392,7 +392,7 @@ export default function IncidentDetailPage() {
             <Dropdown.Toggle className="inline-flex min-h-10 items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid">
               More Actions <ChevronDown size={16} aria-hidden />
             </Dropdown.Toggle>
-            <Dropdown.Menu className="w-56 border-navy/15 py-1">
+            <Dropdown.Menu className="w-56 border-line/15 py-1">
               <Dropdown.Item onClick={() => setTab('updates')}>Add an update</Dropdown.Item>
               <Dropdown.Item onClick={() => setTab('photos')}>Attach a photo</Dropdown.Item>
               <Dropdown.Item onClick={() => setTab('history')}>View history</Dropdown.Item>
@@ -402,10 +402,10 @@ export default function IncidentDetailPage() {
       </div>
 
       {/* Status strip */}
-      <header className="rounded-md border border-navy/15 bg-white px-4 py-3 shadow-sm">
+      <header className="rounded-md border border-line/15 bg-surface px-4 py-3 shadow-card">
         <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:gap-x-6">
           <div className="col-span-2 min-w-0 sm:col-span-3 lg:col-span-1 lg:pr-6">
-            <span className="inline-block rounded bg-alert-soft px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-navy">
+            <span className="inline-block rounded bg-alert-soft px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-ink">
               {incidentStatusLabel(incident.status)}
             </span>
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: level?.color }}>
@@ -416,7 +416,7 @@ export default function IncidentDetailPage() {
           <StripField label="Incident ID" value={incident.incident_ref} strong />
           {/* Which team's form raised this — the same chip the incident list
               and the checklist catalogue use, so the tie is obvious. */}
-          <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-navy/10 lg:pl-6">
+          <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-line/10 lg:pl-6">
             <p className="text-xs text-muted">Owning Team</p>
             <div className="mt-0.5">
               <TeamChip name={incident.source_group} code={incident.source_template_code} />
@@ -450,7 +450,7 @@ export default function IncidentDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-navy/15 px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-line/15 px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -462,8 +462,8 @@ export default function IncidentDetailPage() {
               aria-current={active ? 'page' : undefined}
               className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3.5 py-2.5 text-sm ${
                 active
-                  ? 'border-b-2 border-primary font-semibold text-navy'
-                  : 'border-b-2 border-transparent text-muted hover:text-navy'
+                  ? 'border-b-2 border-primary font-semibold text-ink'
+                  : 'border-b-2 border-transparent text-muted hover:text-ink'
               }`}
             >
               <Icon size={15} aria-hidden />
@@ -480,7 +480,7 @@ export default function IncidentDetailPage() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-4">
                   <Card title="Source Information">
-                    <dl className="divide-y divide-navy/5">
+                    <dl className="divide-y divide-line/5">
                       <Row
                         label="Source Checklist"
                         value={`${incident.source_template_code || ''} – ${
@@ -503,10 +503,10 @@ export default function IncidentDetailPage() {
                           maxLength={DESCRIPTION_MAX}
                           value={draft.description ?? ''}
                           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                          className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                          className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                         />
                       ) : (
-                        <p className="rounded border border-navy/20 bg-white px-3 py-2 text-sm">{incident.description}</p>
+                        <p className="rounded border border-line/20 bg-surface px-3 py-2 text-sm">{incident.description}</p>
                       )}
                     </Field>
 
@@ -516,7 +516,7 @@ export default function IncidentDetailPage() {
                           <select
                             value={draft.deficiency_level ?? ''}
                             onChange={(e) => setDraft({ ...draft, deficiency_level: e.target.value })}
-                            className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
+                            className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
                           >
                             {deficiencyLevels().map((l) => (
                               <option key={l.level} value={l.level}>
@@ -525,7 +525,7 @@ export default function IncidentDetailPage() {
                             ))}
                           </select>
                         ) : (
-                          <div className="flex min-h-10 items-center gap-2 rounded border border-navy/20 px-3 text-sm">
+                          <div className="flex min-h-10 items-center gap-2 rounded border border-line/20 px-3 text-sm">
                             <span className="h-2 w-2 rounded-full" style={{ background: level?.color }} aria-hidden />
                             {level?.label ?? '—'}
                           </div>
@@ -536,7 +536,7 @@ export default function IncidentDetailPage() {
                           <select
                             value={draft.category ?? ''}
                             onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-                            className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
+                            className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
                           >
                             {INCIDENT_CATEGORIES.map((c) => (
                               <option key={c.value} value={c.value}>
@@ -545,7 +545,7 @@ export default function IncidentDetailPage() {
                             ))}
                           </select>
                         ) : (
-                          <div className="flex min-h-10 items-center rounded border border-navy/20 px-3 text-sm">
+                          <div className="flex min-h-10 items-center rounded border border-line/20 px-3 text-sm">
                             {labelOf(INCIDENT_CATEGORIES, incident.category)}
                           </div>
                         )}
@@ -558,7 +558,7 @@ export default function IncidentDetailPage() {
                           <select
                             value={draft.incident_type ?? ''}
                             onChange={(e) => setDraft({ ...draft, incident_type: e.target.value })}
-                            className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
+                            className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
                           >
                             <option value="">—</option>
                             {INCIDENT_TYPES.map((c) => (
@@ -568,7 +568,7 @@ export default function IncidentDetailPage() {
                             ))}
                           </select>
                         ) : (
-                          <div className="flex min-h-10 items-center rounded border border-navy/20 px-3 text-sm">
+                          <div className="flex min-h-10 items-center rounded border border-line/20 px-3 text-sm">
                             {labelOf(INCIDENT_TYPES, incident.incident_type)}
                           </div>
                         )}
@@ -586,7 +586,7 @@ export default function IncidentDetailPage() {
                               : setIncident({ ...incident, potential_impact: e.target.value })
                           }
                           onBlur={(e) => !editing && saveIncident({ ...incident, potential_impact: e.target.value })}
-                          className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                          className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                         />
                       </Field>
                       <Field label="Immediate Action Taken (if any)">
@@ -601,7 +601,7 @@ export default function IncidentDetailPage() {
                           onBlur={(e) =>
                             !editing && saveIncident({ ...incident, immediate_action_taken: e.target.value })
                           }
-                          className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                          className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                         />
                       </Field>
                     </div>
@@ -609,18 +609,18 @@ export default function IncidentDetailPage() {
                 </div>
 
                 {/* Location card */}
-                <section className="h-fit rounded-md border border-navy/15 bg-white shadow-sm">
+                <section className="h-fit rounded-md border border-line/15 bg-surface shadow-card">
                   <div className="flex flex-wrap items-start justify-between gap-2 px-4 pt-4">
-                    <h2 className="text-sm font-semibold text-navy">Incident Location</h2>
+                    <h2 className="text-sm font-semibold text-ink">Incident Location</h2>
                     <button
                       type="button"
                       onClick={useMyLocation}
-                      className="inline-flex min-h-9 items-center gap-2 rounded-md border border-navy/20 px-3 text-xs font-semibold text-navy hover:bg-stripe"
+                      className="inline-flex min-h-9 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2"
                     >
                       <LocateFixed size={14} aria-hidden /> Use My Location
                     </button>
                   </div>
-                  <div className="mt-2 flex gap-4 border-b border-navy/10 px-4">
+                  <div className="mt-2 flex gap-4 border-b border-line/10 px-4">
                     {[
                       { id: 'map', label: 'Map View' },
                       { id: 'details', label: 'Details View' },
@@ -631,8 +631,8 @@ export default function IncidentDetailPage() {
                         onClick={() => setLocationView(v.id)}
                         className={`pb-2 text-xs ${
                           locationView === v.id
-                            ? 'border-b-2 border-primary font-semibold text-navy'
-                            : 'border-b-2 border-transparent text-muted hover:text-navy'
+                            ? 'border-b-2 border-primary font-semibold text-ink'
+                            : 'border-b-2 border-transparent text-muted hover:text-ink'
                         }`}
                       >
                         {v.label}
@@ -652,13 +652,13 @@ export default function IncidentDetailPage() {
                           saveIncident(next);
                         }}
                       />
-                      <div className="pointer-events-none absolute right-7 top-7 z-[400] rounded border border-navy/15 bg-white px-3 py-2 text-xs shadow-sm">
-                        <p className="font-semibold text-navy">Incident Location</p>
+                      <div className="pointer-events-none absolute right-7 top-7 z-[400] rounded border border-line/15 bg-surface px-3 py-2 text-xs shadow-card">
+                        <p className="font-semibold text-ink">Incident Location</p>
                         <p className="text-muted">{incident.location_label}</p>
                       </div>
                     </div>
                   ) : (
-                    <dl className="divide-y divide-navy/5 px-4 py-2">
+                    <dl className="divide-y divide-line/5 px-4 py-2">
                       <Row label="Location" value={incident.location_label} />
                       <Row label="Capture Method" value={incident.location_capture_method || '—'} />
                       <Row label="Pin Adjusted" value={incident.location_user_adjusted ? 'Yes' : 'No'} />
@@ -684,13 +684,13 @@ export default function IncidentDetailPage() {
           )}
 
           {tab === 'location' && (
-            <section className="rounded-md border border-navy/15 bg-white shadow-sm">
+            <section className="rounded-md border border-line/15 bg-surface shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-2 px-4 pt-4">
-                <h2 className="text-sm font-semibold text-navy">Incident Location</h2>
+                <h2 className="text-sm font-semibold text-ink">Incident Location</h2>
                 <button
                   type="button"
                   onClick={useMyLocation}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-md border border-navy/20 px-3 text-xs font-semibold text-navy hover:bg-stripe"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2"
                 >
                   <LocateFixed size={14} aria-hidden /> Use My Location
                 </button>
@@ -734,7 +734,7 @@ export default function IncidentDetailPage() {
                 {(incident.attachments ?? []).map((att, i) => {
                   const key = att.id ?? att.photo_url ?? i;
                   return (
-                    <figure key={key} className="relative overflow-hidden rounded border border-navy/10">
+                    <figure key={key} className="relative overflow-hidden rounded border border-line/10">
                       {(att.previewUrl || att.photo_url) && (
                         <img
                           src={att.previewUrl || att.photo_url}
@@ -767,7 +767,7 @@ export default function IncidentDetailPage() {
                 rows={3}
                 value={updateBody}
                 onChange={(e) => setUpdateBody(e.target.value)}
-                className="w-full rounded border border-navy/20 px-3 py-2 text-sm"
+                className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
                 placeholder="Add an update…"
               />
               <button
@@ -788,7 +788,7 @@ export default function IncidentDetailPage() {
               </button>
               <ul className="mt-4 space-y-3">
                 {(incident.updates ?? []).map((u) => (
-                  <li key={u.id} className="border-t border-navy/10 pt-3 text-sm">
+                  <li key={u.id} className="border-t border-line/10 pt-3 text-sm">
                     <p>{u.body}</p>
                     <p className="text-xs text-muted">
                       {u.author_name || 'User'} · {fmtDateTime(u.created_at)}
@@ -829,7 +829,7 @@ export default function IncidentDetailPage() {
               />
               <div>
                 <span className="mb-1 block text-xs text-muted">Deficiency Level</span>
-                <div className="flex min-h-10 items-center gap-2 rounded border border-navy/20 px-3 text-sm">
+                <div className="flex min-h-10 items-center gap-2 rounded border border-line/20 px-3 text-sm">
                   <span className="h-2 w-2 rounded-full" style={{ background: level?.color }} aria-hidden />
                   {level?.label ?? '—'}
                 </div>
@@ -850,7 +850,7 @@ export default function IncidentDetailPage() {
                   <li key={s.value} className="relative flex flex-1 flex-col items-center text-center">
                     {i > 0 && (
                       <span
-                        className={`absolute right-1/2 top-2.5 h-0.5 w-full ${i <= step ? 'bg-primary' : 'bg-navy/15'}`}
+                        className={`absolute right-1/2 top-2.5 h-0.5 w-full ${i <= step ? 'bg-primary' : 'bg-line/15'}`}
                         aria-hidden
                       />
                     )}
@@ -860,13 +860,13 @@ export default function IncidentDetailPage() {
                           ? 'border-success bg-success text-white'
                           : current
                             ? 'border-primary bg-primary text-white'
-                            : 'border-navy/20 bg-white'
+                            : 'border-line/20 bg-surface'
                       }`}
                     >
                       {done && <Check size={12} aria-hidden />}
                     </span>
                     <span
-                      className={`mt-1.5 text-[10px] leading-tight ${current ? 'font-semibold text-navy' : 'text-muted'}`}
+                      className={`mt-1.5 text-[10px] leading-tight ${current ? 'font-semibold text-ink' : 'text-muted'}`}
                     >
                       {STEP_LABELS[i]}
                     </span>
@@ -923,7 +923,7 @@ export default function IncidentDetailPage() {
                       setIncident(next);
                       saveIncident(next);
                     }}
-                    className="min-h-10 w-full rounded border border-navy/20 px-3 pr-9 text-sm"
+                    className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 pr-9 text-sm text-ink"
                   />
                   <Calendar
                     size={15}
@@ -967,14 +967,14 @@ export default function IncidentDetailPage() {
                 type="button"
                 onClick={() => setStatusOpen((v) => !v)}
                 aria-expanded={statusOpen}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-navy/25 px-3.5 text-sm font-semibold text-navy hover:bg-stripe"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-line/25 px-3.5 text-sm font-semibold text-ink hover:bg-surface-2"
               >
                 <RefreshCw size={16} aria-hidden /> Change Status
               </button>
               {statusOpen && (
                 <select
                   autoFocus
-                  className="min-h-10 rounded border border-navy/20 px-2 text-sm"
+                  className="min-h-10 rounded border border-line/20 bg-surface px-2 text-sm text-ink"
                   value=""
                   onChange={(e) => e.target.value && changeStatus(e.target.value)}
                 >
@@ -996,7 +996,7 @@ export default function IncidentDetailPage() {
                     setIncident(next);
                     saveIncident(next);
                   }}
-                  className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
+                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
                 >
                   <option value="">Select a SAT re-inspection…</option>
                   {reinspections.map((row) => (

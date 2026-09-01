@@ -81,7 +81,7 @@ export default function DeficiencyLevelsSection({ draft, onChange }) {
       >
         <div className="space-y-4">
           {ordered.map((row, i) => (
-            <article key={row.level} className="rounded-md border border-navy/15 p-4">
+            <article key={row.level} className="rounded-md border border-line/15 p-4">
               <div className="mb-3 flex items-center gap-2.5">
                 <span
                   className="h-8 w-1.5 shrink-0 rounded-full"
@@ -89,7 +89,7 @@ export default function DeficiencyLevelsSection({ draft, onChange }) {
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-navy">{row.label || `Level ${row.level}`}</p>
+                  <p className="text-sm font-bold text-ink">{row.label || `Level ${row.level}`}</p>
                   <p className="text-xs text-muted">
                     Recorded on the form as {row.level}
                     {severityOrder !== 'unset' &&

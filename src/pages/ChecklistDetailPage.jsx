@@ -494,7 +494,7 @@ export default function ChecklistDetailPage() {
       <button
         type="button"
         onClick={goBack}
-        className="-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -503,7 +503,7 @@ export default function ChecklistDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-bold leading-tight text-navy sm:text-[1.65rem]">{schema.title}</h1>
+            <h1 className="text-xl font-bold leading-tight text-ink sm:text-[1.65rem]">{schema.title}</h1>
             {/* A reference sheet has no workflow state — it is never drafted,
                 submitted or acknowledged, so it carries no status pill. */}
             {!isReference && (
@@ -528,7 +528,7 @@ export default function ChecklistDetailPage() {
               type="button"
               onClick={() => save()}
               disabled={saving}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-primary/40 bg-white px-3 py-2 text-sm font-medium text-primary"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-primary/40 bg-surface px-3 py-2 text-sm font-medium text-primary"
             >
               <Save className="h-4 w-4" />
               {saving ? 'Saving…' : 'Save Draft'}
@@ -544,7 +544,7 @@ export default function ChecklistDetailPage() {
             // reference-sheet case: any open preview toggles closed.
             onClick={previewUrl ? closePreview : handleShowPreview}
             disabled={previewing}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink"
           >
             <Eye className="h-4 w-4" />
             {previewing
@@ -583,7 +583,7 @@ export default function ChecklistDetailPage() {
                 await persistSubmission(next);
                 navigate(`/checklists/${next.id}`);
               }}
-              className="min-h-11 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm sm:min-h-10"
+              className="min-h-11 rounded-md border border-line/20 bg-surface px-3 py-2 text-sm text-ink sm:min-h-10"
             >
               Create correction
             </button>
@@ -612,8 +612,8 @@ export default function ChecklistDetailPage() {
       )}
 
       {record.status === 'submitted' && ['om', 'coo'].includes(profile?.role) && (
-        <section className="rounded-md border border-navy/15 bg-white p-4">
-          <h2 className="text-sm font-semibold text-navy">OM acknowledgment</h2>
+        <section className="rounded-md border border-line/15 bg-surface p-4">
+          <h2 className="text-sm font-semibold text-ink">OM acknowledgment</h2>
           <p className="mt-1 text-sm text-muted">
             The submitted answers stay frozen. Acknowledgment appends your signature and regenerates the overlay PDF.
           </p>
@@ -648,7 +648,7 @@ export default function ChecklistDetailPage() {
         <iframe
           title={`${schema.title} — approved PDF`}
           src={previewUrl}
-          className="block h-[calc(100dvh-13rem)] min-h-[420px] w-full rounded-lg border border-navy/15 bg-stripe"
+          className="block h-[calc(100dvh-13rem)] min-h-[420px] w-full rounded-lg border border-line/15 bg-stripe"
         />
       ) : (
       <ChecklistForm

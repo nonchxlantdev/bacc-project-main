@@ -1,4 +1,5 @@
 import { generateSeed, SEED_VERSION } from '../../seed/generateSeed.js';
+import { applyShowcase } from '../../seed/generateShowcase.js';
 import { refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
 import { airportIso, airportYmd } from '../../../lib/belizeTime.js';
 
@@ -69,12 +70,22 @@ export function getStore() {
     /* ignore */
   }
   state = generateSeed();
+  if (import.meta.env.VITE_SHOWCASE === 'true') {
+    applyShowcase(state);
+  }
   persist();
   return state;
 }
 
+export function loadShowcaseData() {
+  return mutateStore((s) => applyShowcase(s));
+}
+
 export function resetStore() {
   state = generateSeed();
+  if (import.meta.env.VITE_SHOWCASE === 'true') {
+    applyShowcase(state);
+  }
   persist();
   emit();
   return state;

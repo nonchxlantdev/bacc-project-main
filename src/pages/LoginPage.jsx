@@ -33,12 +33,12 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-navy p-6">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+      <div className="w-full max-w-md rounded-lg bg-surface p-8 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
           <img src={baccLogoUrl} alt="BACC" className="h-10 w-auto object-contain" />
           <img src={pgiaLogoUrl} alt="PGIA" className="h-10 w-auto rounded bg-navy object-contain p-1" />
         </div>
-        <h1 className="text-xl font-bold text-navy">Sign in</h1>
+        <h1 className="text-xl font-bold text-ink">Sign in</h1>
         <p className="mt-1 text-sm text-muted">BACC operations portal — PMM and VAES checklist demo</p>
         {!configured && (
           <p className="mt-3 rounded bg-stripe px-3 py-2 text-xs text-muted">
@@ -55,10 +55,10 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setEmail(row.email)}
                 className={`rounded-md border px-3 py-2 text-left text-sm ${
-                  email === row.email ? 'border-primary bg-primary/5' : 'border-navy/15 hover:border-primary'
+                  email === row.email ? 'border-primary bg-primary/5' : 'border-line/15 hover:border-primary'
                 }`}
               >
-                <span className="font-medium text-navy">{row.full_name}</span>
+                <span className="font-medium text-ink">{row.full_name}</span>
                 <span className="mt-0.5 block text-xs text-muted">
                   {row.position} · {row.department}
                 </span>
@@ -74,7 +74,7 @@ export default function LoginPage() {
               required={configured}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded border border-navy/20 px-3 py-2"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-ink"
             />
           </label>
           <label className="block">
@@ -84,7 +84,7 @@ export default function LoginPage() {
               required={configured}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-navy/20 px-3 py-2"
+              className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-ink"
             />
           </label>
           {(localError || error) && <p className="text-sm text-alert">{localError || error}</p>}

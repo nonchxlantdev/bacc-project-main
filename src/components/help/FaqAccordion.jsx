@@ -19,7 +19,7 @@ function FaqItem({ item, forceOpen }) {
     <details ref={ref} open={open} className="group px-4">
       <summary
         onClick={onSummaryClick}
-        className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium text-navy marker:hidden hover:text-primary"
+        className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium text-ink marker:hidden hover:text-primary"
       >
         {item.q}
         <ChevronDown
@@ -42,12 +42,12 @@ export default function FaqAccordion({ group, openAll }) {
   return (
     <section
       id={group.id}
-      className="scroll-mt-4 rounded-lg border border-navy/10 bg-white shadow-sm"
+      className="scroll-mt-4 rounded-lg border border-line/10 bg-surface shadow-card"
     >
-      <h2 className="border-b border-navy/10 px-4 py-3 text-sm font-bold uppercase tracking-wide text-navy">
+      <h2 className="border-b border-line/10 px-4 py-3 text-sm font-bold uppercase tracking-wide text-ink">
         {group.title}
       </h2>
-      <div className="divide-y divide-navy/5">
+      <div className="divide-y divide-line/5">
         {group.questions.map((item) => (
           <FaqItem key={item.q} item={item} forceOpen={openAll} />
         ))}

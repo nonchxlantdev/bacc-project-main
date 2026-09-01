@@ -34,7 +34,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
     <div className="mt-3">
       <div className="overflow-x-auto">
         <table className="table-stack w-full min-w-full text-left text-sm">
-          <thead className="bg-navy text-white">
+          <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
               <th className="w-10 px-2 py-2 text-center">#</th>
               {columns.map((col) => (
@@ -49,7 +49,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
             {rows.map((row, i) => {
               const beyond = i >= printed;
               return (
-                <tr key={i} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+                <tr key={i} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                   <td
                     data-label="#"
                     className={`px-2 py-2 text-center text-xs font-semibold ${
@@ -77,7 +77,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
                           disabled={disabled}
                           aria-label={`${col.label}, row ${i + 1}`}
                           onChange={(e) => setCell(i, col.key, e.target.value)}
-                          className="min-h-10 w-full min-w-0 rounded border border-navy/15 px-2 text-sm sm:min-h-9"
+                          className="min-h-10 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink sm:min-h-9"
                         />
                       )}
                     </td>
@@ -109,7 +109,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
         <button
           type="button"
           onClick={addRow}
-          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-navy/25 bg-white px-3 text-xs font-semibold text-primary hover:border-primary sm:min-h-9"
+          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary sm:min-h-9"
         >
           <Plus className="h-3.5 w-3.5" />
           Add row

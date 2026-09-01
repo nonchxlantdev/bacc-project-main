@@ -33,13 +33,13 @@ export default function HowThisWorks({ incident }) {
                     ? 'border-success bg-success text-white'
                     : current
                       ? 'border-primary bg-primary text-white'
-                      : 'border-navy/20 bg-white text-muted'
+                      : 'border-line/20 bg-line/15 text-muted'
                 }`}
               >
                 {done ? <Check size={11} aria-hidden /> : i + 1}
               </span>
               <div className="min-w-0">
-                <p className={`text-xs font-semibold ${current ? 'text-navy' : 'text-muted'}`}>
+                <p className={`text-xs font-semibold ${current ? 'text-ink' : 'text-muted'}`}>
                   {status.label}
                   {current && <span className="ml-1.5 font-normal text-primary">— you are here</span>}
                 </p>
@@ -53,7 +53,7 @@ export default function HowThisWorks({ incident }) {
       {incident?.source_item_code && (
         <p
           className={`mt-4 rounded-md border px-3 py-2 text-xs leading-relaxed ${
-            cleared ? 'border-success bg-success-soft text-navy' : 'border-navy/15 bg-stripe text-muted'
+            cleared ? 'border-success bg-success-soft text-ink' : 'border-line/15 bg-stripe text-muted'
           }`}
         >
           {cleared ? (

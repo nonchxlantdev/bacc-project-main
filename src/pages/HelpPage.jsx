@@ -28,7 +28,7 @@ export default function HelpPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-navy sm:text-2xl">Help</h1>
+        <h1 className="text-xl font-bold text-ink sm:text-2xl">Help</h1>
         <p className="mt-1 text-sm text-muted">
           Guidance on using the portal. If anything here does not match what you see on screen, contact the Operations Manager.
         </p>
@@ -42,7 +42,7 @@ export default function HelpPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder='Search help (for example "signature" or "NO SAT")'
-          className="min-h-11 w-full rounded-md border border-navy/20 bg-white pl-9 pr-3 text-sm"
+          className="min-h-11 w-full rounded-md border border-line/20 bg-surface pl-9 pr-3 text-sm"
         />
       </label>
 

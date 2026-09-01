@@ -35,7 +35,7 @@ export default function VerificationPanel({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-navy/10 text-left text-xs font-semibold text-muted">
+            <tr className="border-b border-line/10 text-left text-xs font-semibold text-muted">
               <th className="py-2 pr-3">Item</th>
               <th className="py-2 pr-3" />
               <th className="w-16 py-2 text-center">SAT</th>
@@ -46,7 +46,7 @@ export default function VerificationPanel({
           </thead>
           <tbody>
             <tr>
-              <td className="py-3 pr-3 align-top font-medium text-navy">{code}</td>
+              <td className="py-3 pr-3 align-top font-medium text-ink">{code}</td>
               <td className="py-3 pr-3 align-top">{incident.source_item_description}</td>
               <td className="py-3 text-center align-top">
                 <RadioButton
@@ -70,7 +70,7 @@ export default function VerificationPanel({
                   <Link
                     to={`/checklists/${incident.submission_id}`}
                     title="View checklist"
-                    className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-navy/20 text-navy hover:bg-stripe"
+                    className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-line/20 text-ink hover:bg-surface-2"
                   >
                     <Camera size={16} aria-hidden />
                     <span className="sr-only">View checklist</span>
@@ -84,11 +84,11 @@ export default function VerificationPanel({
         </table>
       </div>
 
-      <p className="mt-2 rounded-md border border-navy/15 bg-stripe px-3 py-2 text-xs leading-relaxed text-muted">
+      <p className="mt-2 rounded-md border border-line/15 bg-stripe px-3 py-2 text-xs leading-relaxed text-muted">
         {VERIFICATION_HINT}
       </p>
 
-      <p className="mt-3 border-t border-navy/10 pt-3 text-xs text-muted">
+      <p className="mt-3 border-t border-line/10 pt-3 text-xs text-muted">
         Recorded <strong className="font-semibold text-alert">NO SAT</strong> on{' '}
         {fmtDate(incident.source_inspection_date)} in {incident.source_template_code}.
         {incident.verification?.result === 'sat' && (
@@ -109,13 +109,13 @@ export default function VerificationPanel({
         <img
           src={incident.verification.photo_url}
           alt="Verification evidence"
-          className="mt-2 h-32 rounded border border-navy/15 object-cover"
+          className="mt-2 h-32 rounded border border-line/15 object-cover"
         />
       )}
 
       {verifyDraft && (
         <div className="mt-3 rounded-md border border-success/40 bg-success-soft/60 p-3">
-          <p className="text-sm font-semibold text-navy">Verify {code} back to SAT</p>
+          <p className="text-sm font-semibold text-ink">Verify {code} back to SAT</p>
           <p className="mt-0.5 text-xs text-muted">
             Records that corrective action was completed and the item re-inspected.
             {!SYNC_SAT_ON_VERIFICATION && ' The original checklist stays untouched.'}
@@ -125,10 +125,10 @@ export default function VerificationPanel({
             value={verifyDraft.note}
             onChange={(e) => onDraftChange({ ...verifyDraft, note: e.target.value })}
             placeholder="What was done, and what was observed on re-inspection…"
-            className="mt-2 w-full rounded border border-navy/20 px-3 py-2 text-sm"
+            className="mt-2 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-navy/20 bg-white px-3 text-xs font-semibold text-navy hover:bg-stripe">
+            <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2">
               <ImagePlus size={14} aria-hidden /> Attach evidence
               <input
                 type="file"
@@ -149,7 +149,7 @@ export default function VerificationPanel({
             <button
               type="button"
               onClick={() => onDraftChange(null)}
-              className="min-h-9 rounded-md border border-navy/20 bg-white px-3 text-xs font-semibold text-navy hover:bg-stripe"
+              className="min-h-9 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2"
             >
               Cancel
             </button>

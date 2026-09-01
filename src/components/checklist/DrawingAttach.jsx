@@ -38,8 +38,8 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
   }
 
   return (
-    <div className="mt-3 rounded-md border border-dashed border-navy/25 bg-stripe/60 p-3">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-navy">
+    <div className="mt-3 rounded-md border border-dashed border-line/25 bg-stripe/60 p-3">
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         <Paperclip className="h-3.5 w-3.5 text-primary" aria-hidden />
         Drawing
         {items.length > 0 && <span className="font-normal normal-case tracking-normal text-muted">· {items.length}</span>}
@@ -48,9 +48,9 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
       {items.length > 0 && (
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {items.map((item) => (
-            <li key={item.id} className="overflow-hidden rounded border border-navy/15 bg-white">
-              <img src={item.dataUri} alt={item.label} className="h-32 w-full bg-white object-contain" />
-              <div className="flex items-center gap-1.5 border-t border-navy/10 p-1.5">
+            <li key={item.id} className="overflow-hidden rounded border border-line/15 bg-surface">
+              <img src={item.dataUri} alt={item.label} className="h-32 w-full bg-stripe object-contain" />
+              <div className="flex items-center gap-1.5 border-t border-line/10 p-1.5">
                 <input
                   value={item.label}
                   disabled={disabled}
@@ -59,7 +59,7 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
                   onChange={(e) =>
                     onChange(items.map((row) => (row.id === item.id ? { ...row, label: e.target.value } : row)))
                   }
-                  className="min-h-9 min-w-0 flex-1 rounded border border-navy/15 px-2 text-xs"
+                  className="min-h-9 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-xs text-ink"
                 />
                 {!disabled && (
                   <button
@@ -82,7 +82,7 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-navy/25 bg-white px-3 text-xs font-semibold text-primary hover:border-primary sm:min-h-9"
+            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary sm:min-h-9"
           >
             <Paperclip className="h-3.5 w-3.5" />
             {items.length ? 'Attach another drawing' : 'Attach drawing'}

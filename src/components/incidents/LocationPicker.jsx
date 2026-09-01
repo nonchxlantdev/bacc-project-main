@@ -125,7 +125,7 @@ export default function LocationPicker({
     <div className="relative">
       <div
         id={idRef.current}
-        className="overflow-hidden rounded-md border border-navy/15"
+        className="overflow-hidden rounded-md border border-line/15"
         style={{ height }}
       />
       {showLayerToggle && (
@@ -134,7 +134,7 @@ export default function LocationPicker({
           onClick={() => setLayer((v) => (v === 'satellite' ? 'street' : 'satellite'))}
           title={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
           aria-label={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
-          className="absolute bottom-3 right-3 z-[400] inline-flex min-h-11 items-center gap-1.5 rounded border border-navy/20 bg-white px-3 text-xs font-semibold text-navy shadow-sm hover:bg-stripe sm:min-h-9 sm:px-2.5"
+          className="absolute bottom-3 right-3 z-[400] inline-flex min-h-11 items-center gap-1.5 rounded border border-line/20 bg-surface px-3 text-xs font-semibold text-ink shadow-card hover:bg-surface-2 sm:min-h-9 sm:px-2.5"
         >
           <Layers size={14} aria-hidden />
           {LAYERS[layer]?.label}

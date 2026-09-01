@@ -91,7 +91,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy sm:text-2xl">Reports</h1>
+          <h1 className="text-xl font-bold text-ink sm:text-2xl">Reports</h1>
           <p className="text-sm text-muted">
             How the inspection programme is doing, in plain terms. Everything below counts scheduled
             inspections — the checks each team is supposed to complete.
@@ -106,7 +106,7 @@ export default function ReportsPage() {
           />
           <button
             type="button"
-            className="min-h-11 flex-1 rounded-md border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy hover:bg-stripe sm:flex-none"
+            className="min-h-11 flex-1 rounded-md border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2 sm:flex-none"
             onClick={() =>
               downloadCsv(
                 'inspection-summary.csv',
@@ -184,9 +184,9 @@ export default function ReportsPage() {
         {late.length === 0 ? (
           <Empty>Nothing has been filed late.</Empty>
         ) : (
-          <div className="overflow-hidden rounded-md border border-navy/10">
+          <div className="overflow-hidden rounded-md border border-line/10">
             <table className="table-stack w-full text-left text-sm">
-              <thead className="bg-navy text-white">
+              <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
                 <tr>
                   <th className="px-3 py-2 font-semibold">Inspection</th>
                   <th className="px-3 py-2 font-semibold">Team</th>
@@ -197,9 +197,9 @@ export default function ReportsPage() {
               </thead>
               <tbody>
                 {late.map((row, i) => (
-                  <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+                  <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                     <td data-label="Inspection" className="px-3 py-2">
-                      <span className="font-medium text-navy">{row.title || row.code}</span>
+                      <span className="font-medium text-ink">{row.title || row.code}</span>
                       <span className="mt-0.5 block text-xs text-muted">{row.code}</span>
                     </td>
                     <td data-label="Team" className="px-3 py-2 text-muted">{row.team}</td>
@@ -235,13 +235,13 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
     <Dropdown open={open} onOpenChange={onOpenChange} align="left" className="flex-1 sm:flex-none">
       <Dropdown.Toggle
         haspopup="true"
-        className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium text-navy transition hover:bg-stripe focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-          open ? 'border-primary' : 'border-navy/20'
+        className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border bg-surface px-3 py-2 text-sm font-medium text-ink transition hover:bg-surface-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          open ? 'border-primary' : 'border-line/20'
         }`}
       >
         <SlidersHorizontal className="h-4 w-4" aria-hidden />
         Reports
-        <span className="rounded-full bg-navy/10 px-1.5 text-xs font-semibold tabular-nums">
+        <span className="rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary tabular-nums">
           {visible.size}/{SECTIONS.length}
         </span>
       </Dropdown.Toggle>
@@ -251,7 +251,7 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
       <Dropdown.Menu
         panel
         align="left"
-        className="z-40 w-[min(18rem,calc(100vw-2rem))] border-navy/15 p-1.5"
+        className="z-40 w-[min(18rem,calc(100vw-2rem))] border-line/15 p-1.5"
       >
         <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
           Show on this page
@@ -263,7 +263,7 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
             <label
               key={section.id}
               className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 sm:min-h-0 ${
-                last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-stripe'
+                last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-surface-2'
               }`}
               title={last ? 'At least one report must stay visible' : undefined}
             >
@@ -275,7 +275,7 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
                 className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-navy">{section.label}</span>
+                <span className="block text-sm font-medium text-ink">{section.label}</span>
                 <span className="block text-xs text-muted">{section.hint}</span>
               </span>
             </label>
@@ -290,18 +290,18 @@ const HEADLINE_TONES = {
   good: 'border-success/30 bg-success-soft text-success',
   warn: 'border-amber-300 bg-amber-50 text-amber-700',
   alert: 'border-alert/30 bg-alert-soft text-alert',
-  neutral: 'border-navy/15 bg-stripe text-navy',
+  neutral: 'border-line/15 bg-stripe text-ink',
 };
 
 function Headline({ tone, Icon, value, label, caption }) {
   return (
-    <div className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-line/10 bg-surface p-4 shadow-card">
       <div className="flex items-center gap-3">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${HEADLINE_TONES[tone]}`}>
           <Icon className="h-5 w-5" aria-hidden />
         </span>
         <p className="min-w-0">
-          <span className="block text-2xl font-bold leading-tight text-navy">{value}</span>
+          <span className="block text-2xl font-bold leading-tight text-ink">{value}</span>
           <span className="block text-sm text-ink">{label}</span>
         </p>
       </div>
@@ -312,8 +312,8 @@ function Headline({ tone, Icon, value, label, caption }) {
 
 function Panel({ title, caption, children }) {
   return (
-    <section className="rounded-lg border border-navy/10 bg-white p-4 shadow-sm sm:p-5">
-      <h2 className="text-base font-bold text-navy">{title}</h2>
+    <section className="rounded-lg border border-line/10 bg-surface p-4 shadow-card sm:p-5">
+      <h2 className="text-base font-bold text-ink">{title}</h2>
       <p className="mb-4 mt-0.5 text-xs leading-relaxed text-muted">{caption}</p>
       {children}
     </section>
@@ -353,12 +353,12 @@ function WeeklyBars({ weeks }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="relative border-b-2 border-l-2 border-navy/20" style={{ height: H }}>
+          <div className="relative border-b-2 border-l-2 border-line/20" style={{ height: H }}>
             {ticks.slice(1).map((t) => (
               <span
                 key={t}
                 aria-hidden
-                className="absolute inset-x-0 border-t border-dashed border-navy/10"
+                className="absolute inset-x-0 border-t border-dashed border-line/10"
                 style={{ bottom: `${(t / max) * 100}%` }}
               />
             ))}
@@ -369,7 +369,7 @@ function WeeklyBars({ weeks }) {
                 return (
                   <div key={week.key} className="flex h-full min-w-0 flex-1 flex-col justify-end">
                     {total > 0 && (
-                      <p className="mb-0.5 text-center text-[11px] font-bold tabular-nums text-navy">
+                      <p className="mb-0.5 text-center text-[11px] font-bold tabular-nums text-ink">
                         {total}
                       </p>
                     )}
@@ -408,7 +408,7 @@ function WeeklyBars({ weeks }) {
         </div>
       </div>
 
-      <figcaption className="mt-3 flex flex-wrap items-center gap-4 border-t border-navy/10 pt-3 text-xs text-muted">
+      <figcaption className="mt-3 flex flex-wrap items-center gap-4 border-t border-line/10 pt-3 text-xs text-muted">
         <Key className="bg-success">Filed on time</Key>
         <Key className="bg-amber-400">Filed late</Key>
         <span className="ml-auto">Vertical axis: number of inspections</span>

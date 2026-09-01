@@ -22,6 +22,11 @@ function spaFallback404Plugin() {
 
 export default defineConfig({
   base,
+  define: {
+    'import.meta.env.VITE_SHOWCASE': JSON.stringify(
+      process.env.GITHUB_PAGES === 'true' || process.env.VITE_SHOWCASE === 'true' ? 'true' : '',
+    ),
+  },
   plugins: [
     react(),
     tailwindcss(),

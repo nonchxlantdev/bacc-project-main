@@ -10,8 +10,8 @@ import { useId } from 'react';
 
 export function Card({ title, children }) {
   return (
-    <section className="rounded-md border border-navy/15 bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-sm font-semibold text-navy">{title}</h2>
+    <section className="rounded-md border border-line/15 bg-surface p-4 shadow-card">
+      <h2 className="mb-3 text-sm font-semibold text-ink">{title}</h2>
       {children}
     </section>
   );
@@ -29,7 +29,7 @@ export function RadioButton({ checked, tone, label, onClick }) {
       aria-label={label}
       title={label}
       className={`inline-flex h-5 w-5 items-center justify-center rounded-full border-2 transition ${
-        checked ? ring : 'border-navy/25 hover:border-navy/50'
+        checked ? ring : 'border-line/25 hover:border-line/50'
       }`}
     >
       {checked && <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />}
@@ -57,9 +57,9 @@ export function Field({ label, children }) {
 
 export function StripField({ label, value, sub, strong }) {
   return (
-    <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-navy/10 lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
+    <div className="min-w-0 lg:min-w-[8rem] lg:border-l lg:border-line/10 lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
       <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-0.5 text-sm ${strong ? 'font-semibold text-navy' : 'text-ink'}`}>{value || '—'}</p>
+      <p className={`mt-0.5 text-sm ${strong ? 'font-semibold text-ink' : 'text-ink'}`}>{value || '—'}</p>
       {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>
   );
@@ -89,7 +89,7 @@ export function SelectField({ label, value, onChange, options }) {
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-10 w-full rounded border border-navy/20 px-2 text-sm"
+        className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

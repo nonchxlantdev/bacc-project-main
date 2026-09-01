@@ -13,13 +13,13 @@ import { Check } from 'lucide-react';
 /** A titled block of related settings. */
 export function Panel({ title, description, children, footer }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-      <header className="border-b border-navy/10 px-5 py-4">
-        <h2 className="text-base font-bold text-navy">{title}</h2>
+    <section className="overflow-hidden rounded-lg border border-line/10 bg-surface shadow-card">
+      <header className="border-b border-line/10 px-5 py-4">
+        <h2 className="text-base font-bold text-ink">{title}</h2>
         {description && <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p>}
       </header>
       <div className="space-y-5 px-5 py-5">{children}</div>
-      {footer && <footer className="border-t border-navy/10 bg-stripe px-5 py-3">{footer}</footer>}
+      {footer && <footer className="border-t border-line/10 bg-stripe px-5 py-3">{footer}</footer>}
     </section>
   );
 }
@@ -35,7 +35,7 @@ export function Row({ label, effect, htmlFor, children, stacked }) {
   return (
     <div className={stacked ? 'space-y-2' : 'grid gap-2 sm:grid-cols-[minmax(0,1fr)_18rem] sm:items-start sm:gap-6'}>
       <div className="min-w-0">
-        <label htmlFor={htmlFor} className="block text-sm font-semibold text-navy">
+        <label htmlFor={htmlFor} className="block text-sm font-semibold text-ink">
           {label}
         </label>
         {effect && <p className="mt-0.5 text-xs leading-relaxed text-muted">{effect}</p>}
@@ -53,7 +53,7 @@ export function TextInput({ id, value, onChange, placeholder, type = 'text', ...
       value={value ?? ''}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="min-h-11 w-full rounded border border-navy/20 bg-white px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+      className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
       {...rest}
     />
   );
@@ -79,7 +79,7 @@ export function NumberInput({ id, value, onChange, min = 0, max, suffix, unsetLa
         // No placeholder: the unset state is spelled out in full beside the
         // field, and a long placeholder just truncates inside a narrow input.
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="min-h-11 w-20 rounded border border-navy/20 bg-white px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+        className="min-h-11 w-20 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
       />
       {suffix && <span className="shrink-0 text-sm text-muted">{suffix}</span>}
       {value == null && <span className="shrink-0 text-xs text-muted">· {unsetLabel}</span>}
@@ -95,7 +95,7 @@ export function TextArea({ id, value, onChange, placeholder, rows = 2 }) {
       value={value ?? ''}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded border border-navy/20 bg-white px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     />
   );
 }
@@ -113,16 +113,16 @@ export function Toggle({ checked, onChange, label, disabled }) {
     >
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-          checked ? 'bg-primary' : 'bg-navy/20 group-hover:bg-navy/30'
+          checked ? 'bg-primary' : 'bg-line/20 group-hover:bg-line/30'
         }`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow transition-all ${
             checked ? 'left-[1.375rem]' : 'left-0.5'
           }`}
         />
       </span>
-      {label && <span className={checked ? 'font-medium text-navy' : 'text-muted'}>{label}</span>}
+      {label && <span className={checked ? 'font-medium text-ink' : 'text-muted'}>{label}</span>}
     </button>
   );
 }
@@ -137,7 +137,7 @@ export function ChoiceCards({ value, onChange, options, name }) {
           <label
             key={option.value}
             className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition ${
-              active ? 'border-primary bg-primary/5' : 'border-navy/15 bg-white hover:border-navy/30'
+              active ? 'border-primary bg-primary/5' : 'border-line/15 bg-surface hover:border-line/30'
             }`}
           >
             <input
@@ -149,13 +149,13 @@ export function ChoiceCards({ value, onChange, options, name }) {
             />
             <span
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                active ? 'border-primary bg-primary' : 'border-navy/25 bg-white'
+                active ? 'border-primary bg-primary' : 'border-line/25 bg-surface'
               }`}
             >
               {active && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-navy">{option.label}</span>
+              <span className="block text-sm font-semibold text-ink">{option.label}</span>
               {option.hint && <span className="mt-0.5 block text-xs text-muted">{option.hint}</span>}
             </span>
           </label>
@@ -181,12 +181,12 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
             value={entry}
             placeholder={placeholder}
             onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))}
-            className="min-h-11 w-full rounded border border-navy/20 bg-white px-3 text-sm focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
           />
           <button
             type="button"
             onClick={() => onChange(values.filter((_, j) => j !== i))}
-            className="min-h-11 shrink-0 rounded border border-navy/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert sm:min-h-10"
+            className="min-h-11 shrink-0 rounded border border-line/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert sm:min-h-10"
           >
             Remove
           </button>
@@ -195,7 +195,7 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
       <button
         type="button"
         onClick={() => onChange([...values, ''])}
-        className="min-h-11 rounded border border-dashed border-navy/30 px-3 text-sm font-medium text-primary hover:border-primary sm:min-h-10"
+        className="min-h-11 rounded border border-dashed border-line/30 px-3 text-sm font-medium text-primary hover:border-primary sm:min-h-10"
       >
         {addLabel}
       </button>

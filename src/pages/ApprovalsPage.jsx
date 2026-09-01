@@ -115,7 +115,7 @@ export default function ApprovalsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-navy sm:text-2xl">Approvals</h1>
+        <h1 className="text-xl font-bold text-ink sm:text-2xl">Approvals</h1>
         <p className="text-sm text-muted">
           Items waiting on {displayName}. Acknowledgment appends a signature; it does not edit the
           submitted record.
@@ -134,7 +134,7 @@ export default function ApprovalsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by form, team, department or person…"
-            className="min-h-11 w-full rounded border border-navy/20 pl-9 pr-3 text-sm sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
           />
         </div>
         <Select
@@ -159,7 +159,7 @@ export default function ApprovalsPage() {
               setQuery('');
               setTeam('');
             }}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-navy/20 px-3 text-sm font-medium text-navy hover:bg-stripe sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -170,13 +170,13 @@ export default function ApprovalsPage() {
       {loading && <p className="text-muted">Loading…</p>}
 
       {!loading && rows.length === 0 && (
-        <p className="rounded-md border border-navy/10 bg-white p-6 text-sm text-muted">
+        <p className="rounded-md border border-line/10 bg-surface p-6 text-sm text-muted">
           Nothing in your inbox.
         </p>
       )}
 
       {!loading && rows.length > 0 && filtered.length === 0 && (
-        <p className="rounded-md border border-navy/10 bg-white p-6 text-sm text-muted">
+        <p className="rounded-md border border-line/10 bg-surface p-6 text-sm text-muted">
           No approvals match those filters.
         </p>
       )}
@@ -184,22 +184,22 @@ export default function ApprovalsPage() {
       {grouped.map(([groupName, list]) => {
         const { Icon, tile } = teamStyle(groupName);
         return (
-        <section key={groupName} className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
-          <h2 className="flex items-center gap-2 border-b border-navy/10 bg-stripe px-4 py-2.5">
+        <section key={groupName} className="overflow-hidden rounded-lg border border-line/10 bg-surface shadow-card">
+          <h2 className="flex items-center gap-2 border-b border-line/10 bg-stripe px-4 py-2.5">
             <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded ${tile}`}>
               <Icon className="h-4 w-4" aria-hidden />
             </span>
-            <span className="text-sm font-bold text-navy">{groupName}</span>
+            <span className="text-sm font-bold text-ink">{groupName}</span>
             <span className="text-sm font-normal text-muted">· {list.length}</span>
           </h2>
           <ul>
             {list.map((row) => (
               <li
                 key={row.id}
-                className="flex flex-col gap-3 border-b border-navy/5 px-4 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between"
+                className="flex flex-col gap-3 border-b border-line/5 px-4 py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-navy">
+                  <p className="font-medium text-ink">
                     {row.entity?.annex_label ? `${row.entity.annex_label} — ` : ''}
                     {row.entity?.title || row.entity_id}
                   </p>
@@ -221,7 +221,7 @@ export default function ApprovalsPage() {
                   {row.entity?.href && (
                     <Link
                       to={row.entity.href}
-                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-navy/20 px-3 text-sm text-primary hover:bg-stripe sm:min-h-9 sm:flex-none"
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-line/20 px-3 text-sm text-primary hover:bg-surface-2 sm:min-h-9 sm:flex-none"
                     >
                       Open
                     </Link>
@@ -246,8 +246,8 @@ export default function ApprovalsPage() {
 
       {active && (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-navy/50 sm:items-start sm:p-4 sm:pt-10">
-          <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-lg sm:pb-5">
-            <h3 className="text-lg font-bold text-navy">Review approval</h3>
+          <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-lg sm:pb-5">
+            <h3 className="text-lg font-bold text-ink">Review approval</h3>
             <p className="mt-1 text-sm text-muted">{active.entity?.title}</p>
 
             <dl className="mt-3 grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[7rem_minmax(0,1fr)]">
@@ -269,7 +269,7 @@ export default function ApprovalsPage() {
             <label className="mt-3 block text-sm">
               Notes
               <textarea
-                className="mt-1 w-full rounded border border-navy/20 px-3 py-2"
+                className="mt-1 w-full rounded border border-line/20 bg-surface px-3 py-2 text-ink"
                 rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -310,8 +310,8 @@ export default function ApprovalsPage() {
 
 const TAG_TONES = {
   role: 'border-primary/30 bg-primary/5 text-primary',
-  assignee: 'border-teal/40 bg-teal/10 text-navy',
-  default: 'border-navy/15 bg-stripe text-muted',
+  assignee: 'border-teal/40 bg-teal/10 text-ink',
+  default: 'border-line/15 bg-stripe text-muted',
 };
 
 function Tag({ tone = 'default', children }) {

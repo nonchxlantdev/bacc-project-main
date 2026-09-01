@@ -31,22 +31,10 @@ export default function SignoffBlock({
   }
 
   return (
-    <div className="rounded-md border border-navy/20 bg-white p-4">
-      <p className="mb-3 text-sm font-semibold text-navy">{label}</p>
-      <label className="mb-2 block text-xs text-muted">Name</label>
-      <input
-        value={name ?? ''}
-        readOnly={readOnly}
-        onChange={(e) => onChange?.({ name: e.target.value })}
-        className="mb-3 min-h-11 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
-      />
-      <label className="mb-2 block text-xs text-muted">Position</label>
-      <input
-        value={position ?? ''}
-        readOnly={readOnly}
-        onChange={(e) => onChange?.({ position: e.target.value })}
-        className="mb-3 min-h-11 w-full rounded border border-navy/20 px-3 py-2 text-sm read-only:bg-stripe"
-      />
+    <div className="rounded-lg border border-line/20 bg-surface p-4">
+      <p className="mb-3 text-[15px] font-bold text-ink">{label}</p>
+      {/* Approved order: the shortcut comes first, so the field pair below is
+          only for the person who isn't reusing a saved signature. */}
       {canUseStored && (
         <div className="mb-3">
           <button
@@ -70,7 +58,27 @@ export default function SignoffBlock({
           )}
         </div>
       )}
-      <p className="mb-2 text-xs text-muted">Drawn signature</p>
+      <label className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
+        Name
+      </label>
+      <input
+        value={name ?? ''}
+        readOnly={readOnly}
+        onChange={(e) => onChange?.({ name: e.target.value })}
+        className="mb-3 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink read-only:bg-stripe"
+      />
+      <label className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
+        Position
+      </label>
+      <input
+        value={position ?? ''}
+        readOnly={readOnly}
+        onChange={(e) => onChange?.({ position: e.target.value })}
+        className="mb-3 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink read-only:bg-stripe"
+      />
+      <p className="mb-2 font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
+        Drawn signature
+      </p>
       <SignaturePad
         value={signatureDataUri}
         disabled={readOnly}

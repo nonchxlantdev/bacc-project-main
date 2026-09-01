@@ -217,7 +217,7 @@ export default function SettingsPage() {
       </p>
 
       <header>
-        <h1 className="text-xl font-bold text-navy sm:text-2xl">Settings</h1>
+        <h1 className="text-xl font-bold text-ink sm:text-2xl">Settings</h1>
         <p className="max-w-2xl text-sm text-muted">
           {isAdmin
             ? 'Your own preferences, and the configuration that governs how the portal treats inspections and deficiencies across PGIA.'
@@ -249,7 +249,7 @@ export default function SettingsPage() {
                     onClick={() => setActiveId(section.id)}
                     aria-current={on ? 'page' : undefined}
                     className={`flex w-full items-start gap-2.5 rounded-md px-3 py-2.5 text-left transition ${
-                      on ? 'bg-navy text-white' : 'text-navy hover:bg-white'
+                      on ? 'bg-primary text-white' : 'text-ink hover:bg-surface'
                     }`}
                   >
                     <section.Icon
@@ -296,7 +296,7 @@ export default function SettingsPage() {
           {/* The commit bar. Sticky so a long section never hides the way to
               save what you just typed. */}
           {active?.id !== 'demo' && (
-            <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-navy/10 bg-stripe/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0">
+            <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-line/10 bg-stripe/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0">
               <button
                 type="button"
                 disabled={!dirty || busy}
@@ -309,7 +309,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={() => setDraft(structuredClone(committed))}
-                className="inline-flex min-h-11 items-center rounded-md border border-navy/20 bg-white px-4 text-sm font-medium text-navy hover:bg-stripe disabled:opacity-40 sm:min-h-10"
+                className="inline-flex min-h-11 items-center rounded-md border border-line/20 bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-40 sm:min-h-10"
               >
                 Discard
               </button>
@@ -371,9 +371,9 @@ function DemoControls() {
   }, []);
 
   return (
-    <section className="space-y-3 rounded-lg border border-dashed border-navy/30 bg-white p-5">
+    <section className="space-y-3 rounded-lg border border-dashed border-line/30 bg-surface p-5">
       <div>
-        <h2 className="text-base font-bold text-navy">Demo clock</h2>
+        <h2 className="text-base font-bold text-ink">Demo clock</h2>
         <p className="mt-1 text-sm text-muted">
           Due and overdue calculations use America/Belize, not this device&apos;s timezone. Airport
           time is currently {clock?.demoNow ?? '—'}.
@@ -396,6 +396,17 @@ function DemoControls() {
           Generate occurrences
         </DemoButton>
         <DemoButton
+          onClick={async () => {
+            const result = await getRepos().instances.loadShowcase();
+            window.alert(
+              `Loaded sample data: ${result.submissions} checklists, ${result.incidents} incidents, ${result.approvals} pending approvals.`,
+            );
+            window.location.reload();
+          }}
+        >
+          Load showcase data
+        </DemoButton>
+        <DemoButton
           tone="alert"
           onClick={async () => {
             await getRepos().instances.resetDemo();
@@ -415,7 +426,7 @@ function DemoButton({ onClick, tone, children }) {
       type="button"
       onClick={onClick}
       className={`min-h-11 rounded-md border px-3 text-sm font-medium sm:min-h-10 ${
-        tone === 'alert' ? 'border-alert text-alert hover:bg-alert-soft' : 'border-navy/20 text-navy hover:bg-stripe'
+        tone === 'alert' ? 'border-alert text-alert hover:bg-alert-soft' : 'border-line/20 text-ink hover:bg-surface-2'
       }`}
     >
       {children}

@@ -75,7 +75,7 @@ export default function MyChecklistsPage() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy sm:text-2xl">My Checklists</h1>
+          <h1 className="text-xl font-bold text-ink sm:text-2xl">My Checklists</h1>
           <p className="text-sm text-muted">
             Draft, submit, and export inspections. Drafts can be deleted; submitted records cannot.
           </p>
@@ -95,9 +95,9 @@ export default function MyChecklistsPage() {
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-navy/10 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
-          <thead className="bg-navy text-white">
+          <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
               <th className="px-4 py-2 font-semibold">Form</th>
               <th className="px-4 py-2 font-semibold">Date</th>
@@ -122,7 +122,7 @@ export default function MyChecklistsPage() {
               </tr>
             )}
             {rows.map((row, i) => (
-              <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-white'}>
+              <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                 <td data-label="Form" className="px-4 py-2">
                   <Link to={`/checklists/${row.id}`} className="font-medium text-primary hover:underline">
                     {row.schema?.annexLabel || row.schema?.annex_label || row.template_code} — {row.schema?.title}

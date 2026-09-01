@@ -12,14 +12,14 @@ export default function TeamCard({ team, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(team.name)}
-      className="group flex w-full flex-col gap-3 rounded-lg border border-navy/10 bg-white p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group flex w-full flex-col gap-3 rounded-lg border border-line/12 bg-surface p-4 text-left shadow-card transition hover:border-primary/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-start gap-3">
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${team.tile}`}>
           <Icon className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-bold text-navy">{team.name}</p>
+          <p className="truncate text-[15px] font-bold text-ink">{team.name}</p>
           <p className="text-xs text-muted">
             {team.count} {team.count === 1 ? 'form' : 'forms'}
           </p>
@@ -61,7 +61,7 @@ function StatusChip({ overdue, missed, dueSoon }) {
   }
   if (dueSoon > 0) {
     return (
-      <Chip className="border-amber-300 bg-amber-50 text-amber-700" Icon={CalendarClock}>
+      <Chip className="border-caution/35 bg-caution-soft text-[#8a5c14]" Icon={CalendarClock}>
         {dueSoon} due soon
       </Chip>
     );
@@ -89,7 +89,7 @@ export function NewInspectionCard({ onClick, disabled }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex min-h-[8.5rem] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-navy/20 bg-white/60 p-4 text-center text-muted transition hover:border-primary hover:bg-white hover:text-primary disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="flex min-h-[8.5rem] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line/25 bg-surface/60 p-4 text-center text-muted transition hover:border-primary hover:bg-surface hover:text-primary disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <span className="flex h-11 w-11 items-center justify-center rounded-full border border-current">
         <Plus className="h-5 w-5" aria-hidden />
