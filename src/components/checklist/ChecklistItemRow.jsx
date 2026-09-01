@@ -28,7 +28,8 @@ export default function ChecklistItemRow({
 
   return (
     <div
-      className={`${CHECKLIST_GRID} flex flex-col border-b border-navy/10 md:min-h-12 md:items-stretch ${
+      id={`checklist-item-${item.code}`}
+      className={`${CHECKLIST_GRID} flex flex-col border-b border-navy/10 md:min-h-12 md:items-stretch scroll-mt-24 ${
         noSat ? 'border-l-4 border-l-alert bg-alert-soft' : selected ? 'bg-primary/5' : striped ? 'bg-stripe' : 'bg-white'
       }`}
     >
@@ -78,7 +79,6 @@ export default function ChecklistItemRow({
           disabled={disabled}
           placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
           onChange={(e) => onChange({ remarks: e.target.value })}
-          onFocus={() => onSelect(item.code)}
           className={`min-h-11 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] md:min-h-9 ${
             remarksError ? 'border-alert bg-white' : 'border-navy/15 bg-white'
           }`}
