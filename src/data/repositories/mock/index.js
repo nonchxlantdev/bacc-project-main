@@ -5,7 +5,7 @@ import { generatePendingInstances, linkSubmissionToInstance, refreshInstanceStat
 import { addAirportDays, airportYmd, daysUntilDue, eachWeekStart } from '../../../lib/belizeTime.js';
 import { dispatchNotification } from '../../../lib/notificationTransport.js';
 import { groupForCode } from '../../templates/registry.js';
-import { advanceClock, getStore, mutateStore, nowMs, resetStore } from './store.js';
+import { advanceClock, clearStore, getStore, mutateStore, nowMs, resetStore } from './store.js';
 
 function notWired() {
   throw new Error('not wired');
@@ -476,6 +476,16 @@ export function createMockRepositories() {
           incidents: getStore().incidents.length,
           approvals: getStore().approvals.filter((a) => a.status === 'pending').length,
         };
+      },
+      // Empties everything anyone filed — submissions, incidents, work
+      // orders, approvals, occurrences, notifications, activity — but keeps
+      // the staff directory and the approved-form catalogue, since those are
+      // this demo's configuration, not data someone entered. See
+      // `clearStore`'s own doc comment for why this never reapplies the
+      // showcase dataset, unlike `resetDemo` above.
+      async clearAll() {
+        clearStore();
+        return { demoNow: getStore().demoNow };
       },
     },
     notifications: {

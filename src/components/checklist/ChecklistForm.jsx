@@ -323,7 +323,7 @@ export default function ChecklistForm({
         />
       )}
       <aside
-        className={`border-line/15 bg-surface xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-card max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[min(52vh,420px)] max-xl:overflow-y-auto max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
+        className={`border-line/15 bg-surface xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-card max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[min(52vh,420px)] max-xl:overflow-y-auto max-xl:overscroll-contain max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
           hasItems ? '' : 'hidden'
         } ${selectedItem ? '' : 'max-xl:hidden'}`}
       >

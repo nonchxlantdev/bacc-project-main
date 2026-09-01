@@ -108,6 +108,7 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState(null);
   const [audit, setAudit] = useState([]);
+  const [mockBusy, setMockBusy] = useState(null);
 
   const actor = useMemo(() => ({ id: user?.id, full_name: displayName }), [user?.id, displayName]);
 
@@ -204,6 +205,40 @@ export default function SettingsPage() {
     }
   }, [active, actor, resetSection]);
 
+  // Both reload the page on success rather than trying to make every
+  // subscribed page notice a swapped-out store: the mock store is a single
+  // in-memory object and a full reload is the one guaranteed way every
+  // screen picks up the new one, same as the existing "Reset demo data"
+  // control (Demo controls, below) already does.
+  const onLoadMockData = useCallback(async () => {
+    setMockBusy('load');
+    try {
+      await getRepos().instances.loadShowcase();
+      window.location.reload();
+    } catch (err) {
+      setMockBusy(null);
+      setBanner({ tone: 'error', text: err.message || 'Could not load mock data.' });
+    }
+  }, []);
+
+  const onRemoveMockData = useCallback(async () => {
+    if (
+      !window.confirm(
+        'Remove all mock data? This clears every checklist, incident and submission stored in this browser. The staff directory and approved forms stay.',
+      )
+    ) {
+      return;
+    }
+    setMockBusy('remove');
+    try {
+      await getRepos().instances.clearAll();
+      window.location.reload();
+    } catch (err) {
+      setMockBusy(null);
+      setBanner({ tone: 'error', text: err.message || 'Could not remove mock data.' });
+    }
+  }, []);
+
   return (
     <div className="space-y-5">
       {/* Marked in progress so nobody demoing the portal mistakes an
@@ -215,6 +250,32 @@ export default function SettingsPage() {
         </span>
         <span>This page is still being built. Everything below saves and takes effect.</span>
       </p>
+
+      {/* Only when this build is actually running the in-browser mock store —
+          never against a configured Supabase project, where these buttons
+          would wipe real submitted records rather than sample ones. Visible
+          to anyone on the deployed demo, not just local dev: that's the
+          build people actually use to try the portal or reset it before the
+          next walkthrough. */}
+      {!configured && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-line/30 bg-surface p-4">
+          <div>
+            <h2 className="text-sm font-bold text-ink">Demo data</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Everything here lives only in this browser. Load a full sample of checklists and incidents to
+              explore, or clear it back to just the staff directory and approved forms.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <DemoButton onClick={onLoadMockData} disabled={Boolean(mockBusy)}>
+              {mockBusy === 'load' ? 'Loading…' : 'Load Mock Data'}
+            </DemoButton>
+            <DemoButton tone="alert" onClick={onRemoveMockData} disabled={Boolean(mockBusy)}>
+              {mockBusy === 'remove' ? 'Removing…' : 'Remove Mock Data'}
+            </DemoButton>
+          </div>
+        </div>
+      )}
 
       <header>
         <h1 className="text-xl font-bold text-ink sm:text-2xl">Settings</h1>
@@ -301,7 +362,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={onSave}
-                className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40 sm:min-h-10"
+                className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40 lg:min-h-10"
               >
                 {busy ? 'Saving…' : 'Save changes'}
               </button>
@@ -309,7 +370,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={() => setDraft(structuredClone(committed))}
-                className="inline-flex min-h-11 items-center rounded-md border border-line/20 bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-40 sm:min-h-10"
+                className="inline-flex min-h-11 items-center rounded-md border border-line/20 bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-40 lg:min-h-10"
               >
                 Discard
               </button>
@@ -319,7 +380,7 @@ export default function SettingsPage() {
                   type="button"
                   disabled={busy}
                   onClick={onReset}
-                  className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted hover:text-alert sm:min-h-10"
+                  className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted hover:text-alert lg:min-h-10"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restore defaults
@@ -396,17 +457,6 @@ function DemoControls() {
           Generate occurrences
         </DemoButton>
         <DemoButton
-          onClick={async () => {
-            const result = await getRepos().instances.loadShowcase();
-            window.alert(
-              `Loaded sample data: ${result.submissions} checklists, ${result.incidents} incidents, ${result.approvals} pending approvals.`,
-            );
-            window.location.reload();
-          }}
-        >
-          Load showcase data
-        </DemoButton>
-        <DemoButton
           tone="alert"
           onClick={async () => {
             await getRepos().instances.resetDemo();
@@ -420,12 +470,13 @@ function DemoControls() {
   );
 }
 
-function DemoButton({ onClick, tone, children }) {
+function DemoButton({ onClick, tone, disabled, children }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-11 rounded-md border px-3 text-sm font-medium sm:min-h-10 ${
+      disabled={disabled}
+      className={`min-h-11 rounded-md border px-3 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 lg:min-h-10 ${
         tone === 'alert' ? 'border-alert text-alert hover:bg-alert-soft' : 'border-line/20 text-ink hover:bg-surface-2'
       }`}
     >

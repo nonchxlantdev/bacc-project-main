@@ -127,7 +127,7 @@ export default function AppShell() {
       />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col md:min-h-0">
         <TopBar online={online} onMenuClick={() => setNavOpen(true)} />
-        <main className="min-w-0 flex-1 overflow-y-auto bg-stripe px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5">
+        <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain bg-stripe px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5">
           <Outlet context={{ online }} />
         </main>
       </div>

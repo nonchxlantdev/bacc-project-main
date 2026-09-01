@@ -263,7 +263,7 @@ export default function IncidentListPage() {
                   </td>
                   <td data-label="Level" className="px-4 py-2">
                     <span
-                      className="inline-block w-fit rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+                      className="inline-block w-fit whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-white"
                       style={{ background: level?.color }}
                     >
                       {level?.label}

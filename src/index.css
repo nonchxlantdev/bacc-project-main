@@ -104,6 +104,19 @@ body,
   min-height: 100%;
 }
 
+/* Stop a scroll gesture that runs out of room inside the app from chaining
+   into the browser's own document-level bounce. Without this, iOS Safari
+   in particular treats a used-up inner scroll (the end of `<main>`, a
+   bottom sheet, a dropdown list) as a cue to rubber-band the WHOLE page —
+   which is what reads as "the entire screen can be moved" and flashes a
+   line of the bare `body` background in at the edge. This is a document-
+   level safety net; `overscroll-contain` on the individual scrolling panes
+   (see AppShell's `<main>`) stops the chain closer to its source. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 body {
   margin: 0;
   color: var(--color-ink);

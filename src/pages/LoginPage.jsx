@@ -32,8 +32,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-navy p-6">
-      <div className="w-full max-w-md rounded-lg bg-surface p-8 shadow-xl">
+    <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-navy">
+      <div className="flex min-h-full items-center justify-center p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="w-full max-w-md rounded-lg bg-surface p-8 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
           <img src={baccLogoUrl} alt="BACC" className="h-10 w-auto object-contain" />
           <img src={pgiaLogoUrl} alt="PGIA" className="h-10 w-auto rounded bg-navy object-contain p-1" />
@@ -96,6 +97,7 @@ export default function LoginPage() {
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

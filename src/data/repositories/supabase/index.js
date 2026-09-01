@@ -28,7 +28,7 @@ export function createSupabaseRepositories() {
     workOrders: stubRepo(['listByIncident', 'get', 'persist']),
     approvals: stubRepo(['listInbox', 'get', 'decide']),
     settings: stubRepo(['get', 'save', 'resetSection', 'audit']),
-    instances: stubRepo(['list', 'generate', 'advanceClock', 'getClock', 'resetDemo']),
+    instances: stubRepo(['list', 'generate', 'advanceClock', 'getClock', 'resetDemo', 'loadShowcase', 'clearAll']),
     notifications: stubRepo(['listForUser', 'unreadCount', 'markRead', 'markAllRead']),
     reports: stubRepo([
       'kpis',

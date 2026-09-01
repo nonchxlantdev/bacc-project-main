@@ -12,6 +12,7 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  Plane,
   Settings,
   ShieldAlert,
   Sun,
@@ -81,9 +82,13 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
         <div className="flex flex-col items-center gap-2 border-b border-white/10 px-2 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
           {/* Compact mark for the icon rail — the full wordmark doesn't fit
               at 76px, so this borrows the same teal-on-navy chip language
-              already used for the signed-in user's initials in the top bar. */}
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal text-sm font-bold text-navy">
-            B
+              already used for the signed-in user's initials in the top bar,
+              with the airport's own aircraft mark in place of initials. */}
+          <span
+            aria-label="BACC Airport Portal"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal text-navy"
+          >
+            <Plane className="h-4 w-4" strokeWidth={2.5} aria-hidden />
           </span>
           <button
             type="button"
@@ -131,7 +136,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
           </div>
         </div>
       )}
-      <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-3">
         {NAV_GROUPS.map((group, groupIndex) => (
           <div
             key={group.label}

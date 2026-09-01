@@ -1,6 +1,5 @@
 import { AlertTriangle, Info, MapPin, Navigation, Paperclip, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { deficiencyLevels } from '../../config/deficiencyLevels.js';
 import { INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../../lib/checklistSchema.js';
 import {
@@ -9,6 +8,7 @@ import {
   prefillFromChecklistItem,
 } from '../../lib/incidents.js';
 import LocationPicker, { captureGps, PGIA_CENTER } from './LocationPicker.jsx';
+import DeficiencyLevelPicker from './DeficiencyLevelPicker.jsx';
 
 const BANNER =
   'You are creating an incident from a NO SAT item. The item details and remarks will be included in the incident.';
@@ -148,22 +148,13 @@ export default function CreateIncidentModal({
                 {form.description.length}/{DESCRIPTION_MAX}
               </p>
             </Field>
+            <Field label="Deficiency Level" required>
+              <DeficiencyLevelPicker
+                value={form.deficiency_level}
+                onChange={(level) => patch({ deficiency_level: level })}
+              />
+            </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Deficiency Level" required>
-                <select
-                  required
-                  value={form.deficiency_level}
-                  onChange={(e) => patch({ deficiency_level: e.target.value ? Number(e.target.value) : '' })}
-                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
-                >
-                  <option value="">Select…</option>
-                  {deficiencyLevels().map((lvl) => (
-                    <option key={lvl.level} value={lvl.level}>
-                      {lvl.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
               <Field label="Category" required>
                 <select
                   required

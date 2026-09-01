@@ -91,6 +91,26 @@ export function resetStore() {
   return state;
 }
 
+/**
+ * A blank slate, on purpose — unlike `resetStore`, this never reapplies the
+ * showcase dataset even when this build was seeded with one. `resetStore`
+ * exists to put a stale/corrupt store back to this build's normal starting
+ * point (showcase included, if that's what this build normally shows);
+ * `clearStore` exists for the person running the demo to explicitly empty
+ * it, and a "clear" that quietly refilled itself wouldn't be one.
+ *
+ * `generateSeed()` is already the clean environment (see its own doc
+ * comment): the staff directory and the approved-form catalogue stay,
+ * because those are configuration, not filed data — everything anyone
+ * actually submitted or reported starts empty.
+ */
+export function clearStore() {
+  state = generateSeed();
+  persist();
+  emit();
+  return state;
+}
+
 export function mutateStore(updater) {
   const current = getStore();
   state = updater(current) || current;

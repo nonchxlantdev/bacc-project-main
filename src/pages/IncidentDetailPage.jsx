@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
+import DeficiencyLevelPicker from '../components/incidents/DeficiencyLevelPicker.jsx';
 import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
 import HowThisWorks from '../components/incidents/HowThisWorks.jsx';
 import { TeamChip } from './IncidentListPage.jsx';
@@ -33,7 +34,7 @@ import {
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
 import Dropdown from '../components/ui/Dropdown.jsx';
-import { deficiencyLevels, getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
+import { getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -63,7 +64,7 @@ const TABS = [
   { id: 'history', label: 'History', icon: HistoryIcon },
 ];
 
-const STEP_LABELS = ['Reported', 'Assigned', 'In Progress', 'Resolved', 'Closed'];
+const STEP_LABELS = ['Reported', 'Assigned', 'In\u00a0Progress', 'Resolved', 'Closed'];
 
 export default function IncidentDetailPage() {
   const { id } = useParams();
@@ -408,7 +409,7 @@ export default function IncidentDetailPage() {
             <span className="inline-block rounded bg-alert-soft px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-ink">
               {incidentStatusLabel(incident.status)}
             </span>
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: level?.color }}>
+            <p className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold" style={{ color: level?.color }}>
               <span className="h-2 w-2 rounded-full" style={{ background: level?.color }} aria-hidden />
               {level?.label ?? '—'}
             </p>
@@ -513,17 +514,11 @@ export default function IncidentDetailPage() {
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <Field label="Deficiency Level">
                         {editing ? (
-                          <select
+                          <DeficiencyLevelPicker
                             value={draft.deficiency_level ?? ''}
-                            onChange={(e) => setDraft({ ...draft, deficiency_level: e.target.value })}
-                            className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
-                          >
-                            {deficiencyLevels().map((l) => (
-                              <option key={l.level} value={l.level}>
-                                {l.label}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(level) => setDraft({ ...draft, deficiency_level: level })}
+                            name="incident-deficiency-level"
+                          />
                         ) : (
                           <div className="flex min-h-10 items-center gap-2 rounded border border-line/20 px-3 text-sm">
                             <span className="h-2 w-2 rounded-full" style={{ background: level?.color }} aria-hidden />
@@ -842,12 +837,12 @@ export default function IncidentDetailPage() {
               />
             </div>
 
-            <ol className="mt-4 flex items-start justify-between">
+            <ol className="mt-4 flex items-start justify-between gap-1">
               {INCIDENT_STATUSES.map((s, i) => {
                 const done = i < step;
                 const current = i === step;
                 return (
-                  <li key={s.value} className="relative flex flex-1 flex-col items-center text-center">
+                  <li key={s.value} className="relative flex min-w-0 flex-1 flex-col items-center text-center">
                     {i > 0 && (
                       <span
                         className={`absolute right-1/2 top-2.5 h-0.5 w-full ${i <= step ? 'bg-primary' : 'bg-line/15'}`}
@@ -855,7 +850,7 @@ export default function IncidentDetailPage() {
                       />
                     )}
                     <span
-                      className={`relative z-10 flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                      className={`relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                         done
                           ? 'border-success bg-success text-white'
                           : current
@@ -866,7 +861,7 @@ export default function IncidentDetailPage() {
                       {done && <Check size={12} aria-hidden />}
                     </span>
                     <span
-                      className={`mt-1.5 text-[10px] leading-tight ${current ? 'font-semibold text-ink' : 'text-muted'}`}
+                      className={`mt-1.5 whitespace-nowrap text-[10px] leading-tight ${current ? 'font-semibold text-ink' : 'text-muted'}`}
                     >
                       {STEP_LABELS[i]}
                     </span>
