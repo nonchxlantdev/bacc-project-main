@@ -134,7 +134,7 @@ export default function ApprovalsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by form, team, department or person…"
-            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink lg:min-h-10"
           />
         </div>
         <Select
@@ -159,7 +159,7 @@ export default function ApprovalsPage() {
               setQuery('');
               setTeam('');
             }}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -221,14 +221,14 @@ export default function ApprovalsPage() {
                   {row.entity?.href && (
                     <Link
                       to={row.entity.href}
-                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-line/20 px-3 text-sm text-primary hover:bg-surface-2 sm:min-h-9 sm:flex-none"
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-line/20 px-3 text-sm text-primary hover:bg-surface-2 lg:min-h-9 sm:flex-none"
                     >
                       Open
                     </Link>
                   )}
                   <button
                     type="button"
-                    className="min-h-11 flex-1 rounded-md bg-navy px-3 py-1.5 text-sm font-semibold text-white sm:min-h-9 sm:flex-none"
+                    className="min-h-11 flex-1 rounded-md bg-navy px-3 py-1.5 text-sm font-semibold text-white lg:min-h-9 sm:flex-none"
                     onClick={() => {
                       setActive(row);
                       setError(null);

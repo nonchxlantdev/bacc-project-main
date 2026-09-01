@@ -353,7 +353,7 @@ export default function IncidentDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/incidents')}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
           >
             <ArrowLeft size={16} aria-hidden />
             <span className="sm:hidden">Back</span>
@@ -365,7 +365,7 @@ export default function IncidentDetailPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
               >
                 <X size={16} aria-hidden /> Cancel
               </button>
@@ -373,7 +373,7 @@ export default function IncidentDetailPage() {
                 type="button"
                 onClick={saveEdit}
                 disabled={busy}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 sm:min-h-10 sm:justify-start"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 lg:min-h-10 sm:justify-start"
               >
                 <Check size={16} aria-hidden /> Save Changes
               </button>
@@ -382,7 +382,7 @@ export default function IncidentDetailPage() {
             <button
               type="button"
               onClick={startEdit}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10 sm:justify-start"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
             >
               <Pencil size={16} aria-hidden /> Edit Incident
             </button>
@@ -615,7 +615,7 @@ export default function IncidentDetailPage() {
                     <button
                       type="button"
                       onClick={useMyLocation}
-                      className="inline-flex min-h-9 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 lg:min-h-9"
                     >
                       <LocateFixed size={14} aria-hidden /> Use My Location
                     </button>
@@ -690,7 +690,7 @@ export default function IncidentDetailPage() {
                 <button
                   type="button"
                   onClick={useMyLocation}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 lg:min-h-9"
                 >
                   <LocateFixed size={14} aria-hidden /> Use My Location
                 </button>

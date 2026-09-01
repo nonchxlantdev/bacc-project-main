@@ -205,7 +205,7 @@ export default function ReportsPage() {
                     <td data-label="Team" className="px-3 py-2 text-muted">{row.team}</td>
                     <td data-label="Was due" className="px-3 py-2 text-muted">{fmtDate(row.due)}</td>
                     <td data-label="Filed" className="px-3 py-2 text-muted">{fmtDate(row.completed)}</td>
-                    <td data-label="Days late" className="px-3 py-2 md:text-right">
+                    <td data-label="Days late" className="px-3 py-2 lg:text-right">
                       <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
                         {row.daysLate} {row.daysLate === 1 ? 'day' : 'days'}
                       </span>
@@ -262,7 +262,7 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
           return (
             <label
               key={section.id}
-              className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 sm:min-h-0 ${
+              className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 lg:min-h-0 ${
                 last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-surface-2'
               }`}
               title={last ? 'At least one report must stay visible' : undefined}

@@ -185,7 +185,7 @@ export default function ChecklistCataloguePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search forms, manuals or departments…"
-            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink lg:min-h-10"
           />
         </div>
         <Select
@@ -206,7 +206,7 @@ export default function ChecklistCataloguePage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -259,7 +259,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex min-h-11 items-center gap-1 rounded border border-line/20 px-2.5 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-9"
+            className="inline-flex min-h-11 items-center gap-1 rounded border border-line/20 px-2.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-9"
           >
             <ChevronLeft className="h-4 w-4" />
             All teams
@@ -319,12 +319,12 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
                 <td data-label="Last done" className="px-4 py-2 text-muted">
                   {lastByCode.get(t.code) ?? 'Never'}
                 </td>
-                <td data-label="" className="px-4 py-2 max-md:pb-3 md:text-right">
+                <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
                   <button
                     type="button"
                     onClick={() => onStart(t.id)}
                     disabled={startingId === t.id}
-                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-surface-2 disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
+                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-surface-2 disabled:opacity-50 lg:min-h-0 lg:w-auto lg:border-0"
                   >
                     {startingId === t.id ? 'Opening…' : 'Start'}
                   </button>

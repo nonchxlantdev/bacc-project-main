@@ -139,13 +139,13 @@ export default function MyChecklistsPage() {
                 <td data-label="Status" className="px-4 py-2">
                   <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
                 </td>
-                <td data-label="" className="px-4 py-2 max-md:pb-3 md:text-right">
+                <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
                   {isDeletableDraft(row) ? (
                     <button
                       type="button"
                       onClick={() => handleDelete(row)}
                       disabled={deletingId === row.id}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 md:min-h-0 md:w-auto md:border-0"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 lg:min-h-0 lg:w-auto lg:border-0"
                     >
                       <Trash2 className="h-4 w-4" />
                       {deletingId === row.id ? 'Deleting…' : 'Delete'}

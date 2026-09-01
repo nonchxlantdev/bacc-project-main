@@ -17,7 +17,17 @@ export function Card({ title, children }) {
   );
 }
 
-/** A single radio-style choice, used where a full radio group would be noise. */
+/**
+ * A single radio-style choice, used where a full radio group would be noise.
+ *
+ * The visible ring stays a small 20px dot — this sits in a dense table cell,
+ * and a 44px circle there would crowd its neighbors — but the button's own
+ * hit area is the full 44px touch-target minimum, centered on that ring, so
+ * tapping near it on a phone or tablet doesn't require the same precision a
+ * mouse pointer has. This is the control that verifies or reopens an
+ * incident; it doesn't get to be the one thing on the page that's fiddly to
+ * tap.
+ */
 export function RadioButton({ checked, tone, label, onClick }) {
   const ring = tone === 'success' ? 'border-success' : 'border-alert';
   const dot = tone === 'success' ? 'bg-success' : 'bg-alert';
@@ -28,11 +38,15 @@ export function RadioButton({ checked, tone, label, onClick }) {
       aria-pressed={checked}
       aria-label={label}
       title={label}
-      className={`inline-flex h-5 w-5 items-center justify-center rounded-full border-2 transition ${
-        checked ? ring : 'border-line/25 hover:border-line/50'
-      }`}
+      className="group inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-surface-2"
     >
-      {checked && <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />}
+      <span
+        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition ${
+          checked ? ring : 'border-line/25 group-hover:border-line/50'
+        }`}
+      >
+        {checked && <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />}
+      </span>
     </button>
   );
 }

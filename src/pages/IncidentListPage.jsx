@@ -158,7 +158,7 @@ export default function IncidentListPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by reference, item, team or person…"
-            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink lg:min-h-10"
           />
         </div>
         <Select
@@ -198,7 +198,7 @@ export default function IncidentListPage() {
               setTeam('');
               setStatus('');
             }}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 sm:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters

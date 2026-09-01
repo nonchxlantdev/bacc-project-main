@@ -53,7 +53,7 @@ export function TextInput({ id, value, onChange, placeholder, type = 'text', ...
       value={value ?? ''}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+      className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
       {...rest}
     />
   );
@@ -79,7 +79,7 @@ export function NumberInput({ id, value, onChange, min = 0, max, suffix, unsetLa
         // No placeholder: the unset state is spelled out in full beside the
         // field, and a long placeholder just truncates inside a narrow input.
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="min-h-11 w-20 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+        className="min-h-11 w-20 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
       />
       {suffix && <span className="shrink-0 text-sm text-muted">{suffix}</span>}
       {value == null && <span className="shrink-0 text-xs text-muted">· {unsetLabel}</span>}
@@ -109,7 +109,7 @@ export function Toggle({ checked, onChange, label, disabled }) {
       aria-checked={Boolean(checked)}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="group inline-flex min-h-11 items-center gap-2.5 rounded text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 sm:min-h-9"
+      className="group inline-flex min-h-11 items-center gap-2.5 rounded text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 lg:min-h-9"
     >
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
@@ -181,12 +181,12 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
             value={entry}
             placeholder={placeholder}
             onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))}
-            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
           />
           <button
             type="button"
             onClick={() => onChange(values.filter((_, j) => j !== i))}
-            className="min-h-11 shrink-0 rounded border border-line/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert sm:min-h-10"
+            className="min-h-11 shrink-0 rounded border border-line/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert lg:min-h-10"
           >
             Remove
           </button>
@@ -195,7 +195,7 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
       <button
         type="button"
         onClick={() => onChange([...values, ''])}
-        className="min-h-11 rounded border border-dashed border-line/30 px-3 text-sm font-medium text-primary hover:border-primary sm:min-h-10"
+        className="min-h-11 rounded border border-dashed border-line/30 px-3 text-sm font-medium text-primary hover:border-primary lg:min-h-10"
       >
         {addLabel}
       </button>

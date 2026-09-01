@@ -80,14 +80,14 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
                         ),
                       )
                     }
-                    className="min-h-9 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-[13px] text-ink"
+                    className="min-h-10 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-[13px] text-ink lg:min-h-9"
                   />
                   {!disabled && (
                     <button
                       type="button"
                       onClick={() => onChange(attachments.filter((row) => row.id !== item.id))}
                       aria-label={`Remove ${item.label}`}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert lg:h-9 lg:w-9"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -104,7 +104,7 @@ export default function AttachmentsPanel({ spec, attachments = [], disabled, onC
               type="button"
               disabled={atLimit}
               onClick={() => inputRef.current?.click()}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-dashed border-line/30 px-4 text-sm font-medium text-primary hover:border-primary disabled:opacity-50 sm:min-h-10"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-dashed border-line/30 px-4 text-sm font-medium text-primary hover:border-primary disabled:opacity-50 lg:min-h-10"
             >
               <Upload className="h-4 w-4" />
               {atLimit ? `Limit of ${spec.max} reached` : 'Attach drawing'}

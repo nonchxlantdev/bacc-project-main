@@ -70,7 +70,7 @@ export default function VerificationPanel({
                   <Link
                     to={`/checklists/${incident.submission_id}`}
                     title="View checklist"
-                    className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-line/20 text-ink hover:bg-surface-2"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-line/20 text-ink hover:bg-surface-2 xl:min-h-9 xl:min-w-9"
                   >
                     <Camera size={16} aria-hidden />
                     <span className="sr-only">View checklist</span>
@@ -128,7 +128,7 @@ export default function VerificationPanel({
             className="mt-2 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2">
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2 xl:min-h-9">
               <ImagePlus size={14} aria-hidden /> Attach evidence
               <input
                 type="file"
@@ -149,7 +149,7 @@ export default function VerificationPanel({
             <button
               type="button"
               onClick={() => onDraftChange(null)}
-              className="min-h-9 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2"
+              className="min-h-11 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2 xl:min-h-9"
             >
               Cancel
             </button>
@@ -157,7 +157,7 @@ export default function VerificationPanel({
               type="button"
               onClick={onConfirm}
               disabled={busy}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-success px-3 text-xs font-semibold text-white disabled:opacity-60"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-success px-3 text-xs font-semibold text-white disabled:opacity-60 xl:min-h-9"
             >
               <Check size={14} aria-hidden /> Confirm SAT
             </button>

@@ -528,7 +528,7 @@ export default function ChecklistDetailPage() {
               type="button"
               onClick={() => save()}
               disabled={saving}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-primary/40 bg-surface px-3 py-2 text-sm font-medium text-primary"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md lg:min-h-10 sm:justify-start border border-primary/40 bg-surface px-3 py-2 text-sm font-medium text-primary"
             >
               <Save className="h-4 w-4" />
               {saving ? 'Saving…' : 'Save Draft'}
@@ -544,7 +544,7 @@ export default function ChecklistDetailPage() {
             // reference-sheet case: any open preview toggles closed.
             onClick={previewUrl ? closePreview : handleShowPreview}
             disabled={previewing}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md lg:min-h-10 sm:justify-start border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink"
           >
             <Eye className="h-4 w-4" />
             {previewing
@@ -559,7 +559,7 @@ export default function ChecklistDetailPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex min-h-11 items-center justify-center rounded-md sm:min-h-10 sm:justify-start bg-navy px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-md lg:min-h-10 sm:justify-start bg-navy px-4 py-2 text-sm font-semibold text-white"
             >
               Submit Checklist
             </button>
@@ -569,7 +569,7 @@ export default function ChecklistDetailPage() {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start bg-primary px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md lg:min-h-10 sm:justify-start bg-primary px-4 py-2 text-sm font-semibold text-white"
           >
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting…' : 'Export PDF'}
@@ -583,7 +583,7 @@ export default function ChecklistDetailPage() {
                 await persistSubmission(next);
                 navigate(`/checklists/${next.id}`);
               }}
-              className="min-h-11 rounded-md border border-line/20 bg-surface px-3 py-2 text-sm text-ink sm:min-h-10"
+              className="min-h-11 rounded-md border border-line/20 bg-surface px-3 py-2 text-sm text-ink lg:min-h-10"
             >
               Create correction
             </button>

@@ -143,12 +143,17 @@ textarea {
   }
 }
 
-/* Record tables restack into label/value cards below `md`.
+/* Record tables restack into label/value cards below `lg`.
    The markup stays a real <table> — only the presentation changes — so the
    desktop layout, column order and export logic are untouched. Each cell
    carries data-label, which becomes the row label on a phone; without it a
-   stacked cell would be an unlabelled value once the header row is hidden. */
-@media (max-width: 767px) {
+   stacked cell would be an unlabelled value once the header row is hidden.
+   `lg` rather than `md` is deliberate: a tablet in portrait (iPad portrait
+   is 768-834px) is still a touch device, and the compact desktop table's
+   row-action buttons shrink below the 44px touch-target minimum once the
+   table is on — see MyChecklistsPage/ChecklistCataloguePage's Delete/Preview
+   buttons, which shrink at the same breakpoint this stacks at. */
+@media (max-width: 1023px) {
   .table-stack,
   .table-stack tbody,
   .table-stack tr,

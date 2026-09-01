@@ -85,7 +85,7 @@ export default function SortableTh({ label, sortKey, sort, onToggle, hint, align
         type="button"
         onClick={() => onToggle(sortKey)}
         title={hint ? `Sort by ${label} (${hint})` : `Sort by ${label}`}
-        className={`flex min-h-11 w-full items-center gap-1.5 px-4 py-2 text-left transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70 sm:min-h-0 ${
+        className={`flex min-h-11 w-full items-center gap-1.5 px-4 py-2 text-left transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70 lg:min-h-0 ${
           align === 'right' ? 'justify-end' : ''
         }`}
       >

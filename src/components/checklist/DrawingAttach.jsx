@@ -59,14 +59,14 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
                   onChange={(e) =>
                     onChange(items.map((row) => (row.id === item.id ? { ...row, label: e.target.value } : row)))
                   }
-                  className="min-h-9 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-xs text-ink"
+                  className="min-h-10 min-w-0 flex-1 rounded border border-line/15 bg-surface px-2 text-xs text-ink lg:min-h-9"
                 />
                 {!disabled && (
                   <button
                     type="button"
                     onClick={() => onChange(items.filter((row) => row.id !== item.id))}
                     aria-label={`Remove ${item.label}`}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert lg:h-9 lg:w-9"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -82,7 +82,7 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary sm:min-h-9"
+            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary lg:min-h-9"
           >
             <Paperclip className="h-3.5 w-3.5" />
             {items.length ? 'Attach another drawing' : 'Attach drawing'}
