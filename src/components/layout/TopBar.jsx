@@ -53,7 +53,7 @@ export default function TopBar({ online, onMenuClick }) {
           type="button"
           onClick={onMenuClick}
           aria-label="Open navigation"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink lg:hidden"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink md:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -61,14 +61,15 @@ export default function TopBar({ online, onMenuClick }) {
         {/* Mobile identity anchor — the sidebar carries the full brand now,
             but it's a closed drawer by default on a phone, so the bar still
             needs to say where you are. */}
-        <div className="min-w-0 leading-tight lg:hidden">
+        <div className="min-w-0 leading-tight md:hidden">
           <div className="truncate text-sm font-semibold text-ink">BACC</div>
           <div className="truncate text-[11px] text-muted">PGIA Operations</div>
         </div>
 
-        {/* Desktop: the sidebar already carries the brand, so this space
-            earns its keep with live status instead of repeating it. */}
-        <div className="hidden items-center gap-2 lg:flex">
+        {/* Tablet/desktop: the sidebar already carries the brand (persistent
+            from `md` up now, rail or full), so this space earns its keep
+            with live status instead of repeating it. */}
+        <div className="hidden items-center gap-2 md:flex">
           <span
             aria-hidden
             className={`h-2.5 w-2.5 shrink-0 rounded-full ${
@@ -77,7 +78,7 @@ export default function TopBar({ online, onMenuClick }) {
           />
           <span className="text-[13px] font-semibold text-muted">{online ? 'Online' : 'Offline'}</span>
         </div>
-        <div className="hidden leading-tight lg:block lg:border-l lg:border-line/15 lg:pl-4">
+        <div className="hidden leading-tight md:block md:border-l md:border-line/15 md:pl-4">
           <div className="font-mono text-[15px] font-semibold tabular-nums text-ink">
             {clockFmt.format(now)}
           </div>
@@ -88,7 +89,7 @@ export default function TopBar({ online, onMenuClick }) {
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <span
           aria-label={online ? 'Online' : 'Offline'}
-          className={`h-2 w-2 shrink-0 rounded-full lg:hidden ${online ? 'bg-teal' : 'bg-alert'}`}
+          className={`h-2 w-2 shrink-0 rounded-full md:hidden ${online ? 'bg-teal' : 'bg-alert'}`}
         />
         <Link
           to="/help"

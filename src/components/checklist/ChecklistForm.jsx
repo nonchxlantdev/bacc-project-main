@@ -87,10 +87,11 @@ export default function ChecklistForm({
         return next;
       });
     }
-    // On phone portrait the panel is a bottom sheet — scroll the item into view
-    // so it is not hidden behind the sheet when NO SAT auto-opens the detail rail.
+    // On phone and tablet the panel is a bottom sheet (through 1279px, the
+    // same width the item table itself waits for) — scroll the item into
+    // view so it is not hidden behind the sheet when NO SAT auto-opens it.
     const el = document.getElementById(`checklist-item-${selectedCode}`);
-    if (el && window.matchMedia('(max-width: 1023px)').matches) {
+    if (el && window.matchMedia('(max-width: 1279px)').matches) {
       requestAnimationFrame(() => {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
@@ -135,9 +136,9 @@ export default function ChecklistForm({
   if (schema.referenceGroups?.length) return <ReferenceList schema={schema} />;
 
   return (
-    <div className={`grid gap-5 ${hasItems ? 'lg:grid-cols-[minmax(0,1fr)_19rem]' : ''}`}>
+    <div className={`grid gap-5 ${hasItems ? 'xl:grid-cols-[minmax(0,1fr)_19rem]' : ''}`}>
       <div className="space-y-4">
-        {(unresolved.length > 0 || (!readOnly && missingHeader.length > 0)) && (
+        {(unresolved.length > 0 || missingHeader.length > 0) && (
           <div className="flex gap-3 rounded-md border border-alert bg-alert-soft px-4 py-3 text-sm text-alert">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
@@ -146,7 +147,7 @@ export default function ChecklistForm({
                   NO SAT items need remarks before submission: <strong>{unresolved.join(', ')}</strong>
                 </p>
               )}
-              {!readOnly && missingHeader.length > 0 && (
+              {missingHeader.length > 0 && (
                 <p className="mt-1">
                   Required header fields are empty:{' '}
                   {missingHeader
@@ -303,10 +304,14 @@ export default function ChecklistForm({
         </div>
       </div>
 
-      {/* Desktop and tablet landscape: sticky evidence rail. Phone portrait: a
-          bottom sheet when an item is selected (including auto-open on NO SAT).
-          The sheet no longer adds dead padding below the form — the selected row
-          scrolls into view instead. */}
+      {/* Desktop (xl, 1280px+): sticky evidence rail, matching the width where
+          the item table itself takes over. Phone and tablet: a bottom sheet
+          when an item is selected (including auto-open on NO SAT) — that's
+          also where the tablet compact row lives, since it drops its own
+          remarks/photo controls in favor of this sheet. The sheet no longer
+          adds dead padding below the form — the selected row scrolls into
+          view instead, and closing it never scrolls the page: it's a fixed
+          overlay, not part of the document flow, so review position holds. */}
       {/* Annex K and Annex L have no item table, so there is nothing to select
           and nothing to attach evidence to — the rail would just be an empty box. */}
       {selectedItem && (
@@ -314,18 +319,18 @@ export default function ChecklistForm({
           type="button"
           aria-label="Close item detail"
           onClick={() => onSelectItem(null)}
-          className="fixed inset-0 z-30 bg-navy/40 lg:hidden"
+          className="fixed inset-0 z-30 bg-navy/40 xl:hidden"
         />
       )}
       <aside
-        className={`border-line/15 bg-surface lg:sticky lg:top-4 lg:h-fit lg:rounded-md lg:border lg:shadow-card max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:max-h-[min(52vh,420px)] max-lg:overflow-y-auto max-lg:rounded-t-xl max-lg:border-t max-lg:pb-[env(safe-area-inset-bottom)] max-lg:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
+        className={`border-line/15 bg-surface xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-card max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[min(52vh,420px)] max-xl:overflow-y-auto max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
           hasItems ? '' : 'hidden'
-        } ${selectedItem ? '' : 'max-lg:hidden'}`}
+        } ${selectedItem ? '' : 'max-xl:hidden'}`}
       >
         {selectedItem ? (
           <div>
             <div
-              className={`sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-surface px-4 py-2 lg:hidden ${
+              className={`sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-surface px-4 py-2 xl:hidden ${
                 selectedRow?.result === 'no_sat' ? 'border-alert bg-alert-soft text-alert' : 'border-line/10'
               }`}
             >
@@ -629,13 +634,21 @@ function HeaderFields({ schema, header, disabled, onChange }) {
                   </div>
                 ) : (
                   <div className="relative">
-                    <FieldIcon Icon={Icon} />
+                    {/* Date/time inputs already carry their own meaning — the
+                        native picker icon and the value text say what the
+                        field is — so our icon here only crowds against them,
+                        worst on a narrow tablet column. Every other field
+                        type keeps it: it's the only cue of what the field is
+                        before anything has been typed into it. */}
+                    {field.type !== 'date' && field.type !== 'time' && <FieldIcon Icon={Icon} />}
                     <input
                       type={INPUT_TYPES[field.type] ?? 'text'}
                       disabled={disabled}
                       value={header[field.key] ?? ''}
                       onChange={(e) => onChange({ [field.key]: e.target.value })}
-                      className="min-h-10 w-full rounded border border-line/20 bg-surface py-2 pl-9 pr-3 text-sm text-ink read-only:bg-stripe"
+                      className={`min-h-10 w-full rounded border border-line/20 bg-surface py-2 pr-3 text-sm text-ink read-only:bg-stripe ${
+                        field.type === 'date' || field.type === 'time' ? 'pl-3' : 'pl-9'
+                      }`}
                     />
                   </div>
                 )}

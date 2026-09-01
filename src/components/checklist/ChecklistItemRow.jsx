@@ -1,22 +1,34 @@
-import { Camera, Check, X } from 'lucide-react';
+import { Camera, ChevronRight, Check, X } from 'lucide-react';
 import { CHECKLIST_GRID } from './checklistGrid.js';
 
 /**
- * One inspection item.
+ * One inspection item — three genuinely different layouts, not one layout
+ * compacted three ways. Each tier is its own sibling block, shown or hidden
+ * outright by breakpoint (`md:hidden`, `hidden md:flex xl:hidden`,
+ * `hidden xl:grid`); only one is ever in the accessibility tree at a time.
  *
- * Desktop (and laptop-and-up) keeps the approved form's five-column table.
- * Below `xl` — phone, any tablet (portrait or landscape), and a narrow
- * laptop window — the same markup restacks into a card: code and wording on
- * top, SAT / NO SAT as two full-width touch targets, remarks and camera
- * underneath. This form's detail page also opens a 19rem evidence panel and
- * the app shell pins its sidebar starting at `lg` (1024px) — stacked
- * together, a tablet-landscape-width viewport has nowhere near enough room
- * left over for the dense table's five columns, so the card stays through
- * `lg` and only gives way once there's genuine desktop-class width at `xl`
- * (1280px). The `xl:contents` wrappers exist only to group children below
- * that width; at `xl` they dissolve and their children become direct grid
- * cells again, so there is one set of markup and one source of truth for the
- * desktop layout.
+ * That used to be one set of markup, restacked with an `xl:contents` trick
+ * so the phone card's DOM nodes became the desktop table's grid cells. It
+ * worked for two tiers because "phone card" and "desktop table" wanted the
+ * same content in a different arrangement. A third, structurally different
+ * tablet tier doesn't fit that trick: this row still needs `CHECKLIST_GRID`'s
+ * `xl:grid` for the table AND a `md:flex`-vs-`xl:hidden` swap for the tablet
+ * row, and stacking two display-affecting utilities like that on one element
+ * depends on generated-CSS source order, not the order they're written in —
+ * not something to build on. Three explicit blocks cost some duplication but
+ * every tier can be read (and changed) on its own.
+ *
+ * - **Phone** (below `md`, 768px): unchanged — code and wording, full-width
+ *   SAT / NO SAT, remarks and camera all inline in the card.
+ * - **Tablet** (`md` to just under `xl`, 768–1279px): a compact row — code,
+ *   wording, SAT / NO SAT. Remarks and the photo live in the detail sheet
+ *   (`ChecklistForm`'s evidence panel, already a bottom sheet below `lg` and
+ *   pinned to the right side of NO SAT items already needing it above that)
+ *   instead of a third inline row, so a full section fits on screen at once
+ *   without shrinking touch targets. A small "Remarks added" / "Photo
+ *   attached" line and a chevron mark when there's something to see there.
+ * - **Desktop** (`xl` and up, 1280px): the approved form's five-column
+ *   table, unchanged.
  */
 export default function ChecklistItemRow({
   item,
@@ -32,19 +44,142 @@ export default function ChecklistItemRow({
 }) {
   const result = row?.result ?? null;
   const noSat = result === 'no_sat';
+  const hasRemarks = Boolean(row?.remarks?.trim());
 
   return (
     <div
       id={`checklist-item-${item.code}`}
-      className={`${CHECKLIST_GRID} flex flex-col border-b border-line/10 xl:min-h-12 xl:items-stretch scroll-mt-24 ${
+      className={`border-b border-line/10 scroll-mt-24 ${
         noSat ? 'border-l-4 border-l-alert bg-alert-soft' : selected ? 'bg-primary/5' : striped ? 'bg-stripe' : 'bg-surface'
       }`}
     >
-      <div className="flex items-baseline gap-2 pt-2 xl:contents">
+      {/* Phone card (<768px) */}
+      <div className="flex flex-col pb-2.5 pt-2 md:hidden">
+        <div className="flex items-baseline gap-2 px-3">
+          <button
+            type="button"
+            onClick={() => onSelect(item.code)}
+            className="shrink-0 text-left text-[13px] font-bold text-ink"
+          >
+            {item.code}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelect(item.code)}
+            className="min-w-0 flex-1 text-left text-[13px] leading-snug text-ink"
+          >
+            {item.text}
+          </button>
+        </div>
+
+        <div className="flex gap-2 px-3 pt-2.5">
+          <ResultToggle
+            itemCode={item.code}
+            label="SAT"
+            checked={result === 'sat'}
+            disabled={disabled}
+            onChange={() => onChange({ result: 'sat' })}
+            tone="sat"
+          />
+          <ResultToggle
+            itemCode={item.code}
+            label="NO SAT"
+            checked={noSat}
+            disabled={disabled}
+            onChange={() => {
+              onChange({ result: 'no_sat' });
+              onSelect(item.code);
+            }}
+            tone="no_sat"
+          />
+        </div>
+
+        <div className="flex items-center gap-1 px-3 pt-2">
+          <input
+            value={row?.remarks ?? ''}
+            disabled={disabled}
+            placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
+            onChange={(e) => onChange({ remarks: e.target.value })}
+            className={`min-h-11 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] text-ink ${
+              remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
+            }`}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              onSelect(item.code);
+              onPhotoClick?.(item.code);
+            }}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded ${
+              hasPhoto ? 'text-primary' : 'text-muted hover:text-ink'
+            }`}
+            aria-label={`Photo for ${item.code}`}
+          >
+            <Camera className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Tablet compact row (768–1279px) */}
+      <div className="hidden flex-col gap-2 px-3 py-2.5 md:flex xl:hidden">
+        <div className="flex items-start gap-2">
+          <button
+            type="button"
+            onClick={() => onSelect(item.code)}
+            className="shrink-0 text-left text-[13px] font-bold text-ink"
+          >
+            {item.code}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelect(item.code)}
+            className="min-w-0 flex-1 text-left text-[13px] leading-snug text-ink"
+          >
+            {item.text}
+            {(hasRemarks || hasPhoto) && (
+              <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-medium text-muted">
+                {hasRemarks && <span>Remarks added</span>}
+                {hasPhoto && (
+                  <span className="inline-flex items-center gap-1">
+                    <Camera className="h-3 w-3" aria-hidden />
+                    Photo attached
+                  </span>
+                )}
+              </span>
+            )}
+          </button>
+          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />
+        </div>
+
+        <div className="flex gap-2">
+          <ResultToggle
+            itemCode={item.code}
+            label="SAT"
+            checked={result === 'sat'}
+            disabled={disabled}
+            onChange={() => onChange({ result: 'sat' })}
+            tone="sat"
+          />
+          <ResultToggle
+            itemCode={item.code}
+            label="NO SAT"
+            checked={noSat}
+            disabled={disabled}
+            onChange={() => {
+              onChange({ result: 'no_sat' });
+              onSelect(item.code);
+            }}
+            tone="no_sat"
+          />
+        </div>
+      </div>
+
+      {/* Desktop table row (1280px+) */}
+      <div className={`hidden ${CHECKLIST_GRID} xl:min-h-12 xl:items-stretch`}>
         <button
           type="button"
           onClick={() => onSelect(item.code)}
-          className="shrink-0 pl-3 text-left text-[13px] font-bold text-ink xl:px-3 xl:py-2.5 xl:pl-3"
+          className="px-3 py-2.5 pl-3 text-left text-[13px] font-bold text-ink"
         >
           {item.code}
         </button>
@@ -52,13 +187,11 @@ export default function ChecklistItemRow({
         <button
           type="button"
           onClick={() => onSelect(item.code)}
-          className="min-w-0 flex-1 pr-3 text-left text-[13px] leading-snug text-ink xl:px-3 xl:py-2.5 xl:pr-3"
+          className="min-w-0 px-3 py-2.5 pr-3 text-left text-[13px] leading-snug text-ink"
         >
           {item.text}
         </button>
-      </div>
 
-      <div className="flex gap-2 px-3 pt-2.5 xl:contents">
         <ResultToggle
           itemCode={item.code}
           label="SAT"
@@ -78,31 +211,31 @@ export default function ChecklistItemRow({
           }}
           tone="no_sat"
         />
-      </div>
 
-      <div className="flex items-center gap-1 px-3 pb-2.5 pt-2 xl:border-l xl:border-line/10 xl:p-1.5">
-        <input
-          value={row?.remarks ?? ''}
-          disabled={disabled}
-          placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
-          onChange={(e) => onChange({ remarks: e.target.value })}
-          className={`min-h-11 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] text-ink xl:min-h-9 ${
-            remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
-          }`}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            onSelect(item.code);
-            onPhotoClick?.(item.code);
-          }}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded xl:h-8 xl:w-8 ${
-            hasPhoto ? 'text-primary' : 'text-muted hover:text-ink'
-          }`}
-          aria-label={`Photo for ${item.code}`}
-        >
-          <Camera className="h-5 w-5 xl:h-4 xl:w-4" />
-        </button>
+        <div className="flex items-center gap-1 border-l border-line/10 p-1.5">
+          <input
+            value={row?.remarks ?? ''}
+            disabled={disabled}
+            placeholder={noSat ? 'Required for NO SAT' : 'Remarks / location'}
+            onChange={(e) => onChange({ remarks: e.target.value })}
+            className={`min-h-9 min-w-0 flex-1 rounded border px-2 py-1 text-[13px] text-ink ${
+              remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
+            }`}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              onSelect(item.code);
+              onPhotoClick?.(item.code);
+            }}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
+              hasPhoto ? 'text-primary' : 'text-muted hover:text-ink'
+            }`}
+            aria-label={`Photo for ${item.code}`}
+          >
+            <Camera className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
