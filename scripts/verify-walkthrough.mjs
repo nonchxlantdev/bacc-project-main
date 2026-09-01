@@ -193,6 +193,12 @@ try {
   const checklistUrl = page.url();
   check(true, `opened ${checklistUrl.split('/').pop()}`);
 
+  const signManual = page.getByRole('button', { name: /Sign manually/i }).first();
+  if (await signManual.isVisible().catch(() => false)) {
+    await signManual.click();
+    await page.waitForTimeout(300);
+  }
+
   // ── Conducted by ──────────────────────────────────────────────────────────
   // One field on the approved form, two controls on screen. The draft arrives
   // carrying the signed-in account, and the title half is the canonical post

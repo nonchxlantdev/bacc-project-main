@@ -16,15 +16,20 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={loading}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-navy/20 bg-white px-3 py-1.5 text-xs font-semibold text-navy disabled:opacity-50 sm:min-h-9"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Rendering…' : 'Refresh preview'}
-        </button>
+        {/* Only meaningful once a preview is actually open — otherwise this sat
+            here at all times and re-opened the panel right after "Hide
+            preview" closed it, undoing the close the person just asked for. */}
+        {(url || loading) && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-navy/20 bg-white px-3 py-1.5 text-xs font-semibold text-navy disabled:opacity-50 sm:min-h-9"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Rendering…' : 'Refresh preview'}
+          </button>
+        )}
       </div>
       {error && <p className="border-b border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>}
       {/* A full US-Letter page is ~1100px tall. On a phone that is a scroll trap
@@ -37,9 +42,18 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
           className="block h-[70dvh] min-h-[380px] w-full bg-stripe lg:h-[1100px]"
         />
       ) : (
-        <p className="px-4 py-10 text-center text-sm text-muted">
-          Click <strong>Show preview</strong> to stamp current values onto the approved PDF and jump here.
-        </p>
+        <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+          <p className="text-sm text-muted">Stamp current values onto the approved PDF to preview it here.</p>
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-navy/20 bg-white px-4 py-2 text-sm font-semibold text-navy disabled:opacity-50 sm:min-h-9"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Rendering…' : 'Show preview'}
+          </button>
+        </div>
       )}
     </section>
   );

@@ -111,8 +111,15 @@ export function AuthProvider({ children }) {
     async function updateProfile(patch) {
       if (!user) return;
       if (!isSupabaseConfigured || !supabase) {
+        const repos = getRepos();
         const next = { ...profile, ...patch };
+        if (repos.users.update) {
+          await repos.users.update(user.id, patch);
+        }
         setProfile(next);
+        setSession((prev) =>
+          prev?.user ? { ...prev, user: toSessionUser({ ...next, email: next.email ?? profile?.email }) } : prev,
+        );
         return next;
       }
       const { data, error: updateError } = await supabase

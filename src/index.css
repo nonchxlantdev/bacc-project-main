@@ -122,3 +122,27 @@ textarea {
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Shared modal entrance keyframes — referenced via Tailwind arbitrary
+   `animate-[...]` utilities (e.g. SignaturePromptModal). Kept global so any
+   dialog can opt in without redefining them. Call sites use the
+   `motion-safe:` variant so reduced-motion users skip the animation. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

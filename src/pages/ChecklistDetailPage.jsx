@@ -1,10 +1,11 @@
-import { AlertTriangle, Download, Eye, Save } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Download, Eye, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import ChecklistForm, { validateChecklist } from '../components/checklist/ChecklistForm.jsx';
 import PdfPreview from '../components/checklist/PdfPreview.jsx';
 import CreateIncidentModal from '../components/incidents/CreateIncidentModal.jsx';
 import SignaturePad from '../components/checklist/SignaturePad.jsx';
+import SignaturePromptModal from '../components/checklist/SignaturePromptModal.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import {
   emptyHeaderState,
@@ -29,13 +30,14 @@ import { ROLE_TITLES } from '../lib/roleStaffing.js';
 import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
+import { applyStoredSignature, shouldShowSignaturePrompt } from '../lib/storedSignature.js';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { online } = useOutletContext() ?? { online: navigator.onLine };
-  const { user, displayName, position, profile } = useAuth();
+  const { user, displayName, position, profile, updateProfile } = useAuth();
 
   const [record, setRecord] = useState(null);
   const [selectedCode, setSelectedCode] = useState(null);
@@ -51,6 +53,7 @@ export default function ChecklistDetailPage() {
   const [incidentModal, setIncidentModal] = useState(null);
   const [itemIncidents, setItemIncidents] = useState({});
   const [omSignature, setOmSignature] = useState('');
+  const [signaturePromptOpen, setSignaturePromptOpen] = useState(false);
   const previewUrlRef = useRef(null);
 
   useEffect(() => {
@@ -133,6 +136,60 @@ export default function ChecklistDetailPage() {
     }, 500);
     return () => clearTimeout(handle);
   }, [record, readOnly]);
+
+  useEffect(() => {
+    if (!record || readOnly || !schema) {
+      setSignaturePromptOpen(false);
+      return;
+    }
+    setSignaturePromptOpen(
+      shouldShowSignaturePrompt({ record, profile, schema, readOnly }),
+    );
+  }, [record?.id, readOnly, schema, profile?.hide_signature_prompt]);
+
+  async function persistHideSignaturePrompt(hide) {
+    if (!hide) return;
+    try {
+      await updateProfile({ hide_signature_prompt: true });
+    } catch {
+      /* profile preference is best-effort */
+    }
+  }
+
+  function applyInspectorStoredSignature() {
+    patchRecord((prev) =>
+      applyStoredSignature({
+        record: prev,
+        profile,
+        displayName,
+        position,
+      }),
+    );
+  }
+
+  async function handleSaveSignatureToProfile({ signature_data_uri, apply }) {
+    const patch = {
+      stored_signature_data_uri: signature_data_uri,
+      stored_signature_updated_at: new Date().toISOString(),
+    };
+    try {
+      await updateProfile(patch);
+    } catch (err) {
+      setBanner({ type: 'error', text: err.message || 'Could not save your signature.' });
+      return;
+    }
+    if (apply) {
+      patchRecord((prev) =>
+        applyStoredSignature({
+          record: prev,
+          profile: { ...profile, ...patch },
+          displayName,
+          position,
+        }),
+      );
+    }
+    setSignaturePromptOpen(false);
+  }
 
   async function patchRecord(updater) {
     setRecord((prev) => updater(prev));
@@ -408,8 +465,26 @@ export default function ChecklistDetailPage() {
 
   const inProgress = !readOnly;
 
+  // A plain browser back would leave the app if this page was opened directly
+  // (a deep link, a reopened tab), so it only replays in-app history when
+  // there is some — otherwise it falls back to the list every checklist is
+  // reachable from, so the control never strands the person on this page.
+  function goBack() {
+    if (window.history.length > 2) navigate(-1);
+    else navigate('/checklists/mine');
+  }
+
   return (
     <div className="space-y-4">
+      <button
+        type="button"
+        onClick={goBack}
+        className="-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-3">
@@ -446,12 +521,24 @@ export default function ChecklistDetailPage() {
           )}
           <button
             type="button"
-            onClick={isReference && previewUrl ? closePreview : handleShowPreview}
+            // A regular checklist's preview used to only ever call
+            // handleShowPreview — once opened there was no way back to
+            // closed, so the (up to 1100px tall) preview panel sat at the
+            // bottom of the page indefinitely, reading as stray blank space
+            // once the person scrolled past it. Closing now mirrors the
+            // reference-sheet case: any open preview toggles closed.
+            onClick={previewUrl ? closePreview : handleShowPreview}
             disabled={previewing}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md sm:min-h-10 sm:justify-start border border-navy/20 bg-white px-3 py-2 text-sm font-medium text-navy"
           >
             <Eye className="h-4 w-4" />
-            {previewing ? 'Rendering…' : !isReference ? 'Show preview' : previewUrl ? 'Back to list' : 'View PDF'}
+            {previewing
+              ? 'Rendering…'
+              : previewUrl
+                ? 'Hide preview'
+                : !isReference
+                  ? 'Show preview'
+                  : 'View PDF'}
           </button>
           {!readOnly && (
             <button
@@ -616,8 +703,25 @@ export default function ChecklistDetailPage() {
             };
           })
         }
+        storedSignatureUri={profile?.stored_signature_data_uri ?? null}
+        onApplyInspectorStoredSignature={applyInspectorStoredSignature}
       />
       )}
+
+      <SignaturePromptModal
+        open={signaturePromptOpen}
+        storedPreviewUri={profile?.stored_signature_data_uri ?? null}
+        onUseSaved={async (dismissForever) => {
+          applyInspectorStoredSignature();
+          await persistHideSignaturePrompt(dismissForever);
+          setSignaturePromptOpen(false);
+        }}
+        onManual={async (dismissForever) => {
+          await persistHideSignaturePrompt(dismissForever);
+          setSignaturePromptOpen(false);
+        }}
+        onSaveToProfile={handleSaveSignatureToProfile}
+      />
 
       {/* A reference sheet has no overlay to re-render, so it gets no refresh
           block — View PDF simply swaps the page for the approved document. */}

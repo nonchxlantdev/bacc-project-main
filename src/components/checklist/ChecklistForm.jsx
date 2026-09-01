@@ -35,6 +35,8 @@ export default function ChecklistForm({
   onPhotoClear,
   onSignoffChange,
   onCreateIncident,
+  storedSignatureUri,
+  onApplyInspectorStoredSignature,
 }) {
   const unresolved = useMemo(() => unresolvedNoSatCodes(schema, items), [schema, items]);
   const missingHeader = useMemo(() => missingRequiredHeaderKeys(schema, header), [schema, header]);
@@ -148,7 +150,13 @@ export default function ChecklistForm({
 
         {sections.map((section, sectionIndex) => {
           const isOpen = open.has(sectionIndex);
-          const hasNextClosed = sections.some((_, i) => i > sectionIndex && !open.has(i));
+          // "View Next Sections" should appear once — at the bottom of the
+          // furthest section currently open — not on every open section that
+          // happens to have a later closed one. `open` only grows as sections
+          // are expanded, so without the `isFrontier` check this rendered on
+          // every previously-opened section as soon as a second one opened.
+          const isFrontier = isOpen && sectionIndex === Math.max(-1, ...open);
+          const hasNextClosed = isFrontier && sections.some((_, i) => i > sectionIndex && !open.has(i));
           return (
             <section
               id={`section-${sectionIndex}`}
@@ -245,14 +253,19 @@ export default function ChecklistForm({
             return (
               <SignoffBlock
                 key={def.role}
+                role={def.role}
                 label={def.label}
                 dateLabel={def.dateLabel}
                 name={signed?.name ?? ''}
                 position={signed?.position ?? ''}
                 signedAt={signed?.signed_at}
                 signatureDataUri={signed?.signature_data_uri}
+                storedSignatureUri={storedSignatureUri}
                 readOnly={readOnly}
                 onChange={(patch) => onSignoffChange?.(def.role, patch)}
+                onApplyStored={
+                  def.role === 'inspector' ? onApplyInspectorStoredSignature : undefined
+                }
               />
             );
           })}
@@ -499,7 +512,11 @@ function HeaderFields({ schema, header, disabled, onChange }) {
           const composed = isConductedBy(field);
           const Wrapper = composed ? 'div' : 'label';
           return (
-            <Wrapper key={field.key} className="block">
+            // The name/title pair needs real width to keep the position title
+            // ("Electrical Maintenance Technician", "Civil Engineering
+            // Consultant"...) from truncating in its half of the control — a
+            // single grid cell is too narrow once the header runs 4-up.
+            <Wrapper key={field.key} className={composed ? 'block md:col-span-2' : 'block'}>
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">
                 {field.label}
                 {field.required ? ' *' : ''}
@@ -606,7 +623,12 @@ function ConductedByField({ field, value, disabled, onChange }) {
     : [...CONDUCTED_BY_TITLES, parts.title];
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    // A name ("Glenrick Spain") is reliably shorter than the longest approved
+    // titles ("Electrical Maintenance Technician", "Civil Engineering
+    // Consultant"), so the pair splits unevenly rather than 50/50 — an equal
+    // split still truncated the longest titles even after the wrapper above
+    // was widened to span two header columns.
+    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
       <input
         type="text"
         aria-label="Conducted by — name"
@@ -621,7 +643,7 @@ function ConductedByField({ field, value, disabled, onChange }) {
         disabled={disabled}
         value={parts.title}
         onChange={(e) => commit({ ...parts, title: e.target.value })}
-        className="min-h-10 w-full rounded border border-navy/20 bg-white px-3 py-2 text-sm"
+        className="min-h-10 w-full rounded border border-navy/20 bg-white px-2 py-2 text-sm"
       >
         <option value="">Select a title…</option>
         {titles.map((title) => (

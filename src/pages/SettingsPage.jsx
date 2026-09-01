@@ -39,7 +39,7 @@ import {
  * govern the airport, then the demo tools.
  */
 const SECTIONS = [
-  { id: 'profile', label: 'My profile', blurb: 'Name and position on records', Icon: UserRound, store: 'preferences' },
+  { id: 'profile', label: 'My profile', blurb: 'Name, position, and saved signature', Icon: UserRound, store: 'preferences' },
   { id: 'preferences', label: 'My notifications', blurb: 'What reaches you', Icon: Bell, store: 'preferences' },
   {
     id: 'deficiency',
@@ -114,9 +114,17 @@ export default function SettingsPage() {
   // The committed value for whichever section is open. Profile is the odd one
   // out: it lives on the user record, not in settings.
   const committed = useMemo(() => {
-    if (active?.id === 'profile') return { full_name: displayName, position };
+    if (active?.id === 'profile') {
+      return {
+        full_name: displayName,
+        position,
+        stored_signature_data_uri: profile?.stored_signature_data_uri ?? null,
+        stored_signature_updated_at: profile?.stored_signature_updated_at ?? null,
+        hide_signature_prompt: Boolean(profile?.hide_signature_prompt),
+      };
+    }
     return settings[active?.store] ?? null;
-  }, [active, settings, displayName, position]);
+  }, [active, settings, displayName, position, profile]);
 
   // Re-clone during render, not in an effect.
   //
@@ -163,7 +171,13 @@ export default function SettingsPage() {
     setBanner(null);
     try {
       if (active.id === 'profile') {
-        await updateProfile({ full_name: draft.full_name, position: draft.position });
+        await updateProfile({
+          full_name: draft.full_name,
+          position: draft.position,
+          stored_signature_data_uri: draft.stored_signature_data_uri ?? null,
+          stored_signature_updated_at: draft.stored_signature_updated_at ?? null,
+          hide_signature_prompt: Boolean(draft.hide_signature_prompt),
+        });
       } else {
         await saveSection(active.store, draft, actor);
       }

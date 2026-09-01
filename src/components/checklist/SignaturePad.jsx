@@ -1,24 +1,66 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 
-export default function SignaturePad({ value, disabled, onChange, label = 'Signature' }) {
+function SignaturePlaceholder() {
+  return (
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center">
+      <svg
+        viewBox="0 0 200 48"
+        className="mb-1 h-10 w-44 text-navy/20"
+        aria-hidden
+        fill="none"
+      >
+        <path
+          d="M8 34c18-22 32-26 48-18s28 8 44-4 28-10 40 2 36 14 52-8"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      </svg>
+      <p className="text-sm font-semibold text-navy">Add your signature here</p>
+      <p className="text-xs text-muted">Use your mouse, trackpad, or touchscreen.</p>
+    </div>
+  );
+}
+
+export default function SignaturePad({
+  value,
+  disabled,
+  onChange,
+  label = 'Signature',
+  variant = 'default',
+  hideClear = false,
+}) {
   const canvasRef = useRef(null);
   const drawing = useRef(false);
+  const prompt = variant === 'prompt';
+  const [hasInk, setHasInk] = useState(Boolean(value));
+
+  useEffect(() => {
+    setHasInk(Boolean(value));
+  }, [value]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (prompt) {
+      // Prompt canvas stays transparent so the dashed box's placeholder
+      // illustration (rendered behind it) can show through until inked.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-navy').trim() || '#0b1e3d';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = prompt ? 2.5 : 2;
     ctx.lineCap = 'round';
     if (value) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       img.src = value;
     }
-  }, [value]);
+  }, [value, prompt]);
 
   function pos(event) {
     const canvas = canvasRef.current;
@@ -33,6 +75,7 @@ export default function SignaturePad({ value, disabled, onChange, label = 'Signa
   function start(event) {
     if (disabled) return;
     drawing.current = true;
+    setHasInk(true);
     const { x, y } = pos(event);
     const ctx = canvasRef.current.getContext('2d');
     ctx.beginPath();
@@ -57,35 +100,60 @@ export default function SignaturePad({ value, disabled, onChange, label = 'Signa
   function clear() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (prompt) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    setHasInk(false);
     onChange?.(null);
   }
 
   return (
     <div>
-      <canvas
-        ref={canvasRef}
-        // A canvas exposes nothing of itself to assistive technology, so
-        // without a name this is an unlabelled drawing surface — and the
-        // signature is the one control on the form that carries a person's
-        // accountability for what they filed.
-        role="img"
-        aria-label={label}
-        width={320}
-        height={96}
-        className="h-24 w-full touch-none rounded border border-navy/20 bg-white"
-        onMouseDown={start}
-        onMouseMove={move}
-        onMouseUp={end}
-        onMouseLeave={end}
-        onTouchStart={start}
-        onTouchMove={move}
-        onTouchEnd={end}
-      />
-      {!disabled && (
-        <button type="button" onClick={clear} className="mt-1 text-xs text-muted hover:text-alert">
-          Clear signature
+      <div
+        className={`relative ${
+          prompt ? 'overflow-hidden rounded-lg border-2 border-dashed border-navy/20 bg-white' : ''
+        }`}
+      >
+        {prompt && !hasInk && !disabled && <SignaturePlaceholder />}
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label={label}
+          width={prompt ? 480 : 320}
+          height={prompt ? 160 : 96}
+          className={
+            prompt
+              ? 'relative z-10 h-40 w-full touch-none'
+              : 'h-24 w-full touch-none rounded border border-navy/20 bg-white'
+          }
+          onMouseDown={start}
+          onMouseMove={move}
+          onMouseUp={end}
+          onMouseLeave={end}
+          onTouchStart={start}
+          onTouchMove={move}
+          onTouchEnd={end}
+        />
+      </div>
+      {!disabled && !hideClear && (
+        <button
+          type="button"
+          onClick={clear}
+          className={`mt-2 inline-flex items-center gap-1.5 text-sm font-medium ${
+            prompt ? 'text-primary hover:text-primary-hover' : 'text-xs text-muted hover:text-alert'
+          }`}
+        >
+          {prompt ? (
+            <>
+              <RotateCcw className="h-4 w-4" />
+              Clear signature
+            </>
+          ) : (
+            'Clear signature'
+          )}
         </button>
       )}
     </div>

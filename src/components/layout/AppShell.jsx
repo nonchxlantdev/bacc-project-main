@@ -59,7 +59,16 @@ export default function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen lg:h-[100dvh] lg:min-h-0">
+    // lg:fixed lg:inset-0 pins the shell's box to the viewport unconditionally
+    // (immune to the 100dvh-resolution failure that used to let it grow with
+    // content). No overflow-hidden here: that briefly made this box itself an
+    // invisible, scrollbar-less scroll container, and the browser's native
+    // "scroll focused control into view" behavior would silently scroll it
+    // instead of `<main>` — shifting the whole sidebar+content out of the
+    // viewport with nothing on screen to undo it. Fixed positioning alone
+    // already guarantees this box can never exceed the viewport, so the
+    // backstop was both redundant and the actual cause of that bug.
+    <div className="flex min-h-screen lg:fixed lg:inset-0 lg:h-[100dvh] lg:min-h-0">
       {navOpen && (
         <button
           type="button"

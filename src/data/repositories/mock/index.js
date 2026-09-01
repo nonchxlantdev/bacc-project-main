@@ -36,6 +36,17 @@ export function createMockRepositories() {
         const enabled = users.filter((row) => row.can_login);
         return enabled.length ? enabled : users;
       },
+      async update(id, patch) {
+        let updated = null;
+        mutateStore((s) => {
+          const index = s.users.findIndex((row) => row.id === id);
+          if (index < 0) return s;
+          s.users[index] = { ...s.users[index], ...patch };
+          updated = s.users[index];
+          return s;
+        });
+        return updated;
+      },
     },
     templates: {
       // Everyone sees every form. The assignment rules below still say who each

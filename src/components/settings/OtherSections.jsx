@@ -2,6 +2,7 @@ import { Clock } from 'lucide-react';
 import { NumberInput, Panel, Row, StringList, TextArea, TextInput, Toggle, Note } from './settingsUi.jsx';
 import { EMAIL_INTEGRATION_READY } from '../../config/settingsDefaults.js';
 import Select from '../ui/Select.jsx';
+import SignaturePad from '../checklist/SignaturePad.jsx';
 
 /**
  * Event names in BACC's own words, with a line saying when each one fires.
@@ -48,6 +49,7 @@ const ALL_RECIPIENTS = Object.keys(ROLE_LABELS);
 /** My Profile — the only section every account can edit. */
 export function ProfileSection({ draft, onChange, email, role, department }) {
   return (
+    <>
     <Panel
       title="How you appear on records"
       description="Your name and position are copied onto the inspector sign-off when you submit a checklist, and onto the exported PDF. They are not changed on records you have already submitted."
@@ -68,6 +70,59 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
         </p>
       </Row>
     </Panel>
+    <Panel
+      title="My signature"
+      description="Used when you tap “Use my saved signature” on a checklist. Does not change records you have already submitted."
+    >
+      <Row
+        label="Saved signature"
+        effect="Draw once here, then apply it to the inspector sign-off on any draft checklist."
+      >
+        <SignaturePad
+          label="Saved signature"
+          value={draft.stored_signature_data_uri ?? null}
+          onChange={(stored_signature_data_uri) =>
+            onChange({
+              ...draft,
+              stored_signature_data_uri,
+              stored_signature_updated_at: stored_signature_data_uri ? new Date().toISOString() : null,
+            })
+          }
+        />
+        {draft.stored_signature_data_uri && (
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...draft,
+                stored_signature_data_uri: null,
+                stored_signature_updated_at: null,
+              })
+            }
+            className="mt-2 text-xs font-medium text-alert hover:underline"
+          >
+            Clear saved signature
+          </button>
+        )}
+        {draft.stored_signature_updated_at && (
+          <p className="mt-2 text-xs text-muted">
+            Last saved {new Date(draft.stored_signature_updated_at).toLocaleString()}
+          </p>
+        )}
+      </Row>
+      <Row label="Signature prompt" effect="When you open a draft checklist, offer to apply your saved signature.">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-navy sm:min-h-10">
+          <input
+            type="checkbox"
+            checked={Boolean(draft.hide_signature_prompt)}
+            onChange={(e) => onChange({ ...draft, hide_signature_prompt: e.target.checked })}
+            className="h-4 w-4"
+          />
+          Don&apos;t show the signature prompt when opening a checklist
+        </label>
+      </Row>
+    </Panel>
+  </>
   );
 }
 

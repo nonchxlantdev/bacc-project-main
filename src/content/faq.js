@@ -72,6 +72,10 @@ export const FAQ_GROUPS = [
         q: 'Does a signature drawn on a phone count?',
         a: 'The portal records your drawn signature together with your name, position, and the time signed, and places that information on the exported form. Whether that meets your auditor’s requirements is subject to BACC confirmation.',
       },
+      {
+        q: 'Can I save my signature and reuse it?',
+        a: 'Yes. Save your signature once under Settings → My profile → My signature. When you open a draft checklist, you can apply it to the inspector sign-off with one tap, or sign manually on the form. Each submission still stores the signature image and time filed on that record; changing your saved signature later does not alter checklists you have already submitted.',
+      },
     ],
   },
   {
