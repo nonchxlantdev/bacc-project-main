@@ -258,3 +258,25 @@ textarea {
     transform: translateY(0) scale(1);
   }
 }
+
+/* Sign-in screen's visual panel ("Ops Board") — a faint instrument-grid
+   backdrop over the navy gradient, plus the slow pulse on its status LEDs.
+   Scoped to LoginPage; kept here rather than inline so the layered
+   background (three images) doesn't have to be hand-built as a JSX style
+   prop. */
+.login-visual-bg {
+  background-image: radial-gradient(120% 90% at 30% 0%, var(--color-navy-mid) 0%, var(--color-navy) 46%, var(--color-navy-deep) 100%),
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+  background-position: 0 0, -1px -1px, -1px -1px;
+}
+
+@keyframes beacon-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}

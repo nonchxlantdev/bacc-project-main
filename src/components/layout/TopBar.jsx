@@ -1,43 +1,14 @@
 import { Bell, CircleHelp, LogOut, Menu } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Dropdown from '../ui/Dropdown.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNotifications } from '../../hooks/useRepos.js';
-
-const clockFmt = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'America/Belize',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-});
-
-const dateFmt = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'America/Belize',
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
-
-/**
- * The real wall clock at PGIA, ticking every second — separate from the
- * app's seeded "airport date" (`getRepos().instances.getClock()`) used
- * elsewhere for due-date math. This one just answers "what time is it".
- */
-function useBelizeClock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
+import { useAirportClock } from '../../hooks/useAirportClock.js';
 
 export default function TopBar({ online, onMenuClick }) {
   const { displayName, position, user, profile, signOut } = useAuth();
   const { unread } = useNotifications(user?.id);
-  const now = useBelizeClock();
+  const clock = useAirportClock();
 
   const initials = displayName
     .split(' ')
@@ -79,10 +50,8 @@ export default function TopBar({ online, onMenuClick }) {
           <span className="text-[13px] font-semibold text-muted">{online ? 'Online' : 'Offline'}</span>
         </div>
         <div className="hidden leading-tight md:block md:border-l md:border-line/15 md:pl-4">
-          <div className="font-mono text-[15px] font-semibold tabular-nums text-ink">
-            {clockFmt.format(now)}
-          </div>
-          <div className="text-[11px] text-muted">{dateFmt.format(now)} · America/Belize</div>
+          <div className="font-mono text-[15px] font-semibold tabular-nums text-ink">{clock.time}</div>
+          <div className="text-[11px] text-muted">{clock.date} · America/Belize</div>
         </div>
       </div>
 

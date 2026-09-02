@@ -1,349 +1,349 @@
 {
-  "templateKey": "annex-k-construction-safety-plan-minimum-format-template",
-  "templateVersion": "ed01",
-  "basePdf": "annex-k-construction-safety-plan-minimum-format-template-ed01.pdf",
-  "documentFamily": "PMM",
-  "origin": "pdf-points-bottom-left",
-  "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
-  "mapping": {
-    "method": "automated: scripts/pmm-extract.mjs — glyph positions + raster rule detection",
-    "headerRules": [
-      65.9,
-      205.9,
-      533.5
-    ],
-    "generated": true
-  },
-  "pageSize": {
-    "width": 612.12,
-    "height": 792.12
-  },
-  "fields": {
-    "project_title": {
-      "page": 0,
-      "x": 211.9,
-      "y": 528.04,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+    "templateKey": "annex-k-construction-safety-plan-minimum-format-template",
+    "templateVersion": "ed01",
+    "basePdf": "annex-k-construction-safety-plan-minimum-format-template-ed01.pdf",
+    "documentFamily": "PMM",
+    "origin": "pdf-points-bottom-left",
+    "originNote": "PDF points, bottom-left origin (pdf-lib). From pdftotext -bbox: y_pdf = 792.12 - yTop - 9.74.",
+    "mapping": {
+        "method": "automated: scripts/pmm-extract.mjs \u2014 glyph positions + raster rule detection",
+        "headerRules": [
+            65.9,
+            205.9,
+            533.5
+        ],
+        "generated": true
     },
-    "project_location_on_aerodrome": {
-      "page": 0,
-      "x": 211.9,
-      "y": 498.04,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+    "pageSize": {
+        "width": 612.12,
+        "height": 792.12
     },
-    "project_description": {
-      "page": 0,
-      "x": 211.9,
-      "y": 479.56,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "contractor_name_and_contact": {
-      "page": 0,
-      "x": 211.9,
-      "y": 449.68,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "contractor_site_safety_officer_name_and_contact": {
-      "page": 0,
-      "x": 211.9,
-      "y": 420.88,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "cec_name_and_contact": {
-      "page": 0,
-      "x": 211.9,
-      "y": 402.39,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "coo_name_and_contact": {
-      "page": 0,
-      "x": 211.9,
-      "y": 382.83,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "om_name_and_contact": {
-      "page": 0,
-      "x": 211.9,
-      "y": 363.16,
-      "size": 9,
-      "width": 317.6,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "bdca_submission_date": {
-      "page": 0,
-      "x": 211.9,
-      "y": 343.6,
-      "size": 9,
-      "width": 317.6
-    },
-    "bdca_acceptance_date": {
-      "page": 0,
-      "x": 211.9,
-      "y": 324.04,
-      "size": 9,
-      "width": 317.6
-    },
-    "section_aoperational_impact_assessment": {
-      "page": 0,
-      "x": 72,
-      "y": 242.64,
-      "width": 457.5,
-      "height": 175.8,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 15,
-      "overflow": "continuation"
-    },
-    "section_bphased_construction_schedule": {
-      "page": 1,
-      "x": 72,
-      "y": 618.72,
-      "width": 457.5,
-      "height": 175.2,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 15,
-      "overflow": "continuation"
-    },
-    "section_cconstruction_area_demarcation_p": {
-      "page": 1,
-      "x": 72,
-      "y": 408.24,
-      "width": 457.5,
-      "height": 175.3,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 15,
-      "overflow": "continuation"
-    },
-    "section_dtemporary_markings_plan": {
-      "page": 1,
-      "x": 72,
-      "y": 186.12,
-      "width": 457.5,
-      "height": 119.3,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 10,
-      "overflow": "continuation"
-    },
-    "section_etemporary_signs_plan_if_applica": {
-      "page": 2,
-      "x": 72,
-      "y": 649.8,
-      "width": 457.5,
-      "height": 155.7,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 14,
-      "overflow": "continuation"
-    },
-    "section_ftemporary_lighting_plan_if_appl.yes": {
-      "page": 2,
-      "x": 87.5,
-      "y": 464.44,
-      "type": "mark",
-      "size": 9
-    },
-    "section_ftemporary_lighting_plan_if_appl.no": {
-      "page": 2,
-      "x": 531.6,
-      "y": 477.75,
-      "type": "mark",
-      "size": 9
-    },
-    "section_ftemporary_lighting_plan_if_appl": {
-      "page": 2,
-      "x": 72,
-      "y": 439.39,
-      "width": 457.5,
-      "height": 151.5,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 13,
-      "overflow": "continuation"
-    },
-    "section_gnotam_plan": {
-      "page": 2,
-      "x": 72,
-      "y": 252.48,
-      "width": 457.5,
-      "height": 185.6,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 16,
-      "overflow": "continuation"
-    },
-    "section_hfod_prevention_and_control_proc": {
-      "page": 3,
-      "x": 72,
-      "y": 649.41,
-      "width": 457.5,
-      "height": 96.8,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 8,
-      "overflow": "continuation"
-    },
-    "section_ivehicle_and_equipment_managemen": {
-      "page": 3,
-      "x": 72,
-      "y": 536.37,
-      "width": 457.5,
-      "height": 213.9,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 19,
-      "overflow": "continuation"
-    },
-    "section_jemergency_procedures_during_con": {
-      "page": 3,
-      "x": 72,
-      "y": 306.21,
-      "width": 457.5,
-      "height": 239.4,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 21,
-      "overflow": "continuation"
-    },
-    "section_kweather_seasonal_contingency_pl": {
-      "page": 4,
-      "x": 72,
-      "y": 630.36,
-      "width": 457.5,
-      "height": 175.3,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 15,
-      "overflow": "continuation"
-    },
-    "section_lenvironmental_management": {
-      "page": 4,
-      "x": 72,
-      "y": 438.81,
-      "width": 457.5,
-      "height": 155.3,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 13,
-      "overflow": "continuation"
-    },
-    "section_mpost_construction_restoration_p": {
-      "page": 4,
-      "x": 72,
-      "y": 267.21,
-      "width": 457.5,
-      "height": 200.4,
-      "size": 9,
-      "wrap": true,
-      "maxLines": 18,
-      "overflow": "continuation"
-    },
-    "inspector_signature": {
-      "page": 5,
-      "x": 72,
-      "y": 568,
-      "type": "image",
-      "width": 150.2,
-      "height": 22
-    },
-    "inspector_name": {
-      "page": 5,
-      "x": 72,
-      "y": 568,
-      "size": 7,
-      "width": 150.2,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "inspector_date": {
-      "page": 5,
-      "x": 96.1,
-      "y": 547.24,
-      "size": 8,
-      "width": 75.1
-    },
-    "coo_signature": {
-      "page": 5,
-      "x": 234.1,
-      "y": 568,
-      "type": "image",
-      "width": 150.2,
-      "height": 22
-    },
-    "coo_name": {
-      "page": 5,
-      "x": 234.1,
-      "y": 568,
-      "size": 7,
-      "width": 150.2,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "coo_date": {
-      "page": 5,
-      "x": 258.2,
-      "y": 536.91,
-      "size": 8,
-      "width": 75.1
-    },
-    "ceo_signature": {
-      "page": 5,
-      "x": 396.4,
-      "y": 568,
-      "type": "image",
-      "width": 150.2,
-      "height": 22
-    },
-    "ceo_name": {
-      "page": 5,
-      "x": 396.4,
-      "y": 568,
-      "size": 7,
-      "width": 150.2,
-      "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
-    },
-    "ceo_date": {
-      "page": 5,
-      "x": 420.5,
-      "y": 536.91,
-      "size": 8,
-      "width": 75.1
+    "fields": {
+        "project_title": {
+            "page": 0,
+            "x": 211.9,
+            "y": 528.04,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "project_location_on_aerodrome": {
+            "page": 0,
+            "x": 211.9,
+            "y": 498.04,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "project_description": {
+            "page": 0,
+            "x": 211.9,
+            "y": 479.56,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "contractor_name_and_contact": {
+            "page": 0,
+            "x": 211.9,
+            "y": 449.68,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "contractor_site_safety_officer_name_and_contact": {
+            "page": 0,
+            "x": 211.9,
+            "y": 420.88,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "cec_name_and_contact": {
+            "page": 0,
+            "x": 211.9,
+            "y": 402.39,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "coo_name_and_contact": {
+            "page": 0,
+            "x": 211.9,
+            "y": 382.83,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "om_name_and_contact": {
+            "page": 0,
+            "x": 211.9,
+            "y": 363.16,
+            "size": 9,
+            "width": 317.6,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "bdca_submission_date": {
+            "page": 0,
+            "x": 211.9,
+            "y": 343.6,
+            "size": 9,
+            "width": 317.6
+        },
+        "bdca_acceptance_date": {
+            "page": 0,
+            "x": 211.9,
+            "y": 324.04,
+            "size": 9,
+            "width": 317.6
+        },
+        "section_aoperational_impact_assessment": {
+            "page": 0,
+            "x": 72,
+            "y": 242.64,
+            "width": 457.5,
+            "height": 175.8,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 15,
+            "overflow": "continuation"
+        },
+        "section_bphased_construction_schedule": {
+            "page": 1,
+            "x": 72,
+            "y": 618.72,
+            "width": 457.5,
+            "height": 175.2,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 15,
+            "overflow": "continuation"
+        },
+        "section_cconstruction_area_demarcation_p": {
+            "page": 1,
+            "x": 72,
+            "y": 408.24,
+            "width": 457.5,
+            "height": 175.3,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 15,
+            "overflow": "continuation"
+        },
+        "section_dtemporary_markings_plan": {
+            "page": 1,
+            "x": 72,
+            "y": 186.12,
+            "width": 457.5,
+            "height": 119.3,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 10,
+            "overflow": "continuation"
+        },
+        "section_etemporary_signs_plan_if_applica": {
+            "page": 2,
+            "x": 72,
+            "y": 649.8,
+            "width": 457.5,
+            "height": 155.7,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 14,
+            "overflow": "continuation"
+        },
+        "section_ftemporary_lighting_plan_if_appl.yes": {
+            "page": 2,
+            "x": 87.5,
+            "y": 464.44,
+            "type": "mark",
+            "size": 9
+        },
+        "section_ftemporary_lighting_plan_if_appl.no": {
+            "page": 2,
+            "x": 531.6,
+            "y": 477.75,
+            "type": "mark",
+            "size": 9
+        },
+        "section_ftemporary_lighting_plan_if_appl": {
+            "page": 2,
+            "x": 72,
+            "y": 439.39,
+            "width": 457.5,
+            "height": 151.5,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 13,
+            "overflow": "continuation"
+        },
+        "section_gnotam_plan": {
+            "page": 2,
+            "x": 72,
+            "y": 252.48,
+            "width": 457.5,
+            "height": 185.6,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 16,
+            "overflow": "continuation"
+        },
+        "section_hfod_prevention_and_control_proc": {
+            "page": 3,
+            "x": 72,
+            "y": 649.41,
+            "width": 457.5,
+            "height": 96.8,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 8,
+            "overflow": "continuation"
+        },
+        "section_ivehicle_and_equipment_managemen": {
+            "page": 3,
+            "x": 72,
+            "y": 536.37,
+            "width": 457.5,
+            "height": 213.9,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 19,
+            "overflow": "continuation"
+        },
+        "section_jemergency_procedures_during_con": {
+            "page": 3,
+            "x": 72,
+            "y": 306.21,
+            "width": 457.5,
+            "height": 239.4,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 21,
+            "overflow": "continuation"
+        },
+        "section_kweather_seasonal_contingency_pl": {
+            "page": 4,
+            "x": 72,
+            "y": 630.36,
+            "width": 457.5,
+            "height": 175.3,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 15,
+            "overflow": "continuation"
+        },
+        "section_lenvironmental_management": {
+            "page": 4,
+            "x": 72,
+            "y": 438.81,
+            "width": 457.5,
+            "height": 155.3,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 13,
+            "overflow": "continuation"
+        },
+        "section_mpost_construction_restoration_p": {
+            "page": 4,
+            "x": 72,
+            "y": 267.21,
+            "width": 457.5,
+            "height": 200.4,
+            "size": 9,
+            "wrap": true,
+            "maxLines": 18,
+            "overflow": "continuation"
+        },
+        "inspector_signature": {
+            "page": 5,
+            "x": 72,
+            "y": 568,
+            "type": "image",
+            "width": 150.2,
+            "height": 36
+        },
+        "inspector_name": {
+            "page": 5,
+            "x": 72,
+            "y": 568,
+            "size": 7,
+            "width": 150.2,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "inspector_date": {
+            "page": 5,
+            "x": 96.1,
+            "y": 547.24,
+            "size": 8,
+            "width": 75.1
+        },
+        "coo_signature": {
+            "page": 5,
+            "x": 234.1,
+            "y": 568,
+            "type": "image",
+            "width": 150.2,
+            "height": 36
+        },
+        "coo_name": {
+            "page": 5,
+            "x": 234.1,
+            "y": 568,
+            "size": 7,
+            "width": 150.2,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "coo_date": {
+            "page": 5,
+            "x": 258.2,
+            "y": 536.91,
+            "size": 8,
+            "width": 75.1
+        },
+        "ceo_signature": {
+            "page": 5,
+            "x": 396.4,
+            "y": 568,
+            "type": "image",
+            "width": 150.2,
+            "height": 36
+        },
+        "ceo_name": {
+            "page": 5,
+            "x": 396.4,
+            "y": 568,
+            "size": 7,
+            "width": 150.2,
+            "wrap": true,
+            "maxLines": 1,
+            "overflow": "continuation"
+        },
+        "ceo_date": {
+            "page": 5,
+            "x": 420.5,
+            "y": 536.91,
+            "size": 8,
+            "width": 75.1
+        }
     }
-  }
 }
