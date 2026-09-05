@@ -184,7 +184,7 @@ export default function ReportsPage() {
         {late.length === 0 ? (
           <Empty>Nothing has been filed late.</Empty>
         ) : (
-          <div className="overflow-hidden rounded-md border border-line/10">
+          <div className="overflow-x-auto rounded-md border border-line/10">
             <table className="table-stack w-full text-left text-sm">
               <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
                 <tr>
@@ -262,7 +262,7 @@ function SectionPicker({ open, onOpenChange, visible, onToggle }) {
           return (
             <label
               key={section.id}
-              className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 lg:min-h-0 ${
+              className={`flex min-h-11 items-start gap-2.5 rounded px-2 py-2 desk:min-h-0 ${
                 last ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-surface-2'
               }`}
               title={last ? 'At least one report must stay visible' : undefined}

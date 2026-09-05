@@ -55,22 +55,17 @@ export default function ChecklistItemRow({
     >
       {/* Phone card (<768px) */}
       <div className="flex flex-col pb-2.5 pt-2 md:hidden">
-        <div className="flex items-baseline gap-2 px-3">
-          <button
-            type="button"
-            onClick={() => onSelect(item.code)}
-            className="shrink-0 text-left text-[13px] font-bold text-ink"
-          >
-            {item.code}
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelect(item.code)}
-            className="min-w-0 flex-1 text-left text-[13px] leading-snug text-ink"
-          >
-            {item.text}
-          </button>
-        </div>
+        {/* Code and wording are one button, not two: they open the same
+            sheet, and split they were a pair of 24px-tall targets and a pair
+            of identical entries in the accessibility tree. */}
+        <button
+          type="button"
+          onClick={() => onSelect(item.code)}
+          className="flex min-h-11 w-full items-start gap-2 px-3 py-1 text-left"
+        >
+          <span className="shrink-0 text-[13px] font-bold text-ink">{item.code}</span>
+          <span className="min-w-0 flex-1 text-[13px] leading-snug text-ink">{item.text}</span>
+        </button>
 
         <div className="flex gap-2 px-3 pt-2.5">
           <ResultToggle
@@ -126,29 +121,25 @@ export default function ChecklistItemRow({
           <button
             type="button"
             onClick={() => onSelect(item.code)}
-            className="shrink-0 text-left text-[13px] font-bold text-ink"
+            className="flex min-h-11 min-w-0 flex-1 items-start gap-2 py-1 text-left"
           >
-            {item.code}
+            <span className="shrink-0 text-[13px] font-bold text-ink">{item.code}</span>
+            <span className="min-w-0 flex-1 text-[13px] leading-snug text-ink">
+              {item.text}
+              {(hasRemarks || hasPhoto) && (
+                <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-medium text-muted">
+                  {hasRemarks && <span>Remarks added</span>}
+                  {hasPhoto && (
+                    <span className="inline-flex items-center gap-1">
+                      <Camera className="h-3 w-3" aria-hidden />
+                      Photo attached
+                    </span>
+                  )}
+                </span>
+              )}
+            </span>
           </button>
-          <button
-            type="button"
-            onClick={() => onSelect(item.code)}
-            className="min-w-0 flex-1 text-left text-[13px] leading-snug text-ink"
-          >
-            {item.text}
-            {(hasRemarks || hasPhoto) && (
-              <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-medium text-muted">
-                {hasRemarks && <span>Remarks added</span>}
-                {hasPhoto && (
-                  <span className="inline-flex items-center gap-1">
-                    <Camera className="h-3 w-3" aria-hidden />
-                    Photo attached
-                  </span>
-                )}
-              </span>
-            )}
-          </button>
-          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />
+          <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted" aria-hidden />
         </div>
 
         <div className="flex gap-2">

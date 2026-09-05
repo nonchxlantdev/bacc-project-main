@@ -343,7 +343,10 @@ export default function IncidentDetailPage() {
         <div>
           <h1 className="text-xl font-bold text-ink sm:text-2xl">Incident Management</h1>
           <p className="mt-1 text-sm text-muted">
-            <Link to="/incidents" className="hover:text-primary hover:underline">
+            <Link
+              to="/incidents"
+              className="inline-flex min-h-11 items-center hover:text-primary hover:underline desk:min-h-0"
+            >
               Incidents
             </Link>
             <span className="px-1.5">&gt;</span>
@@ -354,7 +357,7 @@ export default function IncidentDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/incidents')}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 desk:min-h-10 sm:justify-start"
           >
             <ArrowLeft size={16} aria-hidden />
             <span className="sm:hidden">Back</span>
@@ -366,7 +369,7 @@ export default function IncidentDetailPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 desk:min-h-10 sm:justify-start"
               >
                 <X size={16} aria-hidden /> Cancel
               </button>
@@ -374,7 +377,7 @@ export default function IncidentDetailPage() {
                 type="button"
                 onClick={saveEdit}
                 disabled={busy}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 lg:min-h-10 sm:justify-start"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 desk:min-h-10 sm:justify-start"
               >
                 <Check size={16} aria-hidden /> Save Changes
               </button>
@@ -383,7 +386,7 @@ export default function IncidentDetailPage() {
             <button
               type="button"
               onClick={startEdit}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10 sm:justify-start"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line/20 bg-surface px-3.5 text-sm font-medium text-ink hover:bg-surface-2 desk:min-h-10 sm:justify-start"
             >
               <Pencil size={16} aria-hidden /> Edit Incident
             </button>
@@ -610,7 +613,7 @@ export default function IncidentDetailPage() {
                     <button
                       type="button"
                       onClick={useMyLocation}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 lg:min-h-9"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 desk:min-h-9"
                     >
                       <LocateFixed size={14} aria-hidden /> Use My Location
                     </button>
@@ -624,7 +627,7 @@ export default function IncidentDetailPage() {
                         key={v.id}
                         type="button"
                         onClick={() => setLocationView(v.id)}
-                        className={`pb-2 text-xs ${
+                        className={`inline-flex min-h-11 items-center pb-2 text-xs desk:min-h-0 ${
                           locationView === v.id
                             ? 'border-b-2 border-primary font-semibold text-ink'
                             : 'border-b-2 border-transparent text-muted hover:text-ink'
@@ -636,7 +639,7 @@ export default function IncidentDetailPage() {
                   </div>
 
                   {locationView === 'map' ? (
-                    <div className="relative p-4">
+                    <div className="relative isolate p-4">
                       <LocationPicker
                         latitude={incident.latitude}
                         longitude={incident.longitude}
@@ -647,7 +650,7 @@ export default function IncidentDetailPage() {
                           saveIncident(next);
                         }}
                       />
-                      <div className="pointer-events-none absolute right-7 top-7 z-[400] rounded border border-line/15 bg-surface px-3 py-2 text-xs shadow-card">
+                      <div className="pointer-events-none absolute right-7 top-7 z-10 rounded border border-line/15 bg-surface px-3 py-2 text-xs shadow-card">
                         <p className="font-semibold text-ink">Incident Location</p>
                         <p className="text-muted">{incident.location_label}</p>
                       </div>
@@ -685,7 +688,7 @@ export default function IncidentDetailPage() {
                 <button
                   type="button"
                   onClick={useMyLocation}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 lg:min-h-9"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line/20 px-3 text-xs font-semibold text-ink hover:bg-surface-2 desk:min-h-9"
                 >
                   <LocateFixed size={14} aria-hidden /> Use My Location
                 </button>

@@ -34,3 +34,6 @@ dist-ssr
 # PDF fidelity harness output
 tmp-pdf-diff/
 tmp-annex-*-coords.json
+
+# QA harness screenshots
+tmp-qa/

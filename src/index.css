@@ -10,6 +10,14 @@
    rare rule that can't be expressed as a token swap (e.g. a shadow's blur). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* "Wide screen AND a precise pointer" — the condition under which a control
+   may drop below the 44px touch minimum and take on desktop density.
+   Width alone is not that condition: a 1024×1366 iPad Pro in portrait is a
+   `lg` viewport driven entirely by a finger, so every `lg:min-h-0` on it
+   shrank buttons to 20–28px. Use `desk:` for anything that trades hit area
+   for density, and plain `lg:` for layout that genuinely depends on width. */
+@custom-variant desk (@media (width >= 64rem) and (pointer: fine));
+
 @theme {
   --color-navy: #0b1e3d;
   --color-navy-mid: #0e2447;
@@ -161,12 +169,17 @@ textarea {
    desktop layout, column order and export logic are untouched. Each cell
    carries data-label, which becomes the row label on a phone; without it a
    stacked cell would be an unlabelled value once the header row is hidden.
-   `lg` rather than `md` is deliberate: a tablet in portrait (iPad portrait
-   is 768-834px) is still a touch device, and the compact desktop table's
-   row-action buttons shrink below the 44px touch-target minimum once the
-   table is on — see MyChecklistsPage/ChecklistCataloguePage's Delete/Preview
-   buttons, which shrink at the same breakpoint this stacks at. */
-@media (max-width: 1023px) {
+
+   The condition is the inverse of `desk:` — stack unless the screen is wide
+   AND the pointer is precise. Width alone used to decide it, which broke on
+   the one device that sits on the wrong side of the line: a 1024×1366 iPad
+   Pro in portrait is `lg` and finger-driven, so it got the dense desktop
+   table, whose row actions and sort headers shrink below the 44px touch
+   minimum, in a content column ~740px wide that the 7-column incidents
+   table overflows. Written in the legacy `not all and` form so it degrades
+   to "always stacked" rather than "never stacked" on a parser that does not
+   understand it. */
+@media not all and (min-width: 64rem) and (pointer: fine) {
   .table-stack,
   .table-stack tbody,
   .table-stack tr,
@@ -221,6 +234,16 @@ textarea {
   .table-stack td[colspan] {
     display: block;
     text-align: center;
+  }
+
+  /* A record's link is the whole point of the row, but as inline text it is
+     a ~20px tap target. Stacked cells each own a full line, so the link can
+     take the touch minimum here without touching the desktop table's row
+     height. */
+  .table-stack td a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
   }
 }
 
@@ -278,5 +301,72 @@ textarea {
   }
   50% {
     opacity: 1;
+  }
+}
+
+/* Dark panels (sidebar nav, etc.) — the OS default is a bright track on
+   navy. A thin, mostly transparent thumb keeps scroll usable without a
+   white stripe down the rail; it brightens slightly on hover. */
+.scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.scrollbar-dark::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+
+.scrollbar-dark:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.32);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Leaflet has its own z-index scale — panes 200–700, controls 800, and the
+   corner control holders at 1000 — but it never makes .leaflet-container a
+   stacking context, so those numbers escape into whichever context the map
+   happens to be rendered in. At the page level that is the root context,
+   where a z-1000 zoom control beats the nav drawer (z-40), dropdown menus,
+   select listboxes, and a modal's sticky action bar, all of which then get
+   painted over by the map. Isolating the container scopes Leaflet's whole
+   scale inside the map box and leaves the map itself an ordinary z-auto
+   element that stacks by document order, which is what every call site
+   already assumes. */
+.leaflet-container {
+  isolation: isolate;
+}
+
+/* Leaflet's zoom buttons are 30px square at every size, including its own
+   "touch" mode. That is the smallest control in the app on a phone, and it
+   sits on a surface where a missed tap pans the map instead. */
+@media (pointer: coarse) {
+  /* `.leaflet-touch .leaflet-bar a` is how Leaflet sets its own 30px, so the
+     override has to be at least as specific to win. */
+  .leaflet-touch .leaflet-bar a,
+  .leaflet-bar a {
+    width: 2.75rem;
+    height: 2.75rem;
+    line-height: 2.75rem;
+  }
+
+  /* The incident pin is a 16px dot that has to be dragged with a fingertip.
+     Grow the grab area, not the dot: an invisible child stretches the hit
+     region to 44px while the marker keeps its exact size and anchor, so the
+     pin still sits on the coordinate it reports. */
+  .leaflet-marker-draggable::after {
+    content: '';
+    position: absolute;
+    inset: -0.875rem;
   }
 }

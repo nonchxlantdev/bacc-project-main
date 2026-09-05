@@ -66,7 +66,7 @@ export default function NewInspectionPicker({ templates, onPick, onClose, busyKe
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by form number, title or team…"
-              className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink lg:min-h-10"
+              className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink desk:min-h-10"
             />
           </div>
           <Select

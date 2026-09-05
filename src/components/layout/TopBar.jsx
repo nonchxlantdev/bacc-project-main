@@ -24,7 +24,7 @@ export default function TopBar({ online, onMenuClick }) {
           type="button"
           onClick={onMenuClick}
           aria-label="Open navigation"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink md:hidden"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-ink md:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -62,14 +62,14 @@ export default function TopBar({ online, onMenuClick }) {
         />
         <Link
           to="/help"
-          className="flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-ink"
           aria-label="Help"
         >
           <CircleHelp className="h-4 w-4" />
         </Link>
         <Link
           to="/notifications"
-          className="relative flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-ink"
+          className="relative flex h-11 w-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-ink"
           aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
         >
           <Bell className="h-4 w-4" />
@@ -80,7 +80,7 @@ export default function TopBar({ online, onMenuClick }) {
           )}
         </Link>
         <Dropdown align="right">
-          <Dropdown.Toggle className="flex min-h-11 items-center gap-3 rounded-md px-1 py-1 hover:bg-surface-2 sm:px-2">
+          <Dropdown.Toggle className="flex min-h-11 items-center gap-3 rounded-md px-1 py-1 transition-colors duration-150 ease-out hover:bg-surface-2 sm:px-2">
             <span className="hidden text-right leading-tight md:block">
               <span className="block max-w-[13rem] truncate text-sm font-semibold text-ink">{displayName}</span>
               <span className="block max-w-[13rem] truncate text-[11px] text-muted">{position}</span>

@@ -24,7 +24,7 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-3 py-1.5 text-xs font-semibold text-ink disabled:opacity-50 lg:min-h-9"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-3 py-1.5 text-xs font-semibold text-ink disabled:opacity-50 desk:min-h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Rendering…' : 'Refresh preview'}
@@ -48,7 +48,7 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50 lg:min-h-9"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-line/20 bg-surface px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50 desk:min-h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Rendering…' : 'Show preview'}

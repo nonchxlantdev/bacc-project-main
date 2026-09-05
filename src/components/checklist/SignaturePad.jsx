@@ -142,7 +142,7 @@ export default function SignaturePad({
         <button
           type="button"
           onClick={clear}
-          className={`mt-2 inline-flex items-center gap-1.5 text-sm font-medium ${
+          className={`mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium desk:min-h-0 ${
             prompt ? 'text-primary hover:text-primary-hover' : 'text-xs text-muted hover:text-alert'
           }`}
         >

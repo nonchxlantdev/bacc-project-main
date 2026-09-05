@@ -362,7 +362,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={onSave}
-                className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40 lg:min-h-10"
+                className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40 desk:min-h-10"
               >
                 {busy ? 'Saving…' : 'Save changes'}
               </button>
@@ -370,7 +370,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={() => setDraft(structuredClone(committed))}
-                className="inline-flex min-h-11 items-center rounded-md border border-line/20 bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-40 lg:min-h-10"
+                className="inline-flex min-h-11 items-center rounded-md border border-line/20 bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-40 desk:min-h-10"
               >
                 Discard
               </button>
@@ -380,7 +380,7 @@ export default function SettingsPage() {
                   type="button"
                   disabled={busy}
                   onClick={onReset}
-                  className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted hover:text-alert lg:min-h-10"
+                  className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted hover:text-alert desk:min-h-10"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restore defaults
@@ -476,7 +476,7 @@ function DemoButton({ onClick, tone, disabled, children }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-11 rounded-md border px-3 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 lg:min-h-10 ${
+      className={`min-h-11 rounded-md border px-3 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 desk:min-h-10 ${
         tone === 'alert' ? 'border-alert text-alert hover:bg-alert-soft' : 'border-line/20 text-ink hover:bg-surface-2'
       }`}
     >

@@ -77,7 +77,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
                           disabled={disabled}
                           aria-label={`${col.label}, row ${i + 1}`}
                           onChange={(e) => setCell(i, col.key, e.target.value)}
-                          className="min-h-10 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink lg:min-h-9"
+                          className="min-h-10 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9"
                         />
                       )}
                     </td>
@@ -88,7 +88,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
                         type="button"
                         onClick={() => onChange(rows.filter((_, r) => r !== i))}
                         aria-label={`Remove row ${i + 1}`}
-                        className="flex h-11 w-11 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert lg:h-9 lg:w-9"
+                        className="flex h-11 w-11 items-center justify-center rounded text-muted hover:bg-alert-soft hover:text-alert desk:h-9 desk:w-9"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -109,7 +109,7 @@ export default function LogTable({ field, value, disabled, onChange }) {
         <button
           type="button"
           onClick={addRow}
-          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary lg:min-h-9"
+          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary desk:min-h-9"
         >
           <Plus className="h-3.5 w-3.5" />
           Add row

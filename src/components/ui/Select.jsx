@@ -131,7 +131,7 @@ export default function Select({
         disabled={disabled}
         onClick={() => !disabled && setOpen((v) => !v)}
         onKeyDown={onKeyDown}
-        className={`flex min-h-11 w-full items-center gap-2 rounded-md border bg-surface px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10 ${
+        className={`flex min-h-11 w-full items-center gap-2 rounded-md border bg-surface px-3 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10 ${
           disabled ? 'cursor-not-allowed opacity-60' : ''
         } ${open ? 'border-primary' : 'border-line/20 hover:border-line/40'}`}
       >
@@ -167,7 +167,7 @@ export default function Select({
                 data-active={i === active}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(i)}
-                className={`flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm lg:min-h-9 ${
+                className={`flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm desk:min-h-9 ${
                   i === active ? 'bg-surface-2' : ''
                 }`}
               >

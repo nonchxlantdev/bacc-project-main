@@ -245,7 +245,7 @@ function Panel({ title, href, linkLabel, children }) {
         {href && (
           <Link
             to={href}
-            className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-md px-2 text-sm font-medium text-primary hover:bg-surface-2 lg:mr-0 lg:min-h-0 lg:px-0 lg:hover:bg-transparent lg:hover:underline"
+            className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-md px-2 text-sm font-medium text-primary hover:bg-surface-2 desk:mr-0 desk:min-h-0 desk:px-0 desk:hover:bg-transparent desk:hover:underline"
           >
             {linkLabel}
             <ChevronRight className="h-4 w-4" aria-hidden />

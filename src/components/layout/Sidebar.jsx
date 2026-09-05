@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
@@ -64,6 +64,45 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
   const location = useLocation();
   const panelRef = useRef(null);
 
+  // Tracks each nav item's DOM node (keyed by route) so the shared
+  // active-page indicator below can measure where to sit.
+  const itemRefs = useRef(new Map());
+  // Position of the active-page indicator, in the <nav>'s own coordinate
+  // space (see `relative` on <nav> below). `animate: false` on the very
+  // first measurement means "snap into place, don't slide in from
+  // nowhere" — matching how the sidebar's own collapse never animates on
+  // first paint either.
+  const [indicator, setIndicator] = useState(null);
+  const hasPositionedRef = useRef(false);
+
+  const activeTo = NAV_GROUPS.flatMap((group) => group.items).find((item) =>
+    isNavActive(item.to, location.pathname),
+  )?.to;
+
+  // Re-measure whenever the active route changes or `collapsed` toggles
+  // (collapsing hides each group's label row, which shifts every item
+  // below it). The resize listener covers the one case neither of those
+  // catches: the `lg` breakpoint shrinking each item from 44px to 40px
+  // tall with no route or collapse change.
+  useLayoutEffect(() => {
+    function measure() {
+      const activeEl = activeTo ? itemRefs.current.get(activeTo) : null;
+      if (!activeEl) {
+        setIndicator(null);
+        return;
+      }
+      setIndicator({
+        top: activeEl.offsetTop + 6,
+        height: activeEl.offsetHeight - 12,
+        animate: hasPositionedRef.current,
+      });
+      hasPositionedRef.current = true;
+    }
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [activeTo, collapsed]);
+
   // Opening the drawer moves focus into it; closing hands focus back to the page.
   useEffect(() => {
     if (open) panelRef.current?.focus();
@@ -95,7 +134,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
             onClick={onToggleCollapsed}
             aria-label="Expand navigation"
             title="Expand navigation"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/70 transition-colors duration-150 ease-out hover:bg-white/10 hover:text-white"
           >
             <PanelLeftOpen className="h-4 w-4" />
           </button>
@@ -121,7 +160,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
               onClick={onToggleCollapsed}
               aria-label="Collapse navigation"
               title="Collapse navigation"
-              className="hidden h-10 w-10 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white md:flex"
+              className="hidden h-10 w-10 items-center justify-center rounded-md text-white/70 transition-colors duration-150 ease-out hover:bg-white/10 hover:text-white md:flex"
             >
               <PanelLeftClose className="h-4 w-4" />
             </button>
@@ -129,14 +168,31 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
               type="button"
               onClick={onClose}
               aria-label="Close navigation"
-              className="-mr-1 -mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white md:hidden"
+              className="-mr-1 -mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-white/70 transition-colors duration-150 ease-out hover:bg-white/10 hover:text-white md:hidden"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
       )}
-      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-3">
+      <nav className="scrollbar-dark relative flex-1 space-y-4 overflow-y-auto overscroll-contain p-3">
+        {/* Active-page indicator — a single glowing rail (the same
+            PAPI-light beacon language used for status dots elsewhere)
+            that slides to whichever item is active, instead of each item
+            drawing its own. Reduced-motion users get it snapping straight
+            to place: the transition is motion-safe-gated, and the very
+            first measurement never animates in from (0, 0). */}
+        {indicator && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-0 w-[3px] rounded-full bg-teal shadow-glow-teal motion-safe:transition-[transform,height] motion-safe:duration-200 motion-safe:ease-out"
+            style={{
+              height: indicator.height,
+              transform: `translateY(${indicator.top}px)`,
+              transitionDuration: indicator.animate ? undefined : '0ms',
+            }}
+          />
+        )}
         {NAV_GROUPS.map((group, groupIndex) => (
           <div
             key={group.label}
@@ -151,21 +207,21 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
               {group.items.map((item) => (
                 <NavLink
                   key={item.to}
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(item.to, el);
+                    else itemRefs.current.delete(item.to);
+                  }}
                   to={item.to}
                   title={collapsed ? item.label : undefined}
                   aria-label={collapsed ? item.label : undefined}
-                  className={({ isActive }) => {
-                    const active = isNavActive(item.to, isActive, location.pathname);
-                    // The active marker is a glowing rail, not a fill — the
-                    // same PAPI-light language used for status beacons
-                    // elsewhere, so "where am I" reads the same way as
-                    // "is this okay" does.
-                    return `relative flex min-h-11 items-center gap-3 rounded-md py-2 text-sm before:absolute before:bottom-1.5 before:left-0 before:top-1.5 before:w-[3px] before:rounded-full before:content-[''] lg:min-h-10 lg:text-[13px] ${
+                  className={() => {
+                    const active = isNavActive(item.to, location.pathname);
+                    return `flex min-h-11 items-center gap-3 rounded-md py-2 text-sm transition-colors duration-150 ease-out desk:min-h-10 desk:text-[13px] ${
                       collapsed ? 'justify-center px-0' : 'pl-4 pr-3'
                     } ${
                       active
-                        ? 'bg-teal/10 font-semibold text-white before:bg-teal before:shadow-glow-teal'
-                        : 'text-white/75 before:bg-transparent hover:bg-white/5 hover:text-white'
+                        ? 'bg-teal/10 font-semibold text-white'
+                        : 'text-white/75 hover:bg-white/5 hover:text-white'
                     }`;
                   }}
                 >
@@ -186,7 +242,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
             onClick={toggleTheme}
             title={collapsed ? 'Toggle theme' : undefined}
             aria-label={collapsed ? `Theme, currently ${theme === 'dark' ? 'dark' : 'light'}` : undefined}
-            className={`flex min-h-11 w-full items-center gap-3 rounded-md py-2 text-sm text-white/75 hover:bg-white/5 hover:text-white lg:min-h-10 lg:text-[13px] ${
+            className={`flex min-h-11 w-full items-center gap-3 rounded-md py-2 text-sm text-white/75 transition-colors duration-150 ease-out hover:bg-white/5 hover:text-white desk:min-h-10 desk:text-[13px] ${
               collapsed ? 'justify-center px-0' : 'pl-4 pr-3'
             }`}
           >
@@ -212,7 +268,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
           onClick={() => signOut()}
           title={collapsed ? 'Sign out' : undefined}
           aria-label={collapsed ? 'Sign out' : undefined}
-          className={`flex min-h-11 w-full items-center gap-3 rounded-md py-2 text-sm text-white/75 hover:bg-white/5 hover:text-white lg:min-h-10 lg:text-[13px] ${
+          className={`flex min-h-11 w-full items-center gap-3 rounded-md py-2 text-sm text-white/75 transition-colors duration-150 ease-out hover:bg-white/5 hover:text-white desk:min-h-10 desk:text-[13px] ${
             collapsed ? 'justify-center px-0' : 'px-3'
           }`}
         >
@@ -224,9 +280,9 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
   );
 }
 
-function isNavActive(to, isActive, pathname) {
+function isNavActive(to, pathname) {
   if (to === '/checklists/mine') {
     return pathname.startsWith('/checklists/') && !pathname.startsWith('/checklists/all');
   }
-  return isActive;
+  return pathname === to || pathname.startsWith(`${to}/`);
 }

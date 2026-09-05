@@ -72,7 +72,7 @@ export default function HowThisWorks({ incident }) {
 
       <Link
         to="/help#incidents"
-        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+        className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-primary hover:underline desk:min-h-0"
       >
         <CircleHelp size={13} aria-hidden />
         More about incidents

@@ -61,10 +61,10 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
         <TextInput id="position" value={draft.position} onChange={(v) => onChange({ ...draft, position: v })} />
       </Row>
       <Row label="Sign-in email" effect="Set by your administrator. Historical records point at this address.">
-        <p className="min-h-11 text-sm text-muted lg:min-h-10">{email || '—'}</p>
+        <p className="min-h-11 text-sm text-muted desk:min-h-10">{email || '—'}</p>
       </Row>
       <Row label="Role and department" effect="Determines which approved forms you may open and what you can approve.">
-        <p className="min-h-11 text-sm text-muted lg:min-h-10">
+        <p className="min-h-11 text-sm text-muted desk:min-h-10">
           {role || '—'}
           {department ? ` · ${department}` : ''}
         </p>
@@ -111,7 +111,7 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
         )}
       </Row>
       <Row label="Signature prompt" effect="When you open a draft checklist, offer to apply your saved signature.">
-        <label className="flex min-h-11 items-center gap-2 text-sm text-ink lg:min-h-10">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-ink desk:min-h-10">
           <input
             type="checkbox"
             checked={Boolean(draft.hide_signature_prompt)}
@@ -236,7 +236,7 @@ export function AlertsSection({ draft, onChange }) {
                               : [...(event.recipients ?? []), recipient],
                           })
                         }
-                        className={`min-h-11 rounded-full border px-3 text-xs font-medium transition lg:min-h-9 ${
+                        className={`min-h-11 rounded-full border px-3 text-xs font-medium transition desk:min-h-9 ${
                           on
                             ? 'border-primary bg-primary/10 text-primary'
                             : 'border-line/20 text-muted hover:border-line/40'
@@ -428,7 +428,7 @@ export function OrganisationSection({ draft, onChange }) {
           <TextInput id="operator" value={draft.operatorName} onChange={(v) => onChange({ ...draft, operatorName: v })} />
         </Row>
         <Row label="Timezone" effect="Every due date, overdue calculation and timestamp is airport-local.">
-          <p className="min-h-11 text-sm text-muted lg:min-h-10">{draft.timezone} · fixed</p>
+          <p className="min-h-11 text-sm text-muted desk:min-h-10">{draft.timezone} · fixed</p>
         </Row>
       </Panel>
 

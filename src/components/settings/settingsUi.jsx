@@ -53,7 +53,7 @@ export function TextInput({ id, value, onChange, placeholder, type = 'text', ...
       value={value ?? ''}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
+      className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
       {...rest}
     />
   );
@@ -66,6 +66,17 @@ export function TextInput({ id, value, onChange, placeholder, type = 'text', ...
  * input that coerces empty to 0 would quietly claim they had, turning "no rule"
  * into "due immediately".
  */
+/** Empty stays empty ("Not set"); anything else lands inside [min, max]. */
+function clampToRange(raw, min, max) {
+  if (raw === '') return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  let out = n;
+  if (min != null) out = Math.max(min, out);
+  if (max != null) out = Math.min(max, out);
+  return out;
+}
+
 export function NumberInput({ id, value, onChange, min = 0, max, suffix, unsetLabel = 'Not set' }) {
   return (
     <div className="flex items-center gap-2">
@@ -78,8 +89,14 @@ export function NumberInput({ id, value, onChange, min = 0, max, suffix, unsetLa
         value={value ?? ''}
         // No placeholder: the unset state is spelled out in full beside the
         // field, and a long placeholder just truncates inside a narrow input.
-        onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="min-h-11 w-20 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
+        //
+        // `min`/`max` on a number input are advisory — they style the field
+        // invalid but still hand you the value. Clamping here is what keeps
+        // an out-of-range number from reaching the settings draft: padding of
+        // 999999999 reached `padStart` and threw "Invalid string length",
+        // taking the whole Lookups section down with it.
+        onChange={(e) => onChange(clampToRange(e.target.value, min, max))}
+        className="min-h-11 w-20 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
       />
       {suffix && <span className="shrink-0 text-sm text-muted">{suffix}</span>}
       {value == null && <span className="shrink-0 text-xs text-muted">· {unsetLabel}</span>}
@@ -109,7 +126,7 @@ export function Toggle({ checked, onChange, label, disabled }) {
       aria-checked={Boolean(checked)}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="group inline-flex min-h-11 items-center gap-2.5 rounded text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 lg:min-h-9"
+      className="group inline-flex min-h-11 items-center gap-2.5 rounded text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 desk:min-h-9"
     >
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
@@ -181,12 +198,12 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
             value={entry}
             placeholder={placeholder}
             onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))}
-            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
           />
           <button
             type="button"
             onClick={() => onChange(values.filter((_, j) => j !== i))}
-            className="min-h-11 shrink-0 rounded border border-line/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert lg:min-h-10"
+            className="min-h-11 shrink-0 rounded border border-line/20 px-3 text-sm font-medium text-muted hover:border-alert hover:text-alert desk:min-h-10"
           >
             Remove
           </button>
@@ -195,7 +212,7 @@ export function StringList({ values = [], onChange, placeholder, addLabel = 'Add
       <button
         type="button"
         onClick={() => onChange([...values, ''])}
-        className="min-h-11 rounded border border-dashed border-line/30 px-3 text-sm font-medium text-primary hover:border-primary lg:min-h-10"
+        className="min-h-11 rounded border border-dashed border-line/30 px-3 text-sm font-medium text-primary hover:border-primary desk:min-h-10"
       >
         {addLabel}
       </button>

@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -129,6 +130,8 @@ function ToggleIcon({
   );
 }
 
+const EDGE_GUTTER = 8;
+
 function Menu({
   children,
   className = '',
@@ -137,16 +140,51 @@ function Menu({
   offset = 'mt-1',
 }) {
   const { open, align } = useDropdown();
+  const menuRef = useRef(null);
+  // Horizontal correction, in px, applied when the menu's natural anchor puts
+  // it past a viewport edge. A right-anchored menu next to a toggle that is
+  // not itself near the right edge — "More Actions" once the action row wraps
+  // on a phone — otherwise opens with its left side off-screen, and the top
+  // three items cannot be tapped at all.
+  const [shift, setShift] = useState(0);
+  const alignRight = (alignProp ?? align) !== 'left';
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setShift(0);
+      return undefined;
+    }
+    function reposition() {
+      const el = menuRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      let dx = 0;
+      if (r.left < EDGE_GUTTER) dx = EDGE_GUTTER - r.left;
+      else if (r.right > window.innerWidth - EDGE_GUTTER) dx = window.innerWidth - EDGE_GUTTER - r.right;
+      // Converges: each pass measures the already-shifted box, so a zero
+      // correction means the menu is inside the viewport and we stop.
+      if (Math.abs(dx) >= 1) setShift((current) => current + dx);
+    }
+    reposition();
+    window.addEventListener('resize', reposition);
+    return () => window.removeEventListener('resize', reposition);
+  }, [open, shift]);
+
   if (!open) return null;
 
-  const side = (alignProp ?? align) === 'left' ? 'left-0' : 'right-0';
+  const side = alignRight ? 'right-0' : 'left-0';
   const base =
-    'absolute z-30 overflow-hidden rounded-md border border-line/15 bg-surface text-ink shadow-lg';
+    'absolute z-30 max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-line/15 bg-surface text-ink shadow-lg motion-safe:animate-[modal-pop_240ms_cubic-bezier(0.16,1,0.3,1)]';
   const menuProps = panel ? {} : { role: 'menu' };
 
   return (
     <div
+      ref={menuRef}
       {...menuProps}
+      // Nudged via the inset the anchor class already sets, not a transform:
+      // `modal-pop` animates transform, and an inline one would be ignored
+      // until the animation finished and then jump.
+      style={shift ? (alignRight ? { right: -shift } : { left: shift }) : undefined}
       className={`${base} ${side} ${offset} ${className}`.trim()}
     >
       {children}

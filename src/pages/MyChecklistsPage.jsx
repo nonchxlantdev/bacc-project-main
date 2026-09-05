@@ -95,7 +95,7 @@ export default function MyChecklistsPage() {
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
           <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
@@ -145,7 +145,7 @@ export default function MyChecklistsPage() {
                       type="button"
                       onClick={() => handleDelete(row)}
                       disabled={deletingId === row.id}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 lg:min-h-0 lg:w-auto lg:border-0"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 desk:min-h-0 desk:w-auto desk:border-0"
                     >
                       <Trash2 className="h-4 w-4" />
                       {deletingId === row.id ? 'Deleting…' : 'Delete'}

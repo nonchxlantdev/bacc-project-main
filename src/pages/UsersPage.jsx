@@ -18,7 +18,7 @@ export default function UsersPage() {
         staff.
       </p>
 
-      <div className="overflow-hidden rounded-lg border border-line/10 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-lg border border-line/10 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
           <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>

@@ -185,7 +185,7 @@ export default function ChecklistCataloguePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search forms, manuals or departments…"
-            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink lg:min-h-10"
+            className="min-h-11 w-full rounded border border-line/20 bg-surface pl-9 pr-3 text-sm text-ink desk:min-h-10"
           />
         </div>
         <Select
@@ -206,7 +206,7 @@ export default function ChecklistCataloguePage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-10"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded border border-line/20 px-3 text-sm font-medium text-ink hover:bg-surface-2 desk:min-h-10"
           >
             <X className="h-4 w-4" />
             Clear filters
@@ -259,7 +259,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex min-h-11 items-center gap-1 rounded border border-line/20 px-2.5 text-sm font-medium text-ink hover:bg-surface-2 lg:min-h-9"
+            className="inline-flex min-h-11 items-center gap-1 rounded border border-line/20 px-2.5 text-sm font-medium text-ink hover:bg-surface-2 desk:min-h-9"
           >
             <ChevronLeft className="h-4 w-4" />
             All teams
@@ -278,7 +278,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
           <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>
@@ -324,7 +324,7 @@ function FormList({ forms, team, heading, lastByCode, startingId, onBack, onStar
                     type="button"
                     onClick={() => onStart(t.id)}
                     disabled={startingId === t.id}
-                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-surface-2 disabled:opacity-50 lg:min-h-0 lg:w-auto lg:border-0"
+                    className="min-h-11 w-full rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary hover:bg-surface-2 disabled:opacity-50 desk:min-h-0 desk:w-auto desk:border-0"
                   >
                     {startingId === t.id ? 'Opening…' : 'Start'}
                   </button>
