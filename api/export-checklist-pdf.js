@@ -6,12 +6,22 @@ import {
   submissionToOverlayValues,
   dataUriToBytes,
 } from '../server/overlayChecklistPdf.js';
+import {
+  LIMITS,
+  capArray,
+  enforceBodySize,
+  rateLimit,
+  readApprovedBasePdf,
+  rejectClientBasePdf,
+  requireUser,
+  resolveFieldMap,
+  sendError,
+} from './_shared.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export const config = {
   maxDuration: 30,
-  api: { bodyParser: { sizeLimit: '12mb' } },
 };
 
 export default async function handler(req, res) {
@@ -22,6 +32,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    enforceBodySize(req);
+    rateLimit(req, { limit: 20 });
+    await requireUser(req);
     const body = req.body ?? {};
     const { bytes, filename } = await buildExport(body);
     res.setHeader('Content-Type', 'application/pdf');
@@ -29,26 +42,19 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     res.end(Buffer.from(bytes));
   } catch (err) {
-    res.status(500).json({ error: err?.message ?? 'PDF export failed' });
+    sendError(res, err);
   }
 }
 
 export async function buildExport(body) {
+  rejectClientBasePdf(body);
   const templateKey = body.templateKey || 'annex-d-drainage';
   const templateVersion = body.templateVersion || 'ed01';
-  const fieldMap = body.fieldMap || loadFieldMap(templateKey, templateVersion);
-  const basePdfBytes = body.basePdfBase64
-    ? Buffer.from(body.basePdfBase64, 'base64')
-    : readFileSync(path.join(root, 'src/assets/forms', fieldMap.basePdf));
+  // Always resolve server-side — ignore client fieldMap.basePdf for filesystem access.
+  const fieldMap = resolveFieldMap(templateKey, templateVersion);
+  const basePdfBytes = readApprovedBasePdf(fieldMap);
 
   const record = body.submission ?? body;
-
-  // A submission carries a SNAPSHOT of its schema, pinned at creation. That is
-  // right for content (item wording and order must never shift under a record),
-  // but header->field-map mapping is a pipeline concern, and older snapshots
-  // predate `mapKey` / `markPrefix`. Without this, a draft created before those
-  // were added silently drops values that have nowhere to go — e.g. C-8's
-  // Systems Affected / AOC Impact never stamps its checkbox.
   const schemaForMapping = hasMappingMetadata(record.schema ?? record.content_schema)
     ? record.schema ?? record.content_schema
     : loadSchema(fieldMap.templateKey) ?? record.schema ?? record.content_schema;
@@ -59,9 +65,14 @@ export async function buildExport(body) {
     const bytes = dataUriToBytes(uri);
     if (bytes) images[key] = bytes;
   }
+  if (Object.keys(images).length > LIMITS.images) {
+    const err = new Error(`images exceeds limit of ${LIMITS.images}`);
+    err.status = 400;
+    throw err;
+  }
 
   const photos = [];
-  for (const photo of body.photos ?? []) {
+  for (const photo of capArray(body.photos ?? [], LIMITS.photos, 'photos')) {
     const bytes = dataUriToBytes(photo.dataUri);
     if (bytes) photos.push({ bytes, label: photo.label, caption: photo.caption, contentType: photo.contentType });
   }
@@ -86,17 +97,10 @@ export async function buildExport(body) {
   return { bytes: pdfBytes, filename, fieldMap };
 }
 
-function loadFieldMap(templateKey, version) {
-  const file = path.join(root, 'src/data/field-maps', `${templateKey}-${version}.json`);
-  return JSON.parse(readFileSync(file, 'utf8'));
-}
-
-/** A schema knows how to map its header fields only if it declares mapKey/markPrefix. */
 function hasMappingMetadata(schema) {
   return (schema?.headerFields ?? []).some((f) => f.markPrefix || f.mapKey);
 }
 
-/** Content schemas are named for their template key: src/data/checklists/<key>.json */
 function loadSchema(templateKey) {
   if (!templateKey) return null;
   try {

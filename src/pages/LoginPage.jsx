@@ -58,6 +58,13 @@ export default function LoginPage() {
               </p>
             )}
 
+            {configured && (
+              <p className="mt-4 rounded-lg border border-line/10 bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed text-muted">
+                Test run on Supabase. Sign in with your provisioned email and password. Data you save is real
+                and shared with the team — treat it as a staging workspace, not production compliance records.
+              </p>
+            )}
+
             {!configured && demoUsers.length > 0 && (
               <div className="mt-4 grid max-h-64 gap-2 overflow-y-auto overscroll-contain pr-1">
                 {demoUsers.map((row) => {

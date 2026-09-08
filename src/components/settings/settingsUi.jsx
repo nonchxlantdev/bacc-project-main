@@ -12,14 +12,19 @@ import { Check } from 'lucide-react';
 
 /** A titled block of related settings. */
 export function Panel({ title, description, children, footer }) {
+  // No overflow-hidden: Selects and Dropdowns inside need to paint past the
+  // card edge. Rounding lives on the header/footer so the corners still read
+  // clean without clipping absolute menus.
   return (
-    <section className="overflow-hidden rounded-lg border border-line/10 bg-surface shadow-card">
-      <header className="border-b border-line/10 px-5 py-4">
+    <section className="rounded-lg border border-line/10 bg-surface shadow-card">
+      <header className="rounded-t-lg border-b border-line/10 px-5 py-4">
         <h2 className="text-base font-bold text-ink">{title}</h2>
         {description && <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p>}
       </header>
       <div className="space-y-5 px-5 py-5">{children}</div>
-      {footer && <footer className="border-t border-line/10 bg-stripe px-5 py-3">{footer}</footer>}
+      {footer && (
+        <footer className="rounded-b-lg border-t border-line/10 bg-stripe px-5 py-3">{footer}</footer>
+      )}
     </section>
   );
 }

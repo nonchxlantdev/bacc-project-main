@@ -1,12 +1,17 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { ToastProvider, useToast } from '../../context/ToastContext.jsx';
 import { queueHandlers } from '../../lib/queueHandlers.js';
-import { startOnlineFlush } from '../../utils/offlineQueue.js';
+import { probeReachability } from '../../lib/reachability.js';
+import { flushQueue } from '../../utils/offlineQueue.js';
+import OfflineModal from '../offline/OfflineModal.jsx';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 
 const SIDEBAR_COLLAPSED_KEY = 'bacc-sidebar-collapsed';
+const OFFLINE_DEBOUNCE_MS = 3000;
+const REACHABILITY_POLL_MS = 30_000;
 
 function readStoredCollapsePref() {
   try {
@@ -17,18 +22,28 @@ function readStoredCollapsePref() {
 }
 
 export default function AppShell() {
+  return (
+    <ToastProvider>
+      <AppShellInner />
+    </ToastProvider>
+  );
+}
+
+function AppShellInner() {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const toast = useToast();
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [navOpen, setNavOpen] = useState(false);
+  const [offlineModalOpen, setOfflineModalOpen] = useState(false);
 
-  // The rail only collapses from `md` (768px) up — below that the sidebar is
-  // a full-width drawer, and an icon-only drawer would just be a worse
-  // drawer. `collapsedPref` is the person's saved choice; `isPersistentWidth`
-  // tracks whether the viewport is currently wide enough to honor it, kept
-  // separate so resizing down to a phone (or a tablet split-view) never
-  // overwrites the saved preference — it only hides its effect until the
-  // viewport is wide enough again.
+  // Once per offline episode: reset the moment we come back online so a later
+  // separate offline period shows the modal again.
+  const shownThisEpisodeRef = useRef(false);
+  const offlineTimerRef = useRef(null);
+  const syncToastIdRef = useRef(null);
+  const onlineRef = useRef(online);
+
   const [collapsedPref, setCollapsedPref] = useState(readStoredCollapsePref);
   const [isPersistentWidth, setIsPersistentWidth] = useState(() =>
     typeof window === 'undefined' ? true : window.matchMedia('(min-width: 768px)').matches,
@@ -52,25 +67,122 @@ export default function AppShell() {
   }, [collapsedPref]);
 
   useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    const stop = startOnlineFlush(queueHandlers);
+    onlineRef.current = online;
+  }, [online]);
+
+  useEffect(() => {
+    async function runFlushAndReport() {
+      const result = await flushQueue(queueHandlers);
+      const id = syncToastIdRef.current;
+      if (result.failed > 0) {
+        const message = `${result.failed} item${result.failed === 1 ? '' : 's'} failed to sync — tap to retry`;
+        if (id) {
+          toast.update(id, {
+            message,
+            actionLabel: 'Retry',
+            onAction: () => {
+              runFlushAndReport();
+            },
+            tone: 'alert',
+          });
+        } else {
+          toast.push({
+            message,
+            actionLabel: 'Retry',
+            onAction: () => {
+              runFlushAndReport();
+            },
+            tone: 'alert',
+          });
+        }
+      } else if (id) {
+        toast.update(id, {
+          message: 'All caught up',
+          actionLabel: null,
+          onAction: null,
+          tone: 'neutral',
+        });
+        setTimeout(() => toast.dismiss(id), 4000);
+      } else {
+        toast.push({ message: 'All caught up' });
+      }
+    }
+
+    const markOnlineAndFlush = () => {
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+      shownThisEpisodeRef.current = false;
+      setOfflineModalOpen(false);
+      onlineRef.current = true;
+      setOnline(true);
+
+      const id = toast.push({
+        id: 'sync-status',
+        message: 'Back online, syncing…',
+        sticky: true,
+      });
+      syncToastIdRef.current = id;
+      runFlushAndReport();
+    };
+
+    const markOffline = () => {
+      onlineRef.current = false;
+      setOnline(false);
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+      offlineTimerRef.current = setTimeout(() => {
+        offlineTimerRef.current = null;
+        toast.push({
+          message: "You're offline — your changes are being saved and will sync automatically.",
+        });
+        if (!shownThisEpisodeRef.current) {
+          shownThisEpisodeRef.current = true;
+          setOfflineModalOpen(true);
+        }
+      }, OFFLINE_DEBOUNCE_MS);
+    };
+
+    const onOnline = async () => {
+      const ok = await probeReachability({ force: true });
+      if (ok) markOnlineAndFlush();
+      else markOffline();
+    };
+
+    const onOffline = () => {
+      markOffline();
+    };
+
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+
+    // Periodic Supabase reachability — catches captive/broken airfield links
+    // where navigator.onLine stays true.
+    const poll = window.setInterval(async () => {
+      const ok = await probeReachability({ force: true });
+      if (ok && !onlineRef.current) markOnlineAndFlush();
+      else if (!ok && onlineRef.current) markOffline();
+    }, REACHABILITY_POLL_MS);
+
+    // Boot: probe then flush when actually reachable.
+    probeReachability({ force: true }).then((ok) => {
+      onlineRef.current = ok;
+      setOnline(ok);
+      if (ok) flushQueue(queueHandlers).catch(() => {});
+    });
     if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
     return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-      stop();
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+      window.clearInterval(poll);
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
     };
-  }, []);
+  }, [toast]);
 
-  // Navigating closes the drawer — otherwise it covers the page you just opened.
   useEffect(() => {
     setNavOpen(false);
   }, [location.pathname]);
 
-  // While the drawer is over the page, the page behind it must not scroll.
   useEffect(() => {
     if (!navOpen) return undefined;
     const previous = document.body.style.overflow;
@@ -98,18 +210,6 @@ export default function AppShell() {
   }
 
   return (
-    // md:fixed md:inset-0 pins the shell's box to the viewport unconditionally
-    // (immune to the 100dvh-resolution failure that used to let it grow with
-    // content). No overflow-hidden here: that briefly made this box itself an
-    // invisible, scrollbar-less scroll container, and the browser's native
-    // "scroll focused control into view" behavior would silently scroll it
-    // instead of `<main>` — shifting the whole sidebar+content out of the
-    // viewport with nothing on screen to undo it. Fixed positioning alone
-    // already guarantees this box can never exceed the viewport, so the
-    // backstop was both redundant and the actual cause of that bug. Pinned
-    // at `md` rather than `lg` because that's where the sidebar itself now
-    // goes persistent — tablet gets the same independently-scrolling shell
-    // as desktop.
     <div className="flex min-h-screen md:fixed md:inset-0 md:h-[100dvh] md:min-h-0">
       {navOpen && (
         <button
@@ -131,6 +231,7 @@ export default function AppShell() {
           <Outlet context={{ online }} />
         </main>
       </div>
+      <OfflineModal open={offlineModalOpen} onDismiss={() => setOfflineModalOpen(false)} />
     </div>
   );
 }

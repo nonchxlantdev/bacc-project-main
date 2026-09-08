@@ -97,9 +97,9 @@ export default function IncidentListPage() {
     const to = `${y}-${m}-${String(last).padStart(2, '0')}`;
     setExporting(true);
     try {
-      const res = await fetch('/api/export-noc-register', {
+      const { apiFetch } = await import('../lib/apiFetch.js');
+      const res = await apiFetch('/api/export-noc-register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ incidents: rows, from, to }),
       });
       if (!res.ok) throw new Error('Register export failed');

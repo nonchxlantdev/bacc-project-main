@@ -1,7 +1,6 @@
 import { Clock } from 'lucide-react';
 import { NumberInput, Panel, Row, StringList, TextArea, TextInput, Toggle, Note } from './settingsUi.jsx';
 import { EMAIL_INTEGRATION_READY } from '../../config/settingsDefaults.js';
-import Select from '../ui/Select.jsx';
 import SignaturePad from '../checklist/SignaturePad.jsx';
 
 /**
@@ -145,20 +144,6 @@ export function PreferencesSection({ draft, onChange }) {
           checked={draft.notifyEmail}
           onChange={(v) => onChange({ ...draft, notifyEmail: v })}
           label={draft.notifyEmail ? 'On' : 'Off'}
-        />
-      </Row>
-      <Row label="Open the portal on" htmlFor="landing" effect="Where you land after signing in.">
-        <Select
-          label="Landing page"
-          value={draft.landingPage}
-          onChange={(v) => onChange({ ...draft, landingPage: v })}
-          options={[
-            { value: '/dashboard', label: 'Dashboard' },
-            { value: '/checklists/mine', label: 'My Checklists' },
-            { value: '/checklists/all', label: 'All Checklists' },
-            { value: '/incidents', label: 'Incidents' },
-            { value: '/approvals', label: 'Approvals' },
-          ]}
         />
       </Row>
     </Panel>

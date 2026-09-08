@@ -1,13 +1,12 @@
-import { Bell, CircleHelp, LogOut, Menu } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LogOut, Menu } from 'lucide-react';
 import Dropdown from '../ui/Dropdown.jsx';
+import HelpDropdown from '../help/HelpDropdown.jsx';
+import NotificationDropdown from '../notifications/NotificationDropdown.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useNotifications } from '../../hooks/useRepos.js';
 import { useAirportClock } from '../../hooks/useAirportClock.js';
 
 export default function TopBar({ online, onMenuClick }) {
   const { displayName, position, user, profile, signOut } = useAuth();
-  const { unread } = useNotifications(user?.id);
   const clock = useAirportClock();
 
   const initials = displayName
@@ -29,17 +28,11 @@ export default function TopBar({ online, onMenuClick }) {
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Mobile identity anchor — the sidebar carries the full brand now,
-            but it's a closed drawer by default on a phone, so the bar still
-            needs to say where you are. */}
         <div className="min-w-0 leading-tight md:hidden">
           <div className="truncate text-sm font-semibold text-ink">BACC</div>
           <div className="truncate text-[11px] text-muted">PGIA Operations</div>
         </div>
 
-        {/* Tablet/desktop: the sidebar already carries the brand (persistent
-            from `md` up now, rail or full), so this space earns its keep
-            with live status instead of repeating it. */}
         <div className="hidden items-center gap-2 md:flex">
           <span
             aria-hidden
@@ -60,25 +53,8 @@ export default function TopBar({ online, onMenuClick }) {
           aria-label={online ? 'Online' : 'Offline'}
           className={`h-2 w-2 shrink-0 rounded-full md:hidden ${online ? 'bg-teal' : 'bg-alert'}`}
         />
-        <Link
-          to="/help"
-          className="flex h-11 w-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-ink"
-          aria-label="Help"
-        >
-          <CircleHelp className="h-4 w-4" />
-        </Link>
-        <Link
-          to="/notifications"
-          className="relative flex h-11 w-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-ink"
-          aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
-        >
-          <Bell className="h-4 w-4" />
-          {unread > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-alert px-1 text-[9px] font-bold text-white">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </Link>
+        <HelpDropdown />
+        <NotificationDropdown />
         <Dropdown align="right">
           <Dropdown.Toggle className="flex min-h-11 items-center gap-3 rounded-md px-1 py-1 transition-colors duration-150 ease-out hover:bg-surface-2 sm:px-2">
             <span className="hidden text-right leading-tight md:block">

@@ -6,12 +6,16 @@ import {
   CalendarClock,
   FlaskConical,
   ListTree,
+  Palette,
   RotateCcw,
   Send,
+  ShieldCheck,
   UserRound,
+  Users,
   Wrench,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useDisplayPrefs } from '../context/DisplayPrefsContext.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { settingsAudit } from '../lib/settingsStore.js';
 import { fmtDateTime } from '../lib/airportFormat.js';
@@ -26,6 +30,8 @@ import {
   ProfileSection,
   SchedulingSection,
 } from '../components/settings/OtherSections.jsx';
+import { AppearanceSection, ApproversSection } from '../components/settings/AppearanceApprovers.jsx';
+import UsersRolesSection from '../components/settings/UsersRolesSection.jsx';
 
 /**
  * Settings.
@@ -41,6 +47,7 @@ import {
 const SECTIONS = [
   { id: 'profile', label: 'My profile', blurb: 'Name, position, and saved signature', Icon: UserRound, store: 'preferences' },
   { id: 'preferences', label: 'My notifications', blurb: 'What reaches you', Icon: Bell, store: 'preferences' },
+  { id: 'appearance', label: 'Appearance', blurb: 'Landing page and clock format', Icon: Palette },
   {
     id: 'deficiency',
     label: 'Deficiency levels',
@@ -77,6 +84,23 @@ const SECTIONS = [
     questions: 'B1, B2',
   },
   {
+    id: 'approvers',
+    label: 'Approvers & signing authority',
+    blurb: 'Who can sign as OM, COO, CEC',
+    Icon: ShieldCheck,
+    store: 'approvers',
+    admin: true,
+    questions: 'A4, B5',
+  },
+  {
+    id: 'users-roles',
+    label: 'Users & roles',
+    blurb: 'Add, edit, and deactivate accounts',
+    Icon: Users,
+    admin: true,
+    questions: 'A3',
+  },
+  {
     id: 'organisation',
     label: 'Organisation',
     blurb: 'Identity, retention, export footer',
@@ -93,6 +117,7 @@ const ADMIN_ROLES = ['om', 'coo', 'admin'];
 export default function SettingsPage() {
   const { user, profile, displayName, position, updateProfile, configured } = useAuth();
   const { settings, saveSection, resetSection } = useSettings();
+  const { landingPage, timeFormat, setDisplayPrefs } = useDisplayPrefs();
 
   const isAdmin = ADMIN_ROLES.includes(profile?.role);
   const sections = useMemo(
@@ -112,8 +137,9 @@ export default function SettingsPage() {
 
   const actor = useMemo(() => ({ id: user?.id, full_name: displayName }), [user?.id, displayName]);
 
-  // The committed value for whichever section is open. Profile is the odd one
-  // out: it lives on the user record, not in settings.
+  // The committed value for whichever section is open. Profile lives on the
+  // user record; Appearance lives in DisplayPrefs (device-local); Users &
+  // roles manages its own CRUD and has no draft.
   const committed = useMemo(() => {
     if (active?.id === 'profile') {
       return {
@@ -124,8 +150,12 @@ export default function SettingsPage() {
         hide_signature_prompt: Boolean(profile?.hide_signature_prompt),
       };
     }
-    return settings[active?.store] ?? null;
-  }, [active, settings, displayName, position, profile]);
+    if (active?.id === 'appearance') {
+      return { landingPage, timeFormat };
+    }
+    if (!active?.store) return null;
+    return settings[active.store] ?? null;
+  }, [active, settings, displayName, position, profile, landingPage, timeFormat]);
 
   // Re-clone during render, not in an effect.
   //
@@ -179,6 +209,8 @@ export default function SettingsPage() {
           stored_signature_updated_at: draft.stored_signature_updated_at ?? null,
           hide_signature_prompt: Boolean(draft.hide_signature_prompt),
         });
+      } else if (active.id === 'appearance') {
+        setDisplayPrefs(draft);
       } else {
         await saveSection(active.store, draft, actor);
       }
@@ -188,7 +220,7 @@ export default function SettingsPage() {
     } finally {
       setBusy(false);
     }
-  }, [active, draft, actor, saveSection, updateProfile]);
+  }, [active, draft, actor, saveSection, updateProfile, setDisplayPrefs]);
 
   const onReset = useCallback(async () => {
     if (!window.confirm(`Restore the shipped defaults for ${active.label}? Your changes to this section are recorded and reversible.`)) {
@@ -344,7 +376,9 @@ export default function SettingsPage() {
             </p>
           )}
 
-          {draft && <SectionBody id={active.id} draft={draft} onChange={setDraft} profile={profile} user={user} />}
+          {(draft || active?.id === 'users-roles') && (
+            <SectionBody id={active.id} draft={draft} onChange={setDraft} profile={profile} user={user} />
+          )}
           {active?.id === 'demo' && <DemoControls />}
 
           {active?.store && lastChange && (
@@ -355,8 +389,9 @@ export default function SettingsPage() {
           )}
 
           {/* The commit bar. Sticky so a long section never hides the way to
-              save what you just typed. */}
-          {active?.id !== 'demo' && (
+              save what you just typed. Users & roles and Demo manage their
+              own actions inline. */}
+          {active?.id !== 'demo' && active?.id !== 'users-roles' && (
             <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-line/10 bg-stripe/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0">
               <button
                 type="button"
@@ -408,6 +443,8 @@ function SectionBody({ id, draft, onChange, profile, user }) {
       );
     case 'preferences':
       return <PreferencesSection draft={draft} onChange={onChange} />;
+    case 'appearance':
+      return <AppearanceSection draft={draft} onChange={onChange} />;
     case 'deficiency':
       return <DeficiencyLevelsSection draft={draft} onChange={onChange} />;
     case 'alerts':
@@ -416,6 +453,10 @@ function SectionBody({ id, draft, onChange, profile, user }) {
       return <SchedulingSection draft={draft} onChange={onChange} />;
     case 'lookups':
       return <LookupsSection draft={draft} onChange={onChange} />;
+    case 'approvers':
+      return <ApproversSection draft={draft} onChange={onChange} />;
+    case 'users-roles':
+      return <UsersRolesSection />;
     case 'organisation':
       return <OrganisationSection draft={draft} onChange={onChange} />;
     default:

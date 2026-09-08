@@ -119,5 +119,10 @@ export function useInstances() {
 export function useUsers() {
   const repos = getRepos();
   const query = useQuery(() => repos.users.list(), []);
-  return { ...query, rows: query.data ?? [] };
+  return {
+    ...query,
+    rows: query.data ?? [],
+    persist: (record) => repos.users.persist(record),
+    setActive: (id, isActive) => repos.users.setActive(id, isActive),
+  };
 }

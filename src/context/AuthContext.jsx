@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getRepos } from '../data/repositories/index.js';
-import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
+import { isLiveSupabase, isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
 const AUTH_KEY = 'bacc-local-auth';
@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [demoUsers, setDemoUsers] = useState([]);
+  const live = isLiveSupabase();
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +31,7 @@ export function AuthProvider({ children }) {
       const users = await (repos.users.listLogins?.() ?? repos.users.list()).catch(() => []);
       if (!cancelled) setDemoUsers(users);
 
-      if (!isSupabaseConfigured || !supabase) {
+      if (!live || !supabase) {
         const cached = sessionStorage.getItem(AUTH_KEY);
         if (cached) {
           const found = users.find((u) => u.id === cached || u.email === cached) ?? users[0];
@@ -65,14 +66,14 @@ export function AuthProvider({ children }) {
       cancelled = true;
       cleanupPromise?.then?.((fn) => fn?.());
     };
-  }, []);
+  }, [live]);
 
   const value = useMemo(() => {
     const user = session?.user ?? null;
 
     async function signIn(email, password) {
       setError(null);
-      if (!isSupabaseConfigured || !supabase) {
+      if (!live || !supabase) {
         const repos = getRepos();
         const key = String(email || '').trim().toLowerCase();
         // Only the two demo accounts may sign in. Typing anyone else's address
@@ -99,7 +100,7 @@ export function AuthProvider({ children }) {
     }
 
     async function signOut() {
-      if (!isSupabaseConfigured || !supabase) {
+      if (!live || !supabase) {
         sessionStorage.removeItem(AUTH_KEY);
         setSession(null);
         setProfile(null);
@@ -110,7 +111,7 @@ export function AuthProvider({ children }) {
 
     async function updateProfile(patch) {
       if (!user) return;
-      if (!isSupabaseConfigured || !supabase) {
+      if (!live || !supabase) {
         const repos = getRepos();
         const next = { ...profile, ...patch };
         if (repos.users.update) {
@@ -122,15 +123,72 @@ export function AuthProvider({ children }) {
         );
         return next;
       }
-      const { data, error: updateError } = await supabase
-        .from('profiles')
-        .update(patch)
-        .eq('id', user.id)
-        .select()
-        .single();
-      if (updateError) throw updateError;
-      setProfile(data);
-      return data;
+
+      // Prefer repository path (handles profile_signatures correctly).
+      const repos = getRepos();
+      const {
+        role: _role,
+        is_approver: _approver,
+        is_active: _active,
+        can_login: _login,
+        id: _id,
+        ...safePatch
+      } = patch;
+
+      if (repos.users.update) {
+        const next = await repos.users.update(user.id, safePatch);
+        setProfile((prev) => ({ ...prev, ...next }));
+        return next;
+      }
+
+      const {
+        stored_signature_data_uri,
+        stored_signature_updated_at,
+        hide_signature_prompt,
+        ...profilePatch
+      } = safePatch;
+
+      if (Object.keys(profilePatch).length) {
+        const { data, error: updateError } = await supabase
+          .from('profiles')
+          .update(profilePatch)
+          .eq('id', user.id)
+          .select('id, email, full_name, position, role, department, is_active, is_approver, can_login')
+          .single();
+        if (updateError) throw updateError;
+        setProfile((prev) => ({ ...prev, ...data }));
+      }
+
+      if (
+        stored_signature_data_uri !== undefined ||
+        hide_signature_prompt !== undefined ||
+        stored_signature_updated_at !== undefined
+      ) {
+        const sigRow = {
+          user_id: user.id,
+          ...(stored_signature_data_uri !== undefined
+            ? { stored_signature_data_uri }
+            : {}),
+          ...(hide_signature_prompt !== undefined
+            ? { hide_signature_prompt: Boolean(hide_signature_prompt) }
+            : {}),
+          stored_signature_updated_at:
+            stored_signature_updated_at ??
+            (stored_signature_data_uri ? new Date().toISOString() : undefined),
+        };
+        Object.keys(sigRow).forEach((k) => sigRow[k] === undefined && delete sigRow[k]);
+        const { error: sigError } = await supabase
+          .from('profile_signatures')
+          .upsert(sigRow, { onConflict: 'user_id' });
+        if (sigError) throw sigError;
+        setProfile((prev) => ({
+          ...prev,
+          ...sigRow,
+          user_id: undefined,
+        }));
+      }
+
+      return profile;
     }
 
     return {
@@ -138,7 +196,9 @@ export function AuthProvider({ children }) {
       profile,
       loading,
       error,
-      configured: isSupabaseConfigured,
+      // Login UI: demo picker when not on live Supabase, even if keys are present.
+      configured: live,
+      keysPresent: isSupabaseConfigured,
       demoUsers,
       signIn,
       signOut,
@@ -146,21 +206,52 @@ export function AuthProvider({ children }) {
       displayName: profile?.full_name || user?.email || 'Inspector',
       position: profile?.position || 'Inspector',
     };
-  }, [session, profile, loading, error, demoUsers]);
+  }, [session, profile, loading, error, demoUsers, live]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 async function fetchProfile(user) {
+  // Role must come from profiles (server-assigned). Never trust user_metadata.role —
+  // signup metadata is client-controlled and was an escalation vector.
   const fallback = {
+    id: user.id,
+    email: user.email,
     full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Inspector',
     position: user.user_metadata?.position || 'Inspector',
-    role: user.user_metadata?.role || 'inspector',
+    role: 'inspector',
     department: user.user_metadata?.department || 'Maintenance',
   };
   if (!supabase) return fallback;
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-  return data ?? fallback;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, position, role, department, is_active, is_approver, can_login')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!profile) return fallback;
+
+  let stored_signature_data_uri = null;
+  let stored_signature_updated_at = null;
+  let hide_signature_prompt = false;
+  try {
+    const { data: sig } = await supabase
+      .from('profile_signatures')
+      .select('stored_signature_data_uri, stored_signature_updated_at, hide_signature_prompt')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    stored_signature_data_uri = sig?.stored_signature_data_uri ?? null;
+    stored_signature_updated_at = sig?.stored_signature_updated_at ?? null;
+    hide_signature_prompt = Boolean(sig?.hide_signature_prompt);
+  } catch {
+    // Table may not exist until migration 010 is applied.
+  }
+
+  return {
+    ...profile,
+    stored_signature_data_uri,
+    stored_signature_updated_at,
+    hide_signature_prompt,
+  };
 }
 
 export function useAuth() {

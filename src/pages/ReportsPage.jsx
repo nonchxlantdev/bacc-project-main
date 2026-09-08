@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, Check, Clock, SlidersHorizontal } from 'lucide-react';
 import { useReports } from '../hooks/useRepos.js';
 import Dropdown from '../components/ui/Dropdown.jsx';
+import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
+import { StatTile, StatusStateTile } from '../components/reports/StatTile.jsx';
 import { downloadCsv, rowsToCsv } from '../lib/csv.js';
 import { fmtDate } from '../lib/airportFormat.js';
 
@@ -22,12 +24,37 @@ const SECTIONS = [
   { id: 'headline', label: 'Headline numbers', hint: 'Behind, still to do, on-time rate' },
   { id: 'onTime', label: 'Filed on time by week', hint: 'Eight-week trend' },
   { id: 'late', label: 'What was filed late', hint: 'The specific records' },
+  { id: 'deficiency', label: 'Deficiencies & incidents', hint: 'Open by level, ageing, NOC, reinspection' },
+  { id: 'workOrders', label: 'Work orders & SLA', hint: 'Turnaround and NOC SLA' },
+  { id: 'templates', label: 'Per-form completion', hint: 'Scheduled vs filed by template' },
 ];
+
+const SLA_LABELS = {
+  ok: 'On track',
+  warning: 'Warning',
+  overdue: 'Breached',
+  none: 'No target',
+};
+
 export default function ReportsPage() {
   const reports = useReports();
   const [teams, setTeams] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [late, setLate] = useState([]);
+  const [byLevel, setByLevel] = useState([]);
+  const [ageing, setAgeing] = useState({ meanDays: null, closedCount: 0, openAgeing: [] });
+  const [noc, setNoc] = useState({ open: 0, closed: 0, byStatus: [] });
+  const [reinspection, setReinspection] = useState({ closed: 0, withSatReinspection: 0, rate: 0 });
+  const [sla, setSla] = useState({
+    onTrack: 0,
+    warning: 0,
+    breached: 0,
+    closedOnTime: 0,
+    closedLate: 0,
+    rows: [],
+  });
+  const [turnaround, setTurnaround] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [visible, setVisible] = useState(() => new Set(SECTIONS.map((r) => r.id)));
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -49,6 +76,13 @@ export default function ReportsPage() {
     reports.teamCompliance().then(setTeams);
     reports.onTimeByWeek({ weeks: 8 }).then(setWeeks);
     reports.lateCompletions({ limit: 12 }).then(setLate);
+    reports.openDeficienciesByLevel().then(setByLevel);
+    reports.deficiencyAgeing().then(setAgeing);
+    reports.nocRegisterStatus().then(setNoc);
+    reports.reinspectionRate().then(setReinspection);
+    reports.slaAdherence().then(setSla);
+    reports.workOrderTurnaround().then(setTurnaround);
+    reports.templateCompletion().then(setTemplates);
   }, [reports]);
 
   const totals = teams.reduce(
@@ -66,12 +100,34 @@ export default function ReportsPage() {
   const onTimeRate = totals.completed ? Math.round((totals.onTime / totals.completed) * 100) : null;
   const teamsBehind = teams.filter((t) => t.overdue + t.missed > 0);
 
+  const templateTotals = templates.reduce(
+    (acc, t) => ({
+      scheduled: acc.scheduled + t.scheduled,
+      completed: acc.completed + t.completed,
+      onTime: acc.onTime + t.onTime,
+      late: acc.late + t.late,
+      outstanding: acc.outstanding + t.outstanding,
+    }),
+    { scheduled: 0, completed: 0, onTime: 0, late: 0, outstanding: 0 },
+  );
+  const templateOnTimeRate = templateTotals.completed
+    ? Math.round((templateTotals.onTime / templateTotals.completed) * 100)
+    : null;
+
+  const reinspectionPct = reinspection.closed
+    ? Math.round(reinspection.rate * 100)
+    : null;
+  const meanDaysClose =
+    ageing.meanDays == null ? null : Math.round(ageing.meanDays * 10) / 10;
+
+  const slaSample = (sla.rows || []).filter((r) => r.status !== 'closed').slice(0, 12);
+
   async function exportPdf() {
     setExporting(true);
     try {
-      const res = await fetch('/api/export-report-pdf', {
+      const { apiFetch } = await import('../lib/apiFetch.js');
+      const res = await apiFetch('/api/export-report-pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teams, weeks, late, totals, onTimeRate }),
       });
       if (!res.ok) throw new Error('Report PDF failed');
@@ -218,8 +274,409 @@ export default function ReportsPage() {
         )}
       </Panel>
       )}
+
+      {/* 4 — deficiencies & incidents */}
+      {shows('deficiency') && (
+        <div className="space-y-4">
+          <Panel
+            title="How are open deficiencies looking?"
+            caption="Open Notices of Condition, how long they take to close, and how often a closed deficiency gets a satisfactory reinspection."
+          >
+            <div className="mb-4 flex flex-wrap gap-2">
+              <ExportCsvButton
+                filename="deficiencies-by-level.csv"
+                columns={['level', 'label', 'count']}
+                rows={byLevel.map((r) => [r.key, r.label, r.count])}
+              />
+              <ExportCsvButton
+                filename="deficiency-ageing.csv"
+                columns={['bucket', 'label', 'count']}
+                rows={(ageing.openAgeing || []).map((r) => [r.bucket, r.label, r.count])}
+              />
+              <ExportCsvButton
+                filename="noc-register-status.csv"
+                columns={['status', 'label', 'count']}
+                rows={(noc.byStatus || []).map((r) => [r.key, r.label, r.count])}
+              />
+            </div>
+            <section className="grid gap-3 sm:grid-cols-3">
+              <StatTile
+                label="Open NOCs"
+                value={noc.open}
+                note={`${noc.closed} closed on the register`}
+                tone={noc.open > 0 ? 'caution' : 'ok'}
+              />
+              <StatTile
+                label="Mean days to close"
+                value={meanDaysClose == null ? '—' : meanDaysClose}
+                note={
+                  ageing.closedCount
+                    ? `Across ${ageing.closedCount} closed ${ageing.closedCount === 1 ? 'incident' : 'incidents'}.`
+                    : 'No closed incidents yet.'
+                }
+              />
+              <StatTile
+                label="Reinspection rate"
+                value={reinspectionPct == null ? '—' : `${reinspectionPct}%`}
+                note={
+                  reinspection.closed
+                    ? `${reinspection.withSatReinspection} of ${reinspection.closed} closed with a satisfactory reinspection.`
+                    : 'No closed incidents yet.'
+                }
+                tone={reinspectionPct != null && reinspectionPct < 80 ? 'caution' : 'ok'}
+              />
+            </section>
+          </Panel>
+
+          <div className="grid gap-4 desk:grid-cols-2">
+            <ChartCard
+              title="Open deficiencies by level"
+              subtitle="Each bar is one deficiency level. Colour comes from the configured palette — read the count beside the bar, not the hue alone."
+              table={
+                byLevel.length === 0 ? (
+                  <Empty>No open deficiencies.</Empty>
+                ) : (
+                  <SimpleTable
+                    columns={[
+                      { key: 'label', label: 'Level' },
+                      { key: 'count', label: 'Open' },
+                    ]}
+                    rows={byLevel}
+                  />
+                )
+              }
+            >
+              {byLevel.every((r) => !r.count) ? (
+                <Empty>No open deficiencies.</Empty>
+              ) : (
+                <>
+                  <ColoredBars items={byLevel} />
+                  <ColorLegend items={byLevel} />
+                </>
+              )}
+            </ChartCard>
+
+            <ChartCard
+              title="Open incident age"
+              subtitle="How long today’s open incidents have been on the register, counted from the reported date."
+              table={
+                (ageing.openAgeing || []).length === 0 ? (
+                  <Empty>No open incidents.</Empty>
+                ) : (
+                  <SimpleTable
+                    columns={[
+                      { key: 'label', label: 'Age' },
+                      { key: 'count', label: 'Open' },
+                    ]}
+                    rows={ageing.openAgeing || []}
+                  />
+                )
+              }
+            >
+              {(ageing.openAgeing || []).every((r) => !r.count) ? (
+                <Empty>No open incidents.</Empty>
+              ) : (
+                <ColoredBars items={ageing.openAgeing || []} />
+              )}
+            </ChartCard>
+          </div>
+
+          <ChartCard
+            title="NOC register by status"
+            subtitle="Every Notice of Condition on the register, grouped by lifecycle status. Colour matches the status token used elsewhere in the portal."
+            table={
+              (noc.byStatus || []).length === 0 ? (
+                <Empty>No NOCs on the register.</Empty>
+              ) : (
+                <SimpleTable
+                  columns={[
+                    {
+                      key: 'label',
+                      label: 'Status',
+                      render: (row) => (
+                        <span className="inline-flex items-center gap-2 capitalize">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                            style={{ backgroundColor: row.color }}
+                            aria-hidden
+                          />
+                          {row.label}
+                        </span>
+                      ),
+                    },
+                    { key: 'count', label: 'Count' },
+                  ]}
+                  rows={noc.byStatus || []}
+                />
+              )
+            }
+          >
+            {(noc.byStatus || []).every((r) => !r.count) ? (
+              <Empty>No NOCs on the register.</Empty>
+            ) : (
+              <>
+                <ColoredBars items={noc.byStatus || []} />
+                <ColorLegend items={noc.byStatus || []} />
+              </>
+            )}
+          </ChartCard>
+        </div>
+      )}
+
+      {/* 5 — work orders & SLA */}
+      {shows('workOrders') && (
+        <div className="space-y-4">
+          <Panel
+            title="Are NOC target dates being met?"
+            caption="Open incidents against their SLA target date, plus how closed ones finished. Status colours here mean on track, warning, or breached — each tile is also labelled."
+          >
+            <div className="mb-4 flex flex-wrap gap-2">
+              <ExportCsvButton
+                filename="work-order-turnaround.csv"
+                columns={['department', 'count', 'completed', 'mean_days', 'median_days']}
+                rows={turnaround.map((r) => [r.label, r.count, r.completed, r.meanDays ?? '', r.medianDays ?? ''])}
+              />
+              <ExportCsvButton
+                filename="sla-adherence.csv"
+                columns={['ref', 'status', 'sla', 'remaining_days', 'target_date']}
+                rows={(sla.rows || []).map((r) => [
+                  r.ref,
+                  r.status,
+                  SLA_LABELS[r.sla] || r.sla,
+                  r.remainingDays ?? '',
+                  r.target_date || '',
+                ])}
+              />
+            </div>
+            <section className="grid gap-3 sm:grid-cols-3">
+              <StatusStateTile kind="ok" label="On track" value={sla.onTrack} />
+              <StatusStateTile kind="warning" label="Warning" value={sla.warning} />
+              <StatusStateTile kind="overdue" label="Breached" value={sla.breached} />
+            </section>
+            <section className="mt-3 grid gap-3 sm:grid-cols-2">
+              <StatTile
+                label="Closed on time"
+                value={sla.closedOnTime}
+                note="Closed on or before the target date."
+                tone="ok"
+              />
+              <StatTile
+                label="Closed late"
+                value={sla.closedLate}
+                note="Closed after the target date."
+                tone={sla.closedLate > 0 ? 'caution' : 'ok'}
+              />
+            </section>
+          </Panel>
+
+          <ChartCard
+            title="Work order turnaround by department"
+            subtitle="Days from issue to works completed or verified. Open orders count toward volume but are left out of the averages."
+            table={
+              turnaround.length === 0 ? (
+                <Empty>No work orders yet.</Empty>
+              ) : (
+                <SimpleTable
+                  columns={[
+                    { key: 'label', label: 'Department' },
+                    { key: 'count', label: 'Orders' },
+                    { key: 'completed', label: 'Completed' },
+                    {
+                      key: 'meanDays',
+                      label: 'Mean days',
+                      render: (row) => (row.meanDays == null ? '—' : row.meanDays),
+                    },
+                    {
+                      key: 'medianDays',
+                      label: 'Median days',
+                      render: (row) => (row.medianDays == null ? '—' : row.medianDays),
+                    },
+                  ]}
+                  rows={turnaround}
+                />
+              )
+            }
+          >
+            {turnaround.length === 0 ? (
+              <Empty>No work orders yet.</Empty>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs uppercase text-muted">
+                    <tr>
+                      <th className="px-2 py-1 font-semibold">Department</th>
+                      <th className="px-2 py-1 text-right font-semibold">Orders</th>
+                      <th className="px-2 py-1 text-right font-semibold">Completed</th>
+                      <th className="px-2 py-1 text-right font-semibold">Mean days</th>
+                      <th className="px-2 py-1 text-right font-semibold">Median days</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {turnaround.map((row, i) => (
+                      <tr key={row.key} className={i % 2 === 0 ? 'bg-surface-2' : ''}>
+                        <td className="px-2 py-1.5 font-medium text-ink">{row.label}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-ink">{row.count}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-ink">{row.completed}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-ink">
+                          {row.meanDays == null ? '—' : row.meanDays}
+                        </td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-ink">
+                          {row.medianDays == null ? '—' : row.medianDays}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ChartCard>
+
+          <Panel
+            title="Open incidents against SLA"
+            caption="A sample of open NOCs with their remaining days to the target date. Negative remaining days means the target has already passed."
+          >
+            {slaSample.length === 0 ? (
+              <Empty>No open incidents with an SLA target.</Empty>
+            ) : (
+              <div className="overflow-x-auto rounded-md border border-line/10">
+                <table className="table-stack w-full text-left text-sm">
+                  <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Ref</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                      <th className="px-3 py-2 font-semibold">SLA</th>
+                      <th className="px-3 py-2 text-right font-semibold">Days left</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {slaSample.map((row, i) => (
+                      <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
+                        <td data-label="Ref" className="px-3 py-2 font-medium text-ink">
+                          {row.ref}
+                        </td>
+                        <td data-label="Status" className="px-3 py-2 capitalize text-muted">
+                          {String(row.status || '').replace('_', ' ')}
+                        </td>
+                        <td data-label="SLA" className="px-3 py-2 text-muted">
+                          {SLA_LABELS[row.sla] || row.sla || '—'}
+                        </td>
+                        <td data-label="Days left" className="px-3 py-2 text-right tabular-nums text-ink">
+                          {row.remainingDays == null ? '—' : row.remainingDays}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
+        </div>
+      )}
+
+      {/* 6 — per-form completion */}
+      {shows('templates') && (
+        <Panel
+          title="How is each form doing?"
+          caption="Scheduled versus filed for every registered checklist template, grouped by document family. Scroll the table — thirty-plus rows is expected."
+        >
+          <div className="mb-4 flex flex-wrap gap-2">
+            <ExportCsvButton
+              filename="template-completion.csv"
+              columns={['code', 'label', 'family', 'scheduled', 'completed', 'on_time', 'late', 'outstanding']}
+              rows={templates.map((t) => [
+                t.code,
+                t.label,
+                t.family,
+                t.scheduled,
+                t.completed,
+                t.onTime,
+                t.late,
+                t.outstanding,
+              ])}
+            />
+          </div>
+          <section className="mb-4 grid gap-3 sm:grid-cols-1 desk:max-w-md">
+            <Headline
+              tone={templateOnTimeRate != null && templateOnTimeRate < 90 ? 'warn' : 'good'}
+              Icon={Check}
+              value={templateOnTimeRate == null ? '—' : `${templateOnTimeRate}%`}
+              label="filed on time across all forms"
+              caption={`${templateTotals.onTime} of ${templateTotals.completed} completed filings were on time · ${templateTotals.outstanding} still outstanding.`}
+            />
+          </section>
+          {templates.length === 0 ? (
+            <Empty>No templates registered.</Empty>
+          ) : (
+            <div className="max-h-[36rem] overflow-auto rounded-md border border-line/10">
+              <table className="table-stack w-full text-left text-sm">
+                <thead className="sticky top-0 bg-gradient-to-r from-navy to-navy-mid text-white">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">Code</th>
+                    <th className="px-3 py-2 font-semibold">Form</th>
+                    <th className="px-3 py-2 text-right font-semibold">Scheduled</th>
+                    <th className="px-3 py-2 text-right font-semibold">Completed</th>
+                    <th className="px-3 py-2 text-right font-semibold">On time</th>
+                    <th className="px-3 py-2 text-right font-semibold">Late</th>
+                    <th className="px-3 py-2 text-right font-semibold">Outstanding</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <TemplateRows templates={templates} />
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+      )}
     </div>
   );
+}
+
+/** Group template rows visually by document family, all expanded. */
+function TemplateRows({ templates }) {
+  const rows = [];
+  let lastFamily = null;
+  let stripe = 0;
+  for (const t of templates) {
+    if (t.family !== lastFamily) {
+      lastFamily = t.family;
+      rows.push(
+        <tr key={`family-${t.family}`} className="group-row bg-surface-2">
+          <td colSpan={7} className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink">
+            {t.family}
+          </td>
+        </tr>,
+      );
+      stripe = 0;
+    }
+    rows.push(
+      <tr key={t.key} className={stripe % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
+        <td data-label="Code" className="px-3 py-2 font-mono text-xs text-ink">
+          {t.code}
+        </td>
+        <td data-label="Form" className="px-3 py-2 text-ink">
+          {t.label}
+        </td>
+        <td data-label="Scheduled" className="px-3 py-2 text-right tabular-nums text-muted">
+          {t.scheduled}
+        </td>
+        <td data-label="Completed" className="px-3 py-2 text-right tabular-nums text-muted">
+          {t.completed}
+        </td>
+        <td data-label="On time" className="px-3 py-2 text-right tabular-nums text-muted">
+          {t.onTime}
+        </td>
+        <td data-label="Late" className="px-3 py-2 text-right tabular-nums text-muted">
+          {t.late}
+        </td>
+        <td data-label="Outstanding" className="px-3 py-2 text-right tabular-nums text-muted">
+          {t.outstanding}
+        </td>
+      </tr>,
+    );
+    stripe += 1;
+  }
+  return rows;
 }
 
 /**
@@ -455,6 +912,67 @@ function Key({ className, children }) {
       <span className={`h-2.5 w-2.5 rounded-sm ${className}`} aria-hidden />
       {children}
     </span>
+  );
+}
+
+/**
+ * Horizontal bars that honour each item's own `color` (unlike HorizontalBarChart,
+ * which paints every bar with the same teal→primary gradient).
+ */
+function ColoredBars({ items }) {
+  const peak = Math.max(1, ...items.map((i) => i.count || 0));
+  return (
+    <div className="flex flex-col gap-3" role="img" aria-label="Bar chart">
+      {items.map((item) => (
+        <div
+          key={item.key || item.bucket || item.label}
+          className="grid grid-cols-[5.5rem_1fr_2.25rem] items-center gap-2.5 sm:grid-cols-[7.25rem_1fr_2.25rem]"
+        >
+          <span className="truncate text-sm font-medium capitalize text-muted">{item.label}</span>
+          <span className="relative h-[11px] overflow-hidden rounded-md bg-surface-2">
+            <span
+              className="absolute inset-y-0 left-0 rounded-md"
+              style={{
+                width: `${Math.max(item.count ? 4 : 0, ((item.count || 0) / peak) * 100)}%`,
+                backgroundColor: item.color || 'var(--color-primary)',
+              }}
+              title={`${item.label}: ${item.count}`}
+            />
+          </span>
+          <span className="text-right font-mono text-sm tabular-nums text-ink">{item.count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ColorLegend({ items }) {
+  if (!items || items.length < 2) return null;
+  return (
+    <figcaption className="mt-3 flex flex-wrap items-center gap-3 border-t border-line/10 pt-3 text-xs text-muted">
+      {items.map((item) => (
+        <span key={item.key || item.label} className="inline-flex items-center gap-1.5 capitalize">
+          <span
+            className="h-2.5 w-2.5 rounded-sm"
+            style={{ backgroundColor: item.color || 'var(--color-primary)' }}
+            aria-hidden
+          />
+          {item.label}
+        </span>
+      ))}
+    </figcaption>
+  );
+}
+
+function ExportCsvButton({ filename, columns, rows }) {
+  return (
+    <button
+      type="button"
+      className="min-h-11 rounded-md border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2"
+      onClick={() => downloadCsv(filename, rowsToCsv(columns, rows))}
+    >
+      Export CSV
+    </button>
   );
 }
 

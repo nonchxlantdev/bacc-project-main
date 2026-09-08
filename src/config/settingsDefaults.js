@@ -135,7 +135,17 @@ export const DEFAULT_ORGANISATION = {
 export const DEFAULT_PREFERENCES = {
   notifyInApp: true,
   notifyEmail: true,
-  landingPage: '/dashboard',
+};
+
+/**
+ * Who may sign as OM / COO / CEC for a department (and optional annex).
+ * Configuration only — enforcement on Approvals is a later pass.
+ */
+export const DEFAULT_APPROVERS = {
+  mappings: [
+    { department: 'Operations', annex: '', omRole: 'om', cooRole: 'coo', cecRole: '' },
+    { department: 'Engineering', annex: '', omRole: 'om', cooRole: 'coo', cecRole: 'electrical_tech' },
+  ],
 };
 
 export const SETTINGS_DEFAULTS = {
@@ -145,6 +155,7 @@ export const SETTINGS_DEFAULTS = {
   lookups: DEFAULT_LOOKUPS,
   organisation: DEFAULT_ORGANISATION,
   preferences: DEFAULT_PREFERENCES,
+  approvers: DEFAULT_APPROVERS,
 };
 
 /** Section keys in the order they appear in the settings rail. */

@@ -179,7 +179,7 @@
  */
 
 export const REPOSITORY_METHODS = {
-  users: ['list', 'getById', 'getByEmail'],
+  users: ['list', 'getById', 'getByEmail', 'persist', 'setActive'],
   templates: ['list', 'get'],
   checklists: [
     'listMine',
@@ -197,6 +197,9 @@ export const REPOSITORY_METHODS = {
   notifications: ['listForUser', 'unreadCount', 'markRead', 'markAllRead'],
   reports: [
     'kpis',
+    'teamCompliance',
+    'onTimeByWeek',
+    'lateCompletions',
     'completionRate',
     'overdueInspections',
     'openDeficienciesByLevel',
@@ -207,6 +210,8 @@ export const REPOSITORY_METHODS = {
     'nocRegisterStatus',
     'reinspectionRate',
     'activityFeed',
+    'workOrderTurnaround',
+    'templateCompletion',
   ],
 };
 
@@ -276,5 +281,17 @@ export const REPORT_AGGREGATIONS = {
     input: '{ limit }',
     output: 'ActivityItem[]',
     supabase: 'view activity_feed',
+  },
+  workOrderTurnaround: {
+    aggregation: true,
+    input: '{ asOfMs }',
+    output: 'WorkOrderTurnaround',
+    supabase: 'rpc work_order_turnaround(as_of)',
+  },
+  templateCompletion: {
+    aggregation: true,
+    input: '{ asOfMs }',
+    output: 'TeamComplianceRow[]',
+    supabase: 'view template_completion',
   },
 };

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AIRPORT_TZ } from '../lib/belizeTime.js';
+import { useDisplayPrefs } from '../context/DisplayPrefsContext.jsx';
 
 /**
  * The real wall clock at PGIA, ticking every second — separate from the
@@ -7,19 +8,8 @@ import { AIRPORT_TZ } from '../lib/belizeTime.js';
  * elsewhere for due-date math. This one just answers "what time is it",
  * for the top bar and the sign-in screen.
  *
- * Always 12-hour with AM/PM, to match every other time shown in the app
- * (see `fmtDateTime` in lib/airportFormat.js) — this used to be its own
- * 24-hour formatter, the one place on the portal that didn't read like
- * the rest of it.
+ * Hour cycle follows the per-device Appearance preference (12h / 24h).
  */
-
-const timeFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: AIRPORT_TZ,
-  hour: 'numeric',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: true,
-});
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
   timeZone: AIRPORT_TZ,
@@ -29,10 +19,25 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 });
 
 export function useAirportClock() {
+  const { timeFormat } = useDisplayPrefs();
   const [now, setNow] = useState(() => new Date());
+
+  const timeFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: AIRPORT_TZ,
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: timeFormat !== '24h',
+      }),
+    [timeFormat],
+  );
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
   return { time: timeFmt.format(now), date: dateFmt.format(now) };
 }

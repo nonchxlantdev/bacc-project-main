@@ -183,6 +183,10 @@ function buildIncident(store, {
   assignedUnit = null,
   offsetDays = -10,
   closed = false,
+  // Small offsets around PGIA so the Locations map has demo pins without
+  // stacking every incident on the exact airport marker.
+  latitude = 17.539,
+  longitude = -88.308,
 }) {
   const year = Number(ymdAt(store, 0).slice(0, 4));
   const reportedAt = isoAt(store, offsetDays);
@@ -210,8 +214,8 @@ function buildIncident(store, {
     potential_impact: '',
     immediate_action_taken: '',
     location_label: itemText,
-    latitude: null,
-    longitude: null,
+    latitude,
+    longitude,
     location_accuracy_m: null,
     location_captured_at: null,
     location_capture_method: null,
@@ -390,6 +394,8 @@ export function applyShowcase(store) {
       reporter: michael,
       assignedUnit: 'grounds',
       offsetDays: -16,
+      latitude: 17.5412,
+      longitude: -88.3048,
     }),
     buildIncident(store, {
       n: 2,
@@ -404,6 +410,8 @@ export function applyShowcase(store) {
       inspector: michael,
       reporter: michael,
       offsetDays: -4,
+      latitude: 17.5368,
+      longitude: -88.3105,
     }),
     buildIncident(store, {
       n: 3,
@@ -419,6 +427,8 @@ export function applyShowcase(store) {
       reporter: andy,
       assignedUnit: 'electrical',
       offsetDays: -8,
+      latitude: 17.5381,
+      longitude: -88.3019,
     }),
     buildIncident(store, {
       n: 4,
@@ -434,6 +444,8 @@ export function applyShowcase(store) {
       reporter: keagan,
       assignedUnit: 'electrical',
       offsetDays: -20,
+      latitude: 17.5435,
+      longitude: -88.3122,
     }),
     buildIncident(store, {
       n: 5,
@@ -450,7 +462,53 @@ export function applyShowcase(store) {
       assignedUnit: 'civil',
       offsetDays: -45,
       closed: true,
+      // No pin — closed historical without a captured location.
+      latitude: null,
+      longitude: null,
     }),
+  ];
+
+  // Sample work orders so Reports → Work order / SLA has turnaround rows.
+  store.work_orders = [
+    {
+      id: seedId('workorder', 1),
+      incident_id: seedId('incident', 1),
+      work_order_number: 'WO-2026-0001',
+      date_issued: ymdAt(store, -14),
+      date_works_completed: ymdAt(store, -10),
+      status: 'verified',
+      department: 'Operations',
+      assigned_to_name: 'Grounds',
+      description_of_work: store.incidents[0].title,
+      pending_sync: false,
+      created_at: isoAt(store, -14),
+    },
+    {
+      id: seedId('workorder', 2),
+      incident_id: seedId('incident', 3),
+      work_order_number: 'WO-2026-0002',
+      date_issued: ymdAt(store, -7),
+      date_works_completed: ymdAt(store, -3),
+      status: 'verified',
+      department: 'Engineering',
+      assigned_to_name: 'Electrical',
+      description_of_work: store.incidents[2].title,
+      pending_sync: false,
+      created_at: isoAt(store, -7),
+    },
+    {
+      id: seedId('workorder', 3),
+      incident_id: seedId('incident', 4),
+      work_order_number: 'WO-2026-0003',
+      date_issued: ymdAt(store, -18),
+      date_works_completed: ymdAt(store, -12),
+      status: 'completed',
+      department: 'Engineering',
+      assigned_to_name: 'Electrical',
+      description_of_work: store.incidents[3].title,
+      pending_sync: false,
+      created_at: isoAt(store, -18),
+    },
   ];
 
   store.approvals = [];

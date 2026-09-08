@@ -8,14 +8,22 @@ import { AIRPORT_TZ } from './belizeTime.js';
  * it, so a record filed at 19:00 local never displays as the following day.
  */
 
-const dateTimeFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: AIRPORT_TZ,
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
+/** @type {'12h' | '24h'} */
+let timeFormatPreference = '12h';
+
+function buildDateTimeFmt(hour12) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: AIRPORT_TZ,
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12,
+  });
+}
+
+let dateTimeFmt = buildDateTimeFmt(true);
 
 const dateFmt = new Intl.DateTimeFormat('en-US', {
   timeZone: AIRPORT_TZ,
@@ -23,6 +31,16 @@ const dateFmt = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 });
+
+/** Called by DisplayPrefsProvider when the 12h/24h preference changes. */
+export function setTimeFormatPreference(format) {
+  timeFormatPreference = format === '24h' ? '24h' : '12h';
+  dateTimeFmt = buildDateTimeFmt(timeFormatPreference !== '24h');
+}
+
+export function getTimeFormatPreference() {
+  return timeFormatPreference;
+}
 
 export function fmtDateTime(value) {
   if (!value) return '—';

@@ -353,13 +353,12 @@ export default function ChecklistDetailPage() {
         });
       }
     }
-    const res = await fetch('/api/export-checklist-pdf', {
+    const { apiFetch } = await import('../lib/apiFetch.js');
+    const res = await apiFetch('/api/export-checklist-pdf', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         templateKey: current.print_template_key || 'annex-d-drainage',
         templateVersion: current.template_version || 'ed01',
-        fieldMap: current.field_map,
         submission: current,
         images,
         photos,

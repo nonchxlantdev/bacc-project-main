@@ -41,5 +41,6 @@ export function buildDirectory(seedId) {
     id: seedId('user', n),
     ...person,
     can_login: true,
+    is_active: true,
   }));
 }

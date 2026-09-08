@@ -1,7 +1,8 @@
 import { getRepos } from '../data/repositories/index.js';
-import { isSupabaseConfigured, supabase } from './supabase.js';
 import { getPhotoRecord } from '../utils/offlineQueue.js';
 import { getRegistryEntry } from '../data/templates/registry.js';
+import { probeReachability } from './reachability.js';
+import { isLiveSupabase, supabase } from './supabase.js';
 
 export function newSubmissionId() {
   return crypto.randomUUID();
@@ -101,7 +102,8 @@ export async function acknowledgeSubmission(payload) {
 export async function uploadPhoto({ userId, submissionId, itemCode, blob, contentType }) {
   const ext = (contentType || blob.type || 'image/jpeg').split('/')[1] || 'jpeg';
   const path = `${userId}/${submissionId}/${itemCode}.${ext}`;
-  if (!navigator.onLine || !isSupabaseConfigured || !supabase) {
+  const reachable = await probeReachability();
+  if (!reachable || !isLiveSupabase() || !supabase) {
     return { url: null, path, queued: true };
   }
   const { error } = await supabase.storage.from('checklist-photos').upload(path, blob, {

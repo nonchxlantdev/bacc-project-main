@@ -33,7 +33,7 @@ export function createMockRepositories() {
       // historical records still point at the people who signed them.
       async listLogins() {
         const users = getStore().users;
-        const enabled = users.filter((row) => row.can_login);
+        const enabled = users.filter((row) => row.can_login !== false && row.is_active !== false);
         return enabled.length ? enabled : users;
       },
       async update(id, patch) {
@@ -42,6 +42,55 @@ export function createMockRepositories() {
           const index = s.users.findIndex((row) => row.id === id);
           if (index < 0) return s;
           s.users[index] = { ...s.users[index], ...patch };
+          updated = s.users[index];
+          return s;
+        });
+        return updated;
+      },
+      /** Create or update a user record. Never hard-deletes. */
+      async persist(record) {
+        let saved = null;
+        mutateStore((s) => {
+          const id = record.id || crypto.randomUUID();
+          const index = s.users.findIndex((row) => row.id === id);
+          const base =
+            index >= 0
+              ? s.users[index]
+              : {
+                  id,
+                  can_login: true,
+                  is_active: true,
+                  is_approver: false,
+                };
+          saved = {
+            ...base,
+            ...record,
+            id,
+            email: String(record.email || base.email || '').toLowerCase(),
+            is_active: record.is_active !== false && record.is_active !== undefined ? Boolean(record.is_active) : (base.is_active !== false),
+          };
+          // Soft deactivate also blocks sign-in; reactivation restores can_login.
+          if (saved.is_active === false) saved.can_login = false;
+          else if (record.can_login != null) saved.can_login = Boolean(record.can_login);
+          else if (saved.is_active !== false && saved.can_login === false && index < 0) saved.can_login = true;
+
+          if (index >= 0) s.users[index] = saved;
+          else s.users.push(saved);
+          return s;
+        });
+        return saved;
+      },
+      /** Soft flag only — submissions/sign-offs attributed to this person stay intact. */
+      async setActive(id, isActive) {
+        let updated = null;
+        mutateStore((s) => {
+          const index = s.users.findIndex((row) => row.id === id);
+          if (index < 0) return s;
+          s.users[index] = {
+            ...s.users[index],
+            is_active: Boolean(isActive),
+            can_login: Boolean(isActive),
+          };
           updated = s.users[index];
           return s;
         });
@@ -879,6 +928,105 @@ function createReportAggregations() {
     },
     async activityFeed({ limit = 8 } = {}) {
       return getStore().activity.slice(0, limit);
+    },
+
+    /**
+     * Mean/median days from date_issued to verification (or works completed),
+     * bucketed by department. Open work orders without a completion date are
+     * counted but excluded from the day averages.
+     */
+    async workOrderTurnaround() {
+      const s = getStore();
+      const byDept = new Map();
+      for (const wo of s.work_orders) {
+        const dept =
+          wo.department ||
+          s.users.find((u) => u.id === wo.issued_by)?.department ||
+          'Other';
+        const row =
+          byDept.get(dept) ??
+          { key: dept, label: dept, count: 0, completed: 0, days: [] };
+        row.count += 1;
+        const end = wo.date_works_completed || wo.verified_at || null;
+        if (end && wo.date_issued) {
+          const days =
+            (Date.parse(`${String(end).slice(0, 10)}T12:00:00-06:00`) -
+              Date.parse(`${String(wo.date_issued).slice(0, 10)}T12:00:00-06:00`)) /
+            86400000;
+          if (Number.isFinite(days) && days >= 0) {
+            row.days.push(days);
+            row.completed += 1;
+          }
+        }
+        byDept.set(dept, row);
+      }
+      return [...byDept.values()]
+        .map((row) => {
+          const sorted = [...row.days].sort((a, b) => a - b);
+          const meanDays = sorted.length
+            ? sorted.reduce((a, b) => a + b, 0) / sorted.length
+            : null;
+          const mid = Math.floor(sorted.length / 2);
+          const medianDays = !sorted.length
+            ? null
+            : sorted.length % 2
+              ? sorted[mid]
+              : (sorted[mid - 1] + sorted[mid]) / 2;
+          return {
+            key: row.key,
+            label: row.label,
+            count: row.count,
+            completed: row.completed,
+            meanDays: meanDays == null ? null : Math.round(meanDays * 10) / 10,
+            medianDays: medianDays == null ? null : Math.round(medianDays * 10) / 10,
+          };
+        })
+        .sort((a, b) => a.label.localeCompare(b.label));
+    },
+
+    /**
+     * Same shape as teamCompliance, one row per registered template/code.
+     */
+    async templateCompletion() {
+      const s = getStore();
+      const rows = new Map();
+      for (const tpl of s.templates) {
+        rows.set(tpl.id, {
+          key: tpl.id,
+          code: tpl.code,
+          label: tpl.title || tpl.code,
+          family: tpl.document_family || tpl.group || 'Other',
+          group: tpl.group || 'Other',
+          scheduled: 0,
+          completed: 0,
+          onTime: 0,
+          late: 0,
+          outstanding: 0,
+          overdue: 0,
+          missed: 0,
+        });
+      }
+      for (const i of s.instances) {
+        const row = rows.get(i.template_id);
+        if (!row) continue;
+        row.scheduled += 1;
+        if (i.status === 'submitted') {
+          row.completed += 1;
+          if (i.completed_at && i.completed_at > i.period_end) row.late += 1;
+          else row.onTime += 1;
+        } else if (i.status === 'overdue') {
+          row.overdue += 1;
+          row.outstanding += 1;
+        } else if (i.status === 'missed') {
+          row.missed += 1;
+          row.outstanding += 1;
+        } else {
+          row.outstanding += 1;
+        }
+      }
+      return [...rows.values()]
+        .map((row) => ({ ...row, rate: row.scheduled ? row.completed / row.scheduled : 1 }))
+        .sort((a, b) => a.family.localeCompare(b.family) || a.code.localeCompare(b.code));
     },
   };
 }

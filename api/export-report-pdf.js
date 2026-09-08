@@ -1,8 +1,15 @@
 import { buildReportPdf } from '../server/reportPdf.js';
+import {
+  LIMITS,
+  capArray,
+  enforceBodySize,
+  rateLimit,
+  requireUser,
+  sendError,
+} from './_shared.js';
 
 export const config = {
   maxDuration: 30,
-  api: { bodyParser: { sizeLimit: '4mb' } },
 };
 
 export default async function handler(req, res) {
@@ -12,13 +19,23 @@ export default async function handler(req, res) {
     return;
   }
   try {
-    const { bytes, filename } = await buildReportPdf(req.body ?? {});
+    enforceBodySize(req);
+    rateLimit(req, { limit: 20 });
+    await requireUser(req);
+    const body = req.body ?? {};
+    const capped = {
+      ...body,
+      teams: capArray(body.teams ?? [], LIMITS.teams, 'teams'),
+      weeks: capArray(body.weeks ?? [], LIMITS.weeks, 'weeks'),
+      late: capArray(body.late ?? [], LIMITS.late, 'late'),
+    };
+    const { bytes, filename } = await buildReportPdf(capped);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-store');
     res.end(Buffer.from(bytes));
   } catch (err) {
-    res.status(500).json({ error: err?.message ?? 'Report PDF failed' });
+    sendError(res, err);
   }
 }
 
