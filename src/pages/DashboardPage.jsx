@@ -33,31 +33,40 @@ export default function DashboardPage() {
   const [loadingShowcase, setLoadingShowcase] = useState(false);
 
   useEffect(() => {
-    reports.kpis().then(setKpis);
-    reports.departmentOverview().then(setDept);
-    reports.activityFeed({ limit: 8 }).then(setActivity);
-    getRepos().instances.getClock().then(setClock);
+    let cancelled = false;
+    reports.kpis().then((v) => !cancelled && setKpis(v)).catch(() => {});
+    reports.departmentOverview().then((v) => !cancelled && setDept(v)).catch(() => {});
+    reports.activityFeed({ limit: 8 }).then((v) => !cancelled && setActivity(v)).catch(() => {});
+    getRepos()
+      .instances.getClock()
+      .then((v) => !cancelled && setClock(v))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [reports]);
 
   useEffect(() => {
     let cancelled = false;
     const repos = getRepos();
-    Promise.all([repos.checklists.listAll(), repos.incidents.list()]).then(([rows, incidents]) => {
-      if (cancelled) return;
-      setShowShowcaseCta(rows.length === 0 && incidents.length === 0);
-      setCompleted(
-        rows
-          .filter((row) => row.status === 'submitted' || row.status === 'acknowledged')
-          .sort((a, b) => byDateDesc(inspectionDate(a), inspectionDate(b)))
-          .slice(0, RECENT_LIMIT),
-      );
-      setPending(
-        incidents
-          .filter((row) => OPEN_INCIDENT_STATUSES.has(row.status))
-          .sort((a, b) => byDateDesc(a.reported_at, b.reported_at))
-          .slice(0, RECENT_LIMIT),
-      );
-    });
+    Promise.all([repos.checklists.listAll(), repos.incidents.list()])
+      .then(([rows, incidents]) => {
+        if (cancelled) return;
+        setShowShowcaseCta(rows.length === 0 && incidents.length === 0);
+        setCompleted(
+          rows
+            .filter((row) => row.status === 'submitted' || row.status === 'acknowledged')
+            .sort((a, b) => byDateDesc(inspectionDate(a), inspectionDate(b)))
+            .slice(0, RECENT_LIMIT),
+        );
+        setPending(
+          incidents
+            .filter((row) => OPEN_INCIDENT_STATUSES.has(row.status))
+            .sort((a, b) => byDateDesc(a.reported_at, b.reported_at))
+            .slice(0, RECENT_LIMIT),
+        );
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -105,7 +114,10 @@ export default function DashboardPage() {
         <h1 className="text-xl font-bold text-ink sm:text-2xl">Dashboard</h1>
         <p className="text-sm text-muted">
           Welcome back, {displayName}
-          {clock ? ` · airport date ${clock.demoNow.slice(0, 10)} (America/Belize)` : ''}.
+          {clock?.demoNow
+            ? ` · airport date ${String(clock.demoNow).slice(0, 10)} (America/Belize)`
+            : ''}
+          .
         </p>
       </div>
 

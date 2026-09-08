@@ -1872,7 +1872,8 @@ export function createSupabaseRepositories() {
       },
       advanceClock: demoUnavailable('instances.advanceClock'),
       async getClock() {
-        return { demoNow: null, nowMs: Date.now() };
+        // No demo clock on Supabase — use real airport-now for due-date helpers.
+        return { demoNow: nowIso(), nowMs: Date.now() };
       },
       resetDemo: demoUnavailable('instances.resetDemo'),
       loadShowcase: demoUnavailable('instances.loadShowcase'),
