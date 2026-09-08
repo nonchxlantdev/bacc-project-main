@@ -206,6 +206,16 @@ export function createMockRepositories() {
           throw new Error('Only unlocked drafts can be deleted. Submitted records stay on file.');
         }
         mutateStore((s) => {
+          const incidentIds = new Set(
+            (s.incidents || [])
+              .filter((i) => i.submission_id === record.id)
+              .map((i) => i.id),
+          );
+          s.work_orders = (s.work_orders || []).filter((w) => !incidentIds.has(w.incident_id));
+          s.incidents = (s.incidents || []).filter((i) => i.submission_id !== record.id);
+          s.approvals = (s.approvals || []).filter(
+            (a) => !(a.entity_type === 'checklist_submission' && a.entity_id === record.id),
+          );
           s.submissions = s.submissions.filter((row) => row.id !== record.id);
           return s;
         });

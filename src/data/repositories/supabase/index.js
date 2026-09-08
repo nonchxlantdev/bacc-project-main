@@ -1465,14 +1465,9 @@ export function createSupabaseRepositories() {
         if (record?.status !== 'draft' || record?.locked) {
           throw new Error('Only unlocked drafts can be deleted. Submitted records stay on file.');
         }
-        const deleted = await sb(
-          client().from('checklist_submissions').delete().eq('id', record.id).select('id'),
-        );
-        if (!deleted?.length) {
-          throw new Error(
-            'Could not delete that draft. Only Operations Manager or admin can delete drafts.',
-          );
-        }
+        // RPC removes linked incidents/work orders first (FK otherwise blocks).
+        const { error } = await client().rpc('delete_draft_submission', { p_id: record.id });
+        if (error) fail(error, 'Could not delete that draft.');
       },
       async acknowledge({ id, name, position, signature_data_uri, actorId }) {
         const current = await fetchSubmission(id);
