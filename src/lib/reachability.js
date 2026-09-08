@@ -9,6 +9,9 @@ let lastResult = { ok: true, at: 0 };
  * True when the browser thinks it is online AND (if live Supabase) the API
  * answers a cheap ping. navigator.onLine alone is not enough on airfield
  * tablets that have captive/broken links. Mock demos skip the ping.
+ *
+ * Any HTTP response from Supabase counts as reachable (including 401) —
+ * we only care that DNS/TLS/routing work, not that the probe is authorized.
  */
 export async function probeReachability({ force = false } = {}) {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -29,15 +32,15 @@ export async function probeReachability({ force = false } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    // HEAD against the REST root is enough; we only care that TLS + DNS work.
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`;
+    const base = import.meta.env.VITE_SUPABASE_URL;
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const res = await fetch(url, {
-      method: 'HEAD',
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    const res = await fetch(`${base}/auth/v1/health`, {
+      method: 'GET',
+      headers: { apikey: key },
       signal: controller.signal,
     });
-    lastResult = { ok: res.ok || res.status === 200 || res.status === 404, at: Date.now() };
+    // Got a response → path is up. Status codes are irrelevant for "online".
+    lastResult = { ok: Number.isFinite(res.status), at: Date.now() };
   } catch {
     lastResult = { ok: false, at: Date.now() };
   } finally {
