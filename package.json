@@ -33,6 +33,7 @@
     "pixelmatch": "^7.2.0",
     "playwright-core": "^1.49.0",
     "pngjs": "^7.0.0",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.1.12",
     "vite": "^7.1.5",
     "vite-plugin-pwa": "^1.0.3"

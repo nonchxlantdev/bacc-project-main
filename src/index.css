@@ -282,26 +282,28 @@ textarea {
   }
 }
 
-/* Sign-in screen's visual panel ("Ops Board") — a faint instrument-grid
-   backdrop over the navy gradient, plus the slow pulse on its status LEDs.
-   Scoped to LoginPage; kept here rather than inline so the layered
-   background (three images) doesn't have to be hand-built as a JSX style
-   prop. */
-.login-visual-bg {
-  background-image: radial-gradient(120% 90% at 30% 0%, var(--color-navy-mid) 0%, var(--color-navy) 46%, var(--color-navy-deep) 100%),
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 28px 28px, 28px 28px;
-  background-position: 0 0, -1px -1px, -1px -1px;
+/* Login screen: photo already carries the navy diagonal blend; a light
+   scrim keeps the glass card readable on bright sky patches. */
+.login-screen {
+  background-color: var(--color-navy-deep);
 }
 
-@keyframes beacon-pulse {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+.login-screen-scrim {
+  background:
+    radial-gradient(ellipse 70% 60% at 70% 45%, rgba(11, 30, 61, 0.18), transparent 70%),
+    linear-gradient(90deg, rgba(6, 18, 40, 0.35) 0%, transparent 42%);
+}
+
+.login-glass {
+  /* Always read as a light panel, even if the app theme is dark. */
+  --color-ink: #1a2332;
+  --color-muted: #5b6b80;
+  --color-line: #0b1e3d;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f6fa;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 
 /* Dark panels (sidebar nav, etc.) — the OS default is a bright track on

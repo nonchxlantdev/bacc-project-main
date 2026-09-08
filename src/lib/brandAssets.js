@@ -1,5 +1,10 @@
-import baccLogoUrl from '../assets/brand/BACC_logo.jpeg';
-import pgiaLogoUrl from '../assets/brand/PGIA_logo.png';
+import baccLogoUrl from '../assets/brand/bacc-logo.webp';
+import baccLogoPngUrl from '../assets/brand/bacc-logo.png';
+import pgiaLogoUrl from '../assets/brand/pgia-logo.webp';
+import pgiaLogoPngUrl from '../assets/brand/PGIA_logo.png';
+import loginBgWebpUrl from '../assets/brand/login-bg.webp';
+import loginBgJpgUrl from '../assets/brand/login-bg.jpg';
+import loginBgSmWebpUrl from '../assets/brand/login-bg-sm.webp';
 
 const cache = new Map();
 
@@ -21,10 +26,18 @@ export async function urlToDataUri(url) {
 
 export async function getBrandDataUris() {
   const [bacc, pgia] = await Promise.all([
-    urlToDataUri(baccLogoUrl),
-    urlToDataUri(pgiaLogoUrl),
+    urlToDataUri(baccLogoPngUrl),
+    urlToDataUri(pgiaLogoPngUrl),
   ]);
   return { bacc, pgia };
 }
 
-export { baccLogoUrl, pgiaLogoUrl };
+export {
+  baccLogoUrl,
+  baccLogoPngUrl,
+  pgiaLogoUrl,
+  pgiaLogoPngUrl,
+  loginBgWebpUrl,
+  loginBgJpgUrl,
+  loginBgSmWebpUrl,
+};
