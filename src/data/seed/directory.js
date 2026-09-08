@@ -5,10 +5,11 @@
  * `BACCUsers and Departments.xlsx` without correction — including the one Gmail
  * address, which is what BACC supplied and is therefore what is true.
  *
- * The last two are demo accounts on `@pgia.local`, a domain that does not
- * resolve. That is deliberate on both sides: it makes them obvious at a glance
- * next to seven real mailboxes, and it means no test notification can ever be
- * delivered to an employee once email is wired up.
+ * The last two are Vision Forge demo accounts on `@pgia.local`, a domain that
+ * does not resolve. That is deliberate: they are obvious next to real mailboxes,
+ * and no test notification can ever be delivered to an employee once email is
+ * wired up. Both are seeded as `admin` so the team can exercise every portal
+ * path (settings, approvals, draft delete, org-wide queues) without role gates.
  *
  * All nine can sign in, so every role can be shown from its own chair rather
  * than described from the Operations Manager's.
@@ -32,8 +33,26 @@ export const PEOPLE = [
   { n: 5, email: 'achable@pgiabelize.com', full_name: 'Andy Chable', position: 'Apron Supervisor', role: 'apron_supervisor', department: 'Operations' },
   { n: 6, email: 'kareemnunez24@gmail.com', full_name: 'Kareem Nunez', position: 'Apron Supervisor', role: 'apron_supervisor', department: 'Operations' },
   { n: 7, email: 'wthompson@pgiabelize.com', full_name: 'Windell Thompson', position: 'SMS', role: 'sms', department: 'Operations' },
-  { n: 8, email: 'shamira.young@pgia.local', full_name: 'Shamira Young', position: 'Operations Manager', role: 'om', department: 'Operations', is_demo: true },
-  { n: 9, email: 'glenrick.spain@pgia.local', full_name: 'Glenrick Spain', position: 'Electrical Maintenance Technician', role: 'electrical_tech', department: 'Engineering', is_demo: true },
+  {
+    n: 8,
+    email: 'shamira.young@pgia.local',
+    full_name: 'Shamira Young',
+    position: 'Administrator',
+    role: 'admin',
+    department: 'Operations',
+    is_approver: true,
+    is_demo: true,
+  },
+  {
+    n: 9,
+    email: 'glenrick.spain@pgia.local',
+    full_name: 'Glenrick Spain',
+    position: 'Administrator',
+    role: 'admin',
+    department: 'Engineering',
+    is_approver: true,
+    is_demo: true,
+  },
 ];
 
 export function buildDirectory(seedId) {

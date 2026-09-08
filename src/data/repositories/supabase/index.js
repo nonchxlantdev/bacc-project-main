@@ -620,6 +620,8 @@ function workOrderDbRow(record) {
 function isApprovalForUser(row, user) {
   if (!user) return false;
   if (row.assigned_to && row.assigned_to === user.id) return true;
+  // Admins exercise every approval queue for end-to-end testing.
+  if (user.role === 'admin') return true;
   if (row.approval_role === 'om_acknowledgment' && (user.role === 'om' || user.role === 'coo')) return true;
   if (row.approval_role === 'om_coo_verification' && (user.role === 'om' || user.role === 'coo')) return true;
   if (row.approval_role === 'cec_clearance' && user.role === 'cec') return true;

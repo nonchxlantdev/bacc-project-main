@@ -48,7 +48,13 @@ test('ids are stable and unique', () => {
   assert.deepEqual(build().map((u) => u.id), ids);
 });
 
-test('the two demo accounts are the ones we expect', () => {
-  const demo = build().filter((u) => u.is_demo).map((u) => u.full_name);
-  assert.deepEqual(demo, ['Shamira Young', 'Glenrick Spain']);
+test('the two demo accounts are admin testers', () => {
+  const demo = build().filter((u) => u.is_demo);
+  assert.deepEqual(
+    demo.map((u) => ({ name: u.full_name, role: u.role, approver: u.is_approver })),
+    [
+      { name: 'Shamira Young', role: 'admin', approver: true },
+      { name: 'Glenrick Spain', role: 'admin', approver: true },
+    ],
+  );
 });
