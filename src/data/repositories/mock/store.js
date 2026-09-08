@@ -1,5 +1,4 @@
 import { generateSeed, SEED_VERSION } from '../../seed/generateSeed.js';
-import { applyShowcase } from '../../seed/generateShowcase.js';
 import { refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
 import { airportIso, airportYmd } from '../../../lib/belizeTime.js';
 
@@ -70,45 +69,23 @@ export function getStore() {
     /* ignore */
   }
   state = generateSeed();
-  if (import.meta.env.VITE_SHOWCASE === 'true') {
-    applyShowcase(state);
-  }
   persist();
   return state;
 }
 
-export function loadShowcaseData() {
-  return mutateStore((s) => applyShowcase(s));
-}
-
 export function resetStore() {
   state = generateSeed();
-  if (import.meta.env.VITE_SHOWCASE === 'true') {
-    applyShowcase(state);
-  }
   persist();
   emit();
   return state;
 }
 
 /**
- * A blank slate, on purpose — unlike `resetStore`, this never reapplies the
- * showcase dataset even when this build was seeded with one. `resetStore`
- * exists to put a stale/corrupt store back to this build's normal starting
- * point (showcase included, if that's what this build normally shows);
- * `clearStore` exists for the person running the demo to explicitly empty
- * it, and a "clear" that quietly refilled itself wouldn't be one.
- *
- * `generateSeed()` is already the clean environment (see its own doc
- * comment): the staff directory and the approved-form catalogue stay,
- * because those are configuration, not filed data — everything anyone
- * actually submitted or reported starts empty.
+ * Same clean slate as `resetStore`: staff directory and approved-form catalogue
+ * stay; filed checklists, incidents, and related records are wiped.
  */
 export function clearStore() {
-  state = generateSeed();
-  persist();
-  emit();
-  return state;
+  return resetStore();
 }
 
 export function mutateStore(updater) {

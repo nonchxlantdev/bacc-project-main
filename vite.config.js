@@ -23,9 +23,8 @@ function spaFallback404Plugin() {
 export default defineConfig({
   base,
   define: {
-    'import.meta.env.VITE_SHOWCASE': JSON.stringify(
-      process.env.GITHUB_PAGES === 'true' || process.env.VITE_SHOWCASE === 'true' ? 'true' : '',
-    ),
+    // Showcase sample data is retired — never auto-load fake submissions/incidents.
+    'import.meta.env.VITE_SHOWCASE': JSON.stringify(''),
   },
   plugins: [
     react(),

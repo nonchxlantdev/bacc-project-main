@@ -60,19 +60,30 @@ function withSourceTeam(inc) {
   return { ...inc, source_group: groupForCode(inc.source_template_code) };
 }
 
+const TEMPLATE_LIST_COLUMNS =
+  'id, code, version, title, annex_label, document_family, department, status, effective_date, base_pdf_path';
+
 function mapTemplate(row, rules = []) {
   if (!row) return null;
-  const schema = row.content_schema ?? row.schema ?? null;
+  const assignment_rules = rules.filter((r) => r.template_id === row.id).map(mapAssignmentRule);
+  const schema =
+    row.content_schema ??
+    row.schema ?? {
+      title: row.title,
+      annexLabel: row.annex_label,
+      code: row.code,
+    };
   const field_map = row.field_map ?? null;
   return {
     ...row,
     schema,
-    content_schema: schema,
+    content_schema: row.content_schema ?? row.schema ?? schema,
     field_map,
     group: row.group ?? groupForCode(row.code),
     annex_label: row.annex_label ?? schema?.annexLabel ?? null,
     print_template_key: row.print_template_key || field_map?.templateKey || null,
-    assignment_rules: rules.filter((r) => r.template_id === row.id).map(mapAssignmentRule),
+    default_frequency: row.default_frequency ?? assignment_rules[0]?.frequency ?? null,
+    assignment_rules,
   };
 }
 
@@ -161,9 +172,14 @@ async function loadAmendments(submissionId) {
 
 async function hydrateSubmission(row, { templatesById, profilesById, amendments } = {}) {
   if (!row) return null;
-  const tpl =
-    templatesById?.get(row.template_id) ||
-    (await fetchTemplateById(row.template_id));
+  let tpl = templatesById?.get(row.template_id) || null;
+  const schemaHint = tpl?.content_schema ?? tpl?.schema;
+  // Catalogue index intentionally omits heavy content_schema. Always load the
+  // full template when the cached row has no sections — otherwise drafts open
+  // as an empty shell with Save/Submit but no SAT items.
+  if (!schemaHint?.sections?.length) {
+    tpl = (await fetchTemplateById(row.template_id)) || tpl;
+  }
   const itemsRows = row.checklist_items || row.items_rows || [];
   const signoffRows = row.checklist_signoffs || row.signoffs_rows || [];
   const inspector = profilesById?.get(row.inspector_id);
@@ -215,17 +231,31 @@ async function fetchTemplateById(id) {
   return mapTemplate(row, []);
 }
 
+let templatesIndexCache = { at: 0, value: null };
+
 async function fetchTemplatesIndex() {
-  const [templates, rules] = await Promise.all([
-    sb(client().from('checklist_templates').select('*').order('code')),
-    sb(client().from('checklist_assignment_rules').select('*')),
-  ]);
-  const mapped = (templates || []).map((t) => mapTemplate(t, rules || []));
-  return {
+  const now = Date.now();
+  if (templatesIndexCache.value && now - templatesIndexCache.at < 15000) {
+    return templatesIndexCache.value;
+  }
+  let rules = [];
+  try {
+    rules = (await sb(client().from('checklist_assignment_rules').select('*'))) || [];
+  } catch {
+    rules = [];
+  }
+  const templates =
+    (await sb(
+      client().from('checklist_templates').select(TEMPLATE_LIST_COLUMNS).eq('status', 'active').order('code'),
+    )) || [];
+  const mapped = templates.map((t) => mapTemplate(t, rules));
+  const value = {
     list: mapped,
     byId: new Map(mapped.map((t) => [t.id, t])),
-    rules: (rules || []).map(mapAssignmentRule),
+    rules: rules.map(mapAssignmentRule),
   };
+  templatesIndexCache = { at: now, value };
+  return value;
 }
 
 async function fetchProfilesIndex() {
@@ -311,13 +341,21 @@ async function fetchSubmission(id) {
 }
 
 async function listSubmissions() {
-  const rows =
-    (await sb(
-      client()
-        .from('checklist_submissions')
-        .select(SUBMISSION_SELECT)
-        .order('created_at', { ascending: false }),
-    )) ?? [];
+  let rows;
+  try {
+    rows =
+      (await sb(
+        client()
+          .from('checklist_submissions')
+          .select(SUBMISSION_SELECT)
+          .order('created_at', { ascending: false }),
+      )) ?? [];
+  } catch {
+    rows =
+      (await sb(
+        client().from('checklist_submissions').select('*').order('created_at', { ascending: false }),
+      )) ?? [];
+  }
   const { byId: templatesById } = await fetchTemplatesIndex();
   const { byId: profilesById } = await fetchProfilesIndex();
   return Promise.all(rows.map((row) => hydrateSubmission(row, { templatesById, profilesById })));
@@ -1127,8 +1165,14 @@ export function createSupabaseRepositories() {
   return {
     users: {
       async list() {
-        const rows = (await sb(client().from('profiles').select('*').order('full_name'))) || [];
-        return attachSignatures(rows);
+        const rows =
+          (await sb(
+            client()
+              .from('profiles')
+              .select('id, email, full_name, position, role, department, is_active, is_approver, can_login')
+              .order('full_name'),
+          )) || [];
+        return rows.map((p) => mapProfile(p));
       },
       async listLogins() {
         const all = await this.list();
@@ -1257,9 +1301,18 @@ export function createSupabaseRepositories() {
         return list;
       },
       async get(idOrCode) {
-        const { list } = await fetchTemplatesIndex();
-        const hit = list.find((row) => row.id === idOrCode || row.code === idOrCode) ?? list[0];
-        return hit ?? null;
+        if (!idOrCode) return null;
+        let row = await sb(
+          client().from('checklist_templates').select('*').eq('id', idOrCode).maybeSingle(),
+        );
+        if (!row) {
+          row = await sb(
+            client().from('checklist_templates').select('*').eq('code', idOrCode).maybeSingle(),
+          );
+        }
+        if (!row) return null;
+        const { rules } = await fetchTemplatesIndex();
+        return mapTemplate(row, rules);
       },
     },
 
@@ -1828,8 +1881,12 @@ export function createSupabaseRepositories() {
 
     instances: {
       async list() {
-        const rows = (await sb(client().from('checklist_instances').select('*'))) || [];
-        return refreshInstanceStatuses(rows, Date.now());
+        try {
+          const rows = (await sb(client().from('checklist_instances').select('*'))) || [];
+          return refreshInstanceStatuses(rows, Date.now());
+        } catch {
+          return [];
+        }
       },
       async generate() {
         const { rules } = await fetchTemplatesIndex();

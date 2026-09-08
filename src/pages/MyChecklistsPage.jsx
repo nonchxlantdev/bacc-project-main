@@ -29,12 +29,18 @@ export default function MyChecklistsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listTemplates(profile), listMineSubmissions(user?.id)]).then(([tpls, list]) => {
-      if (cancelled) return;
-      setTemplates(tpls);
-      setRows(list);
-      setLoading(false);
-    });
+    Promise.all([listTemplates(profile), listMineSubmissions(user?.id).catch(() => [])])
+      .then(([tpls, list]) => {
+        if (cancelled) return;
+        setTemplates(tpls);
+        setRows(list);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || 'Could not load checklists.');
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };

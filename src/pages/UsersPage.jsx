@@ -8,7 +8,7 @@ import { useUsers } from '../hooks/useRepos.js';
  * longer says it back to them.
  */
 export default function UsersPage() {
-  const { rows } = useUsers();
+  const { rows, loading, error } = useUsers();
 
   return (
     <div className="space-y-4">
@@ -17,6 +17,11 @@ export default function UsersPage() {
         Everyone who can sign in. Accounts marked <em>Test account</em> are for walkthroughs and are not PGIA
         staff.
       </p>
+      {error && (
+        <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">
+          {error.message || 'Could not load the staff directory.'}
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-lg border border-line/10 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
@@ -30,6 +35,20 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-muted">
+                  Loading…
+                </td>
+              </tr>
+            )}
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-muted">
+                  No sign-in accounts found.
+                </td>
+              </tr>
+            )}
             {rows.map((row, i) => (
               <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                 <td data-label="Name" className="px-4 py-3 font-medium text-ink">{row.full_name}</td>

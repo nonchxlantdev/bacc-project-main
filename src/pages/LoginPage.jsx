@@ -48,11 +48,11 @@ export default function LoginPage() {
             </div>
 
             <h1 className="text-2xl font-bold text-ink">Sign in</h1>
-            <p className="mt-1 text-sm text-muted">BACC operations portal — PMM and VAES checklist demo</p>
+            <p className="mt-1 text-sm text-muted">BACC operations portal — PMM and VAES checklists</p>
 
             {!configured && (
               <p className="mt-4 rounded-lg border border-line/10 bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed text-muted">
-                Demo mode. Pick any account below to sign in as that person. Everyone can open every checklist;
+                Local mode. Pick an account below to sign in as that person. Everyone can open every checklist;
                 what differs is whose name goes on it. The password is not checked — real sign-in arrives with
                 Supabase.
               </p>
@@ -60,8 +60,8 @@ export default function LoginPage() {
 
             {configured && (
               <p className="mt-4 rounded-lg border border-line/10 bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed text-muted">
-                Test run on Supabase. Sign in with your provisioned email and password. Data you save is real
-                and shared with the team — treat it as a staging workspace, not production compliance records.
+                Sign in with your provisioned email and password. Data you save is shared with the team —
+                treat it as a staging workspace, not production compliance records.
               </p>
             )}
 
@@ -110,6 +110,7 @@ export default function LoginPage() {
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">Password</span>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   required={configured}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

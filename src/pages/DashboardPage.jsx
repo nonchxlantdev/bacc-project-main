@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, ChevronRight, Clock3, Database, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock3, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useReports } from '../hooks/useRepos.js';
 import { StatTile } from '../components/reports/StatTile.jsx';
 import { HorizontalBarChart } from '../components/reports/Charts.jsx';
 import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
 import StatusPill from '../components/checklist/StatusPill.jsx';
-import { getDataSource, getRepos } from '../data/repositories/index.js';
+import { getRepos } from '../data/repositories/index.js';
 import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
 import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
@@ -29,8 +29,6 @@ export default function DashboardPage() {
   const [clock, setClock] = useState(null);
   const [completed, setCompleted] = useState([]);
   const [pending, setPending] = useState([]);
-  const [showShowcaseCta, setShowShowcaseCta] = useState(false);
-  const [loadingShowcase, setLoadingShowcase] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,9 +50,6 @@ export default function DashboardPage() {
     Promise.all([repos.checklists.listAll(), repos.incidents.list()])
       .then(([rows, incidents]) => {
         if (cancelled) return;
-        setShowShowcaseCta(
-          getDataSource() === 'mock' && rows.length === 0 && incidents.length === 0,
-        );
         setCompleted(
           rows
             .filter((row) => row.status === 'submitted' || row.status === 'acknowledged')
@@ -74,44 +69,10 @@ export default function DashboardPage() {
     };
   }, []);
 
-  async function loadShowcase() {
-    setLoadingShowcase(true);
-    try {
-      await getRepos().instances.loadShowcase();
-      window.location.reload();
-    } catch {
-      setLoadingShowcase(false);
-    }
-  }
-
   const delta = (key) => (kpis ? kpis[key] - kpis.prior[key] : null);
 
   return (
     <div className="space-y-6">
-      {showShowcaseCta && (
-        <section className="flex flex-col gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <Database className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-            <div>
-              <h2 className="text-sm font-semibold text-navy">Explore with sample data</h2>
-              <p className="mt-0.5 text-sm text-muted">
-                Load filed checklists, open incidents, pending approvals, and report history to see how the portal
-                looks in day-to-day use. Your walkthrough can still start from a clean environment via Reset demo
-                data in Settings.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={loadShowcase}
-            disabled={loadingShowcase}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60 sm:min-h-10"
-          >
-            {loadingShowcase ? 'Loading…' : 'Load sample data'}
-          </button>
-        </section>
-      )}
-
       <div>
         <h1 className="text-xl font-bold text-ink sm:text-2xl">Dashboard</h1>
         <p className="text-sm text-muted">

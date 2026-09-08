@@ -518,20 +518,8 @@ export function createMockRepositories() {
         return { demoNow: getStore().demoNow };
       },
       async loadShowcase() {
-        const { loadShowcaseData } = await import('./store.js');
-        loadShowcaseData();
-        return {
-          submissions: getStore().submissions.length,
-          incidents: getStore().incidents.length,
-          approvals: getStore().approvals.filter((a) => a.status === 'pending').length,
-        };
+        throw new Error('Sample showcase data has been removed.');
       },
-      // Empties everything anyone filed — submissions, incidents, work
-      // orders, approvals, occurrences, notifications, activity — but keeps
-      // the staff directory and the approved-form catalogue, since those are
-      // this demo's configuration, not data someone entered. See
-      // `clearStore`'s own doc comment for why this never reapplies the
-      // showcase dataset, unlike `resetDemo` above.
       async clearAll() {
         clearStore();
         return { demoNow: getStore().demoNow };

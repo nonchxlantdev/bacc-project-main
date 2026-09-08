@@ -4,7 +4,6 @@ import {
   Bell,
   Building2,
   CalendarClock,
-  FlaskConical,
   ListTree,
   Palette,
   RotateCcw,
@@ -12,14 +11,12 @@ import {
   ShieldCheck,
   UserRound,
   Users,
-  Wrench,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useDisplayPrefs } from '../context/DisplayPrefsContext.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { settingsAudit } from '../lib/settingsStore.js';
 import { fmtDateTime } from '../lib/airportFormat.js';
-import { getRepos } from '../data/repositories/index.js';
 import Select from '../components/ui/Select.jsx';
 import DeficiencyLevelsSection from '../components/settings/DeficiencyLevelsSection.jsx';
 import {
@@ -42,7 +39,7 @@ import UsersRolesSection from '../components/settings/UsersRolesSection.jsx';
  * PGIA, not just the person editing it.
  *
  * Ordered by who they belong to: your own settings first, then the ones that
- * govern the airport, then the demo tools.
+ * govern the airport.
  */
 const SECTIONS = [
   { id: 'profile', label: 'My profile', blurb: 'Name, position, and saved signature', Icon: UserRound, store: 'preferences' },
@@ -109,7 +106,6 @@ const SECTIONS = [
     admin: true,
     questions: 'C1',
   },
-  { id: 'demo', label: 'Demo controls', blurb: 'Clock and seed data', Icon: FlaskConical, dev: true },
 ];
 
 const ADMIN_ROLES = ['om', 'coo', 'admin'];
@@ -121,7 +117,7 @@ export default function SettingsPage() {
 
   const isAdmin = ADMIN_ROLES.includes(profile?.role);
   const sections = useMemo(
-    () => SECTIONS.filter((s) => (!s.admin || isAdmin) && (!s.dev || import.meta.env.DEV)),
+    () => SECTIONS.filter((s) => !s.admin || isAdmin),
     [isAdmin],
   );
 
@@ -133,7 +129,6 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState(null);
   const [audit, setAudit] = useState([]);
-  const [mockBusy, setMockBusy] = useState(null);
 
   const actor = useMemo(() => ({ id: user?.id, full_name: displayName }), [user?.id, displayName]);
 
@@ -237,85 +232,15 @@ export default function SettingsPage() {
     }
   }, [active, actor, resetSection]);
 
-  // Both reload the page on success rather than trying to make every
-  // subscribed page notice a swapped-out store: the mock store is a single
-  // in-memory object and a full reload is the one guaranteed way every
-  // screen picks up the new one, same as the existing "Reset demo data"
-  // control (Demo controls, below) already does.
-  const onLoadMockData = useCallback(async () => {
-    setMockBusy('load');
-    try {
-      await getRepos().instances.loadShowcase();
-      window.location.reload();
-    } catch (err) {
-      setMockBusy(null);
-      setBanner({ tone: 'error', text: err.message || 'Could not load mock data.' });
-    }
-  }, []);
-
-  const onRemoveMockData = useCallback(async () => {
-    if (
-      !window.confirm(
-        'Remove all mock data? This clears every checklist, incident and submission stored in this browser. The staff directory and approved forms stay.',
-      )
-    ) {
-      return;
-    }
-    setMockBusy('remove');
-    try {
-      await getRepos().instances.clearAll();
-      window.location.reload();
-    } catch (err) {
-      setMockBusy(null);
-      setBanner({ tone: 'error', text: err.message || 'Could not remove mock data.' });
-    }
-  }, []);
-
   return (
     <div className="space-y-5">
-      {/* Marked in progress so nobody demoing the portal mistakes an
-          unfinished screen for a finished one. */}
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wide">
-          <Wrench className="h-3.5 w-3.5" aria-hidden />
-          In progress · Dev
-        </span>
-        <span>This page is still being built. Everything below saves and takes effect.</span>
-      </p>
-
-      {/* Only when this build is actually running the in-browser mock store —
-          never against a configured Supabase project, where these buttons
-          would wipe real submitted records rather than sample ones. Visible
-          to anyone on the deployed demo, not just local dev: that's the
-          build people actually use to try the portal or reset it before the
-          next walkthrough. */}
-      {!configured && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-line/30 bg-surface p-4">
-          <div>
-            <h2 className="text-sm font-bold text-ink">Demo data</h2>
-            <p className="mt-0.5 text-xs text-muted">
-              Everything here lives only in this browser. Load a full sample of checklists and incidents to
-              explore, or clear it back to just the staff directory and approved forms.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <DemoButton onClick={onLoadMockData} disabled={Boolean(mockBusy)}>
-              {mockBusy === 'load' ? 'Loading…' : 'Load Mock Data'}
-            </DemoButton>
-            <DemoButton tone="alert" onClick={onRemoveMockData} disabled={Boolean(mockBusy)}>
-              {mockBusy === 'remove' ? 'Removing…' : 'Remove Mock Data'}
-            </DemoButton>
-          </div>
-        </div>
-      )}
-
       <header>
         <h1 className="text-xl font-bold text-ink sm:text-2xl">Settings</h1>
         <p className="max-w-2xl text-sm text-muted">
           {isAdmin
             ? 'Your own preferences, and the configuration that governs how the portal treats inspections and deficiencies across PGIA.'
             : 'Your own preferences. Airport-wide configuration is managed by the Operations Manager.'}
-          {!configured && ' This demo stores changes in this browser only.'}
+          {!configured && ' Changes in this build are stored in this browser only.'}
         </p>
       </header>
 
@@ -379,7 +304,6 @@ export default function SettingsPage() {
           {(draft || active?.id === 'users-roles') && (
             <SectionBody id={active.id} draft={draft} onChange={setDraft} profile={profile} user={user} />
           )}
-          {active?.id === 'demo' && <DemoControls />}
 
           {active?.store && lastChange && (
             <p className="text-xs text-muted">
@@ -389,9 +313,8 @@ export default function SettingsPage() {
           )}
 
           {/* The commit bar. Sticky so a long section never hides the way to
-              save what you just typed. Users & roles and Demo manage their
-              own actions inline. */}
-          {active?.id !== 'demo' && active?.id !== 'users-roles' && (
+              save what you just typed. Users & roles manages its own actions inline. */}
+          {active?.id !== 'users-roles' && (
             <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-line/10 bg-stripe/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0">
               <button
                 type="button"
@@ -462,66 +385,4 @@ function SectionBody({ id, draft, onChange, profile, user }) {
     default:
       return null;
   }
-}
-
-/** Development-only tools for moving the demo clock and reseeding. */
-function DemoControls() {
-  const [clock, setClock] = useState(null);
-
-  useEffect(() => {
-    getRepos().instances.getClock().then(setClock);
-  }, []);
-
-  return (
-    <section className="space-y-3 rounded-lg border border-dashed border-line/30 bg-surface p-5">
-      <div>
-        <h2 className="text-base font-bold text-ink">Demo clock</h2>
-        <p className="mt-1 text-sm text-muted">
-          Due and overdue calculations use America/Belize, not this device&apos;s timezone. Airport
-          time is currently {clock?.demoNow ?? '—'}.
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <DemoButton onClick={async () => setClock(await getRepos().instances.advanceClock(1))}>
-          Advance 1 day
-        </DemoButton>
-        <DemoButton onClick={async () => setClock(await getRepos().instances.advanceClock(7))}>
-          Advance 7 days
-        </DemoButton>
-        <DemoButton
-          onClick={async () => {
-            const result = await getRepos().instances.generate();
-            setClock(await getRepos().instances.getClock());
-            window.alert(`Generated ${result.created} occurrence(s). Total ${result.total}.`);
-          }}
-        >
-          Generate occurrences
-        </DemoButton>
-        <DemoButton
-          tone="alert"
-          onClick={async () => {
-            await getRepos().instances.resetDemo();
-            window.location.reload();
-          }}
-        >
-          Reset demo data
-        </DemoButton>
-      </div>
-    </section>
-  );
-}
-
-function DemoButton({ onClick, tone, disabled, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`min-h-11 rounded-md border px-3 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 desk:min-h-10 ${
-        tone === 'alert' ? 'border-alert text-alert hover:bg-alert-soft' : 'border-line/20 text-ink hover:bg-surface-2'
-      }`}
-    >
-      {children}
-    </button>
-  );
 }

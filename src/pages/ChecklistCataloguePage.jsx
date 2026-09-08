@@ -50,17 +50,23 @@ export default function ChecklistCataloguePage() {
     let cancelled = false;
     Promise.all([
       listTemplates(profile),
-      listAllSubmissions(),
-      getRepos().instances.list(),
-      getRepos().instances.getClock(),
-    ]).then(([tpls, filed, rows, clock]) => {
-      if (cancelled) return;
-      setTemplates(tpls);
-      setSubmissions(filed);
-      setInstances(rows);
-      setNowMs(clock.nowMs);
-      setLoading(false);
-    });
+      listAllSubmissions().catch(() => []),
+      getRepos().instances.list().catch(() => []),
+      getRepos().instances.getClock().catch(() => ({ nowMs: Date.now() })),
+    ])
+      .then(([tpls, filed, rows, clock]) => {
+        if (cancelled) return;
+        setTemplates(tpls);
+        setSubmissions(filed);
+        setInstances(rows);
+        setNowMs(clock.nowMs);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || 'Could not load the catalogue.');
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
