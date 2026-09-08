@@ -1,0 +1,26 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:palette
+      - run: npm run verify:content
+      - run: npm run verify:signoffs
+      - run: npm run verify:walkthrough
+      - run: npm run verify:pdf
+      - run: npm run build
+        env:
+          # Build must succeed without real secrets; mock is the default.
+          VITE_DATA_SOURCE: mock
