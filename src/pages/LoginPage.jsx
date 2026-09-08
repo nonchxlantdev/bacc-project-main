@@ -97,7 +97,9 @@ export default function LoginPage() {
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">Email</span>
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="username"
                   required={configured}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
