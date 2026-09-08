@@ -7,7 +7,7 @@ import { StatTile } from '../components/reports/StatTile.jsx';
 import { HorizontalBarChart } from '../components/reports/Charts.jsx';
 import ChartCard, { SimpleTable } from '../components/reports/ChartCard.jsx';
 import StatusPill from '../components/checklist/StatusPill.jsx';
-import { getRepos } from '../data/repositories/index.js';
+import { getDataSource, getRepos } from '../data/repositories/index.js';
 import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
 import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
@@ -52,7 +52,9 @@ export default function DashboardPage() {
     Promise.all([repos.checklists.listAll(), repos.incidents.list()])
       .then(([rows, incidents]) => {
         if (cancelled) return;
-        setShowShowcaseCta(rows.length === 0 && incidents.length === 0);
+        setShowShowcaseCta(
+          getDataSource() === 'mock' && rows.length === 0 && incidents.length === 0,
+        );
         setCompleted(
           rows
             .filter((row) => row.status === 'submitted' || row.status === 'acknowledged')
