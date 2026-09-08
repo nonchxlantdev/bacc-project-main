@@ -1,6 +1,5 @@
 import { getRepos } from '../data/repositories/index.js';
 import { getPhotoRecord } from '../utils/offlineQueue.js';
-import { getRegistryEntry } from '../data/templates/registry.js';
 import { probeReachability } from './reachability.js';
 import { isLiveSupabase, supabase } from './supabase.js';
 
@@ -176,6 +175,7 @@ export const queueHandlers = {
 export async function refreshDraftTemplate(record) {
   if (!record || record.locked || record.status !== 'draft') return record;
   const key = record.print_template_key ?? record.field_map?.templateKey;
+  const { getRegistryEntry } = await import('../data/templates/registry.js');
   const entry = key ? getRegistryEntry(key) : null;
   if (!entry) return record;
   const sameSchema = JSON.stringify(entry.schema) === JSON.stringify(record.schema);

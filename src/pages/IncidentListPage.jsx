@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { getDeficiencyLevel } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS } from '../config/incidentLookups.js';
-import { GROUP_ORDER } from '../data/templates/registry.js';
+import { GROUP_ORDER } from '../data/templates/templateMeta.js';
 import { INCIDENT_STATUSES, incidentStatusLabel } from '../lib/incidentLifecycle.js';
 import { listIncidents } from '../lib/incidents.js';
 import { teamStyle } from '../lib/checklistCatalogue.js';

@@ -4,8 +4,10 @@ import { isQualifyingReinspection, workOrderVerifiedBlockers } from '../../../li
 import { generatePendingInstances, linkSubmissionToInstance, refreshInstanceStatuses } from '../../../lib/instanceGeneration.js';
 import { addAirportDays, airportYmd, daysUntilDue, eachWeekStart } from '../../../lib/belizeTime.js';
 import { dispatchNotification } from '../../../lib/notificationTransport.js';
-import { groupForCode } from '../../templates/registry.js';
-import { advanceClock, clearStore, getStore, mutateStore, nowMs, resetStore } from './store.js';
+import { groupForCode } from '../../templates/templateMeta.js';
+import { advanceClock, clearStore, getStore, mutateStore, nowMs, resetStore, subscribeStore } from './store.js';
+
+export { subscribeStore };
 
 function notWired() {
   throw new Error('not wired');

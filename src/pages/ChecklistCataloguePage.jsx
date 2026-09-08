@@ -7,7 +7,7 @@ import TeamCard, { NewInspectionCard } from '../components/checklist/TeamCard.js
 import { StatTile } from '../components/reports/StatTile.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getRepos } from '../data/repositories/index.js';
-import { FAMILY_LABELS, FREQUENCY_LABELS } from '../data/templates/registry.js';
+import { FAMILY_LABELS, FREQUENCY_LABELS } from '../data/templates/templateMeta.js';
 import {
   buildTeamSummaries,
   catalogueKpis,

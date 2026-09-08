@@ -10,7 +10,7 @@ import {
   Zap,
   Folder,
 } from 'lucide-react';
-import { GROUP_ORDER } from '../data/templates/registry.js';
+import { GROUP_ORDER } from '../data/templates/templateMeta.js';
 import { airportMonthStartYmd, airportYmd, daysUntilDue } from './belizeTime.js';
 
 /**

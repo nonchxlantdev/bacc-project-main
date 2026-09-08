@@ -794,9 +794,7 @@ export function getRegistryEntry(key) {
  * the useful question on both screens is "whose is this?" — and that answer
  * already exists here, in the folder the approved form arrived in.
  */
-export function groupForCode(code) {
-  return TEMPLATE_REGISTRY.find((t) => t.code === code)?.group ?? null;
-}
+export { groupForCode } from './templateMeta.js';
 
 /*
  * `templatesForProfile` used to live here — a second, uncalled copy of the

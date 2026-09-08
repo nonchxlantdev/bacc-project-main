@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ClipboardCheck, Search, X } from 'lucide-react';
-import { FREQUENCY_LABELS } from '../../data/templates/registry.js';
+import { FREQUENCY_LABELS } from '../../data/templates/templateMeta.js';
 import { filterTemplates, groupTemplates } from '../../lib/checklistCatalogue.js';
 import Select from '../ui/Select.jsx';
 

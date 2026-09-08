@@ -8,7 +8,7 @@ import {
 } from '../../../lib/instanceGeneration.js';
 import { addAirportDays, airportYmd, daysUntilDue, eachWeekStart } from '../../../lib/belizeTime.js';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase.js';
-import { groupForCode } from '../../templates/registry.js';
+import { groupForCode } from '../../templates/templateMeta.js';
 
 /** Fixed entity id for settings overrides stored in audit_log (no app_settings table). */
 const SETTINGS_ENTITY_ID = '00000000-0000-4000-8000-0000000000a1';

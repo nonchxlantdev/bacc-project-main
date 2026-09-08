@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useApprovals } from '../hooks/useRepos.js';
 import SignaturePad from '../components/checklist/SignaturePad.jsx';
 import StatusPill from '../components/checklist/StatusPill.jsx';
-import { GROUP_ORDER } from '../data/templates/registry.js';
+import { GROUP_ORDER } from '../data/templates/templateMeta.js';
 import { teamStyle } from '../lib/checklistCatalogue.js';
 import { fmtDate } from '../lib/airportFormat.js';
 import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
