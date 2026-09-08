@@ -200,9 +200,11 @@ export default function ChecklistForm({
                       disabled={readOnly}
                       remarksError={unresolved.includes(item.code)}
                       hasPhoto={Boolean(photoPreviewByCode[item.code] || items[item.code]?.photo_url)}
+                      linkedIncident={linkedIncidentByCode[item.code]}
                       onSelect={onSelectItem}
                       onChange={(patch) => onItemChange(item.code, patch)}
                       onPhotoClick={onSelectItem}
+                      onViewIncident={() => onCreateIncident?.(item, items[item.code])}
                     />
                   ))}
                   {hasNextClosed && (
@@ -372,7 +374,7 @@ export default function ChecklistForm({
                   <button
                     type="button"
                     onClick={() => onCreateIncident?.(selectedItem, selectedRow)}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-navy px-3 py-2.5 text-sm font-semibold text-white"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-alert px-3 py-2.5 text-sm font-semibold text-white hover:bg-alert/90"
                   >
                     <Plus className="h-4 w-4" />
                     {linkedIncidentByCode[selectedItem.code] ? 'View Incident' : 'Create Incident'}

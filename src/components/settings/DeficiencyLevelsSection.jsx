@@ -138,7 +138,11 @@ export default function DeficiencyLevelsSection({ draft, onChange }) {
                   <NumberInput
                     id={`days-${row.level}`}
                     value={row.targetDays}
-                    onChange={(v) => patchLevel(row.level, { targetDays: v })}
+                    min={1}
+                    onChange={(v) => {
+                      if (v == null) patchLevel(row.level, { targetDays: null });
+                      else if (Number.isInteger(v) && v > 0) patchLevel(row.level, { targetDays: v });
+                    }}
                     suffix="days"
                     unsetLabel="No target date"
                   />

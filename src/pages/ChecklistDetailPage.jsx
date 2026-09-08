@@ -30,7 +30,7 @@ import { ROLE_TITLES } from '../lib/roleStaffing.js';
 import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
-import { applyStoredSignature, selfSignoffRole, shouldShowSignaturePrompt } from '../lib/storedSignature.js';
+import { applyStoredSignature, selfSignoffRole } from '../lib/storedSignature.js';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
@@ -137,16 +137,6 @@ export default function ChecklistDetailPage() {
     return () => clearTimeout(handle);
   }, [record, readOnly]);
 
-  useEffect(() => {
-    if (!record || readOnly || !schema) {
-      setSignaturePromptOpen(false);
-      return;
-    }
-    setSignaturePromptOpen(
-      shouldShowSignaturePrompt({ record, profile, schema, readOnly }),
-    );
-  }, [record?.id, readOnly, schema, profile?.hide_signature_prompt]);
-
   async function persistHideSignaturePrompt(hide) {
     if (!hide) return;
     try {
@@ -224,6 +214,19 @@ export default function ChecklistDetailPage() {
           : `Required header fields are empty: ${missingHeader.join(', ')}`,
       });
       if (unresolved[0]) setSelectedCode(unresolved[0]);
+      return;
+    }
+
+    const noSatMissingIncident = flattenItems(schema)
+      .filter((item) => record.items[item.code]?.result === 'no_sat')
+      .filter((item) => !itemIncidents[item.code])
+      .map((item) => item.code);
+    if (noSatMissingIncident.length) {
+      setBanner({
+        type: 'error',
+        text: `Create an incident for NO SAT item(s) before submitting: ${noSatMissingIncident.join(', ')}`,
+      });
+      setSelectedCode(noSatMissingIncident[0]);
       return;
     }
 
@@ -699,7 +702,9 @@ export default function ChecklistDetailPage() {
           }
           setIncidentModal({ item, row });
         }}
-        onSignoffChange={(role, patch) =>
+        onSignoffChange={(role, patch) => {
+          const selfRole = selfSignoffRole(schema);
+          const prevSig = record.signoffs?.find((s) => s.role === role)?.signature_data_uri;
           patchRecord((prev) => {
             const rest = (prev.signoffs ?? []).filter((s) => s.role !== role);
             const current = (prev.signoffs ?? []).find((s) => s.role === role) ?? { role };
@@ -715,11 +720,33 @@ export default function ChecklistDetailPage() {
                 },
               ],
             };
-          })
-        }
+          });
+          if (
+            role === selfRole &&
+            patch.signature_data_uri &&
+            !prevSig &&
+            !profile?.has_ever_signed &&
+            !profile?.stored_signature_data_uri
+          ) {
+            updateProfile({ has_ever_signed: true }).catch(() => {});
+            setSignaturePromptOpen(true);
+          }
+        }}
         storedSignatureUri={profile?.stored_signature_data_uri ?? null}
         onApplySelfStoredSignature={applySelfStoredSignature}
       />
+      )}
+
+      {!readOnly && !isReference && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white sm:w-auto desk:min-h-10"
+          >
+            Submit Checklist
+          </button>
+        </div>
       )}
 
       <SignaturePromptModal
@@ -759,7 +786,7 @@ export default function ChecklistDetailPage() {
           displayName={displayName}
           photoPreview={photoPreview[incidentModal.item.code]}
           onCreated={({ incident, proceed }) => {
-            setItemIncidents((prev) => ({ ...prev, [incident.source_item_code]: incident.id }));
+            setItemIncidents((prev) => ({ ...prev, [incident.source_item_code]: incident }));
             setBanner({
               type: 'ok',
               text: `${incident.incident_ref} created. The NO SAT response was not changed.`,

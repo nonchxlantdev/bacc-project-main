@@ -5,7 +5,7 @@ import NewInspectionPicker from '../components/checklist/NewInspectionPicker.jsx
 import StatusPill from '../components/checklist/StatusPill.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { startInspection } from '../lib/startInspection.js';
-import { deleteDraft, isDeletableDraft, listMineSubmissions } from '../lib/submissions.js';
+import { deleteDraft, canDeleteDraft, listMineSubmissions } from '../lib/submissions.js';
 import { listTemplates } from '../lib/templates.js';
 
 const TYPE_LABELS = {
@@ -58,7 +58,7 @@ export default function MyChecklistsPage() {
   }
 
   async function handleDelete(row) {
-    if (!isDeletableDraft(row)) return;
+    if (!canDeleteDraft(row, profile)) return;
     const title = row.schema?.title || row.template_code || 'this draft';
     const date = row.inspection_date || row.header?.date || '';
     const confirmed = window.confirm(
@@ -146,7 +146,7 @@ export default function MyChecklistsPage() {
                   <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
                 </td>
                 <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
-                  {isDeletableDraft(row) ? (
+                  {canDeleteDraft(row, profile) ? (
                     <button
                       type="button"
                       onClick={() => handleDelete(row)}

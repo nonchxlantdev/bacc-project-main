@@ -26,4 +26,5 @@ export const ASSIGNED_UNITS = [
   { value: 'grounds', label: 'Grounds' },
   { value: 'electrical', label: 'Electrical' },
   { value: 'plumbing', label: 'Plumbing' },
+  { value: 'om', label: 'Operations Manager' },
 ];

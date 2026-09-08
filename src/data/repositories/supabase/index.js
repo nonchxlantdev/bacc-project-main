@@ -1320,8 +1320,8 @@ export function createSupabaseRepositories() {
       async listMine(userId) {
         const rows = await listSubmissions();
         if (!userId) return rows;
-        const user = await sb(client().from('profiles').select('role').eq('id', userId).maybeSingle());
-        if (user && ['om', 'coo', 'admin'].includes(user.role)) return rows;
+        // "My Checklists" is personal — OM/admin still only see their own here.
+        // Everyone else's filed work lives under All Checklists / Approvals / Reports.
         return rows.filter((row) => row.inspector_id === userId);
       },
       async listAll() {
@@ -1463,7 +1463,14 @@ export function createSupabaseRepositories() {
         if (record?.status !== 'draft' || record?.locked) {
           throw new Error('Only unlocked drafts can be deleted. Submitted records stay on file.');
         }
-        await sb(client().from('checklist_submissions').delete().eq('id', record.id));
+        const deleted = await sb(
+          client().from('checklist_submissions').delete().eq('id', record.id).select('id'),
+        );
+        if (!deleted?.length) {
+          throw new Error(
+            'Could not delete that draft. Only Operations Manager or admin can delete drafts.',
+          );
+        }
       },
       async acknowledge({ id, name, position, signature_data_uri, actorId }) {
         const current = await fetchSubmission(id);

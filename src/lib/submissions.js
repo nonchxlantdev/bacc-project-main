@@ -91,6 +91,13 @@ export function isDeletableDraft(record) {
   return record?.status === 'draft' && !record?.locked;
 }
 
+/** Client gate matching migration 014 — OM/admin only, unlocked drafts. */
+export function canDeleteDraft(record, profile) {
+  if (!isDeletableDraft(record)) return false;
+  const role = profile?.role;
+  return role === 'om' || role === 'admin';
+}
+
 export async function deleteDraft(record) {
   return getRepos().checklists.deleteDraft(record);
 }

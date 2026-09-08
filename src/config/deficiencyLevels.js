@@ -60,6 +60,7 @@ export function severityOrderIsSet() {
 export function slaState(targetDate, now = new Date()) {
   if (!targetDate) return { kind: 'none', remainingDays: null };
   const due = new Date(`${String(targetDate).slice(0, 10)}T23:59:59-06:00`);
+  if (Number.isNaN(due.getTime())) return { kind: 'none', remainingDays: null };
   const ms = due.getTime() - (typeof now === 'number' ? now : now.getTime());
   const remainingDays = Math.ceil(ms / 86400000);
   if (remainingDays < 0) return { kind: 'overdue', remainingDays };
@@ -73,7 +74,7 @@ export function slaState(targetDate, now = new Date()) {
  */
 export function targetDateFor(level, fromYmd) {
   const days = getDeficiencyLevel(level)?.targetDays;
-  if (days == null || !fromYmd) return null;
+  if (days == null || days <= 0 || !Number.isInteger(days) || !fromYmd) return null;
   const ms = Date.parse(`${fromYmd}T12:00:00-06:00`) + days * 86400000;
   return new Date(ms).toISOString().slice(0, 10);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -21,7 +21,6 @@ import {
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
 import DeficiencyLevelPicker from '../components/incidents/DeficiencyLevelPicker.jsx';
 import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
-import HowThisWorks from '../components/incidents/HowThisWorks.jsx';
 import { TeamChip } from './IncidentListPage.jsx';
 import {
   Card,
@@ -121,6 +120,14 @@ export default function IncidentDetailPage() {
   const sla = incident ? slaState(incident.target_date, clockMs) : { kind: 'none' };
   const step = incident ? incidentStepIndex(incident.status) : 0;
   const verified = incident ? hasSatVerification(incident) : false;
+
+  const assignedUnitOptions = useMemo(() => {
+    const unassigned = { value: '', label: 'Unassigned' };
+    if (profile?.role === 'apron_supervisor') {
+      return [unassigned, { value: 'om', label: 'Operations Manager' }];
+    }
+    return [unassigned, ...ASSIGNED_UNITS.filter((u) => u.value !== 'om')];
+  }, [profile?.role]);
 
   async function saveIncident(next) {
     const saved = await persistIncident(next);
@@ -773,13 +780,28 @@ export default function IncidentDetailPage() {
                 className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid"
                 onClick={async () => {
                   if (!updateBody.trim()) return;
-                  await addIncidentUpdate(incident, {
-                    body: updateBody.trim(),
+                  const body = updateBody.trim();
+                  const row = await addIncidentUpdate(incident, {
+                    body,
                     authorId: user?.id,
                     authorName: displayName,
                   });
                   setUpdateBody('');
-                  await reload();
+                  setIncident((prev) => ({
+                    ...prev,
+                    updates: [
+                      {
+                        id: row.id,
+                        body: row.body ?? body,
+                        author_name: displayName,
+                        author_id: user?.id,
+                        created_at: row.created_at,
+                        status_from: row.status_from ?? null,
+                        status_to: row.status_to ?? null,
+                      },
+                      ...(prev.updates ?? []),
+                    ],
+                  }));
                 }}
               >
                 <MessageSquarePlus size={16} aria-hidden /> Add Update
@@ -816,7 +838,6 @@ export default function IncidentDetailPage() {
 
         {/* Right rail */}
         <aside className="h-fit space-y-4 xl:sticky xl:top-4">
-          <HowThisWorks incident={incident} />
           <Card title="Status & Workflow">
             <div className="space-y-3">
               <SelectField
@@ -899,7 +920,7 @@ export default function IncidentDetailPage() {
                   setIncident(next);
                   saveIncident(next);
                 }}
-                options={[{ value: '', label: 'Unassigned' }, ...ASSIGNED_UNITS]}
+                options={assignedUnitOptions}
               />
               <div>
                 <span className="mb-1 block text-xs text-muted">Assigned Date</span>

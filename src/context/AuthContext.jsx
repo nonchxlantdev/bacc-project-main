@@ -221,11 +221,12 @@ async function fetchProfile(user) {
     position: user.user_metadata?.position || 'Inspector',
     role: 'inspector',
     department: user.user_metadata?.department || 'Maintenance',
+    has_ever_signed: false,
   };
   if (!supabase) return fallback;
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, email, full_name, position, role, department, is_active, is_approver, can_login')
+    .select('id, email, full_name, position, role, department, is_active, is_approver, can_login, has_ever_signed')
     .eq('id', user.id)
     .maybeSingle();
   if (!profile) return fallback;
@@ -248,6 +249,7 @@ async function fetchProfile(user) {
 
   return {
     ...profile,
+    has_ever_signed: Boolean(profile.has_ever_signed),
     stored_signature_data_uri,
     stored_signature_updated_at,
     hide_signature_prompt,

@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useAirportClock } from '../hooks/useAirportClock.js';
 import { baccLogoUrl, pgiaLogoUrl } from '../lib/brandAssets.js';
 
 export default function LoginPage() {
   const { user, loading, signIn, error, configured, demoUsers } = useAuth();
   const [email, setEmail] = useState(demoUsers[0]?.email || '');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
-  const clock = useAirportClock();
 
   useEffect(() => {
     if (!email && demoUsers[0]?.email) setEmail(demoUsers[0].email);
@@ -36,7 +36,7 @@ export default function LoginPage() {
   return (
     <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-navy">
       <div className="min-h-full lg:grid lg:grid-cols-[1.05fr_1fr]">
-        <VisualPanel clock={clock} />
+        <VisualPanel />
 
         <div className="flex items-center justify-center bg-surface px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-10 lg:px-12">
           <div className="w-full max-w-[26rem]">
@@ -106,16 +106,24 @@ export default function LoginPage() {
                   className="w-full rounded-lg border border-line/20 bg-surface px-3 py-2 text-ink"
                 />
               </label>
-              <label className="block">
+              <label className="relative block">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">Password</span>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required={configured}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-line/20 bg-surface px-3 py-2 text-ink"
+                  className="w-full rounded-lg border border-line/20 bg-surface py-2 pl-3 pr-11 text-ink"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute bottom-0 right-0 flex h-[42px] w-11 items-center justify-center rounded-r-lg text-muted hover:text-ink"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </label>
               {(localError || error) && <p className="text-sm text-alert">{localError || error}</p>}
               <button
@@ -145,67 +153,30 @@ function initialsOf(fullName) {
 }
 
 /**
- * The left half of the sign-in screen on `lg` and up — an "Ops Board":
- * a quiet instrument-panel readout rather than a runway photo, reusing the
- * same navy gradient and teal/amber "beacon glow" language the rest of the
- * portal already uses for status (see Sidebar's active-item marker and the
- * dashboard's stat tiles). Collapses to a slim brand strip below `lg` —
- * this is a work tool people sign into one-handed on the apron, so the
- * form has to be reachable without scrolling past decoration first.
+ * Calm brand panel on `lg` and up — logos and airport name only, no live
+ * telemetry or animation. Below `lg`, a slim strip keeps the form reachable
+ * without scrolling past decoration on a phone.
  */
-function VisualPanel({ clock }) {
+function VisualPanel() {
   return (
     <>
       <div className="login-visual-bg relative hidden flex-col justify-between overflow-hidden px-10 py-9 text-white lg:flex">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <img src={pgiaLogoUrl} alt="Philip S.W. Goldson International Airport" className="h-auto w-[160px] max-w-full" />
-            <p className="mt-2 text-[12px] font-semibold text-white/85">BACC Airport Portal</p>
-            <p className="mt-0.5 text-[11px] text-white/50">Philip S.W. Goldson International Airport</p>
-          </div>
-          <div className="shrink-0 text-right font-mono text-[11px] leading-relaxed text-white/65">
-            <div>
-              <span
-                aria-hidden
-                className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-teal align-middle shadow-glow-teal"
-              />
-              <span className="align-middle font-medium text-white">Online</span>
-            </div>
-            <div className="tabular-nums">{clock.time}</div>
-            <div>{clock.date} · America/Belize</div>
-          </div>
+        <div>
+          <img src={pgiaLogoUrl} alt="Philip S.W. Goldson International Airport" className="h-auto w-[160px] max-w-full" />
+          <p className="mt-3 text-[12px] font-semibold text-white/85">BACC Airport Portal</p>
+          <p className="mt-0.5 text-[11px] text-white/50">Philip S.W. Goldson International Airport</p>
         </div>
 
-        <div className="my-8 flex-1">
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-teal">PGIA · Annex D compliance</p>
-          <h1 className="max-w-[16ch] text-[clamp(1.7rem,2.6vw+1rem,2.6rem)] font-semibold leading-[1.1] text-white">
-            Airfield compliance, verified daily.
-          </h1>
+        <p className="max-w-[22ch] text-sm leading-relaxed text-white/70">
+          Daily airfield compliance checklists and incident tracking for PGIA.
+        </p>
 
-          <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
-            <InstrumentTile label="Runway 07/25" value="Active" led="teal" />
-            <InstrumentTile label="System status" value="Online" led="teal" />
-            <InstrumentTile label="Checklists on file" value="131" />
-            <InstrumentTile label="Open incidents" value="4" led="amber" />
-            <InstrumentTile label="Coordinates" value="17.5391°N 88.3082°W" />
-            <InstrumentTile label="Timezone" value="America/Belize" />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-7 border-t border-white/10 pt-4 font-mono text-[11px] text-white/55">
-          <div>
-            <strong className="block font-sans text-[15px] font-semibold text-white">BACC</strong>
-            <span className="mt-0.5 block">Belize Airport Concession Co.</span>
-          </div>
-          <div>
-            <strong className="block font-sans text-[15px] font-semibold text-white">24/7</strong>
-            <span className="mt-0.5 block">Ops coverage</span>
-          </div>
+        <div className="border-t border-white/10 pt-4 text-[11px] text-white/55">
+          <strong className="block font-sans text-[15px] font-semibold text-white">BACC</strong>
+          <span className="mt-0.5 block">Belize Airport Concession Co.</span>
         </div>
       </div>
 
-      {/* Below `lg`: a compact brand strip instead of the full board, so the
-          form is reachable without scrolling past decoration on a phone. */}
       <div className="flex items-center gap-3 bg-navy px-6 py-5 text-white lg:hidden">
         <img src={pgiaLogoUrl} alt="Philip S.W. Goldson International Airport" className="h-8 w-auto shrink-0" />
         <div className="min-w-0">
@@ -214,24 +185,5 @@ function VisualPanel({ clock }) {
         </div>
       </div>
     </>
-  );
-}
-
-function InstrumentTile({ label, value, led }) {
-  return (
-    <div className="bg-navy-deep/55 px-3.5 py-2.5 font-mono">
-      <div className="text-[10px] uppercase tracking-wide text-white/45">{label}</div>
-      <div className="mt-1 flex items-center gap-1.5 text-[14.5px] text-[#eef3fa]">
-        {led && (
-          <span
-            aria-hidden
-            className={`h-1.5 w-1.5 shrink-0 rounded-full motion-safe:animate-[beacon-pulse_3.6s_ease-in-out_infinite] ${
-              led === 'amber' ? 'bg-caution shadow-glow-caution' : 'bg-teal shadow-glow-teal'
-            }`}
-          />
-        )}
-        <span className="truncate">{value}</span>
-      </div>
-    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -8,6 +8,8 @@ import StatusPill from '../components/checklist/StatusPill.jsx';
 import { GROUP_ORDER } from '../data/templates/registry.js';
 import { teamStyle } from '../lib/checklistCatalogue.js';
 import { fmtDate } from '../lib/airportFormat.js';
+import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
+import { listIncidents } from '../lib/incidents.js';
 import Select from '../components/ui/Select.jsx';
 
 const ROLE_LABEL = {
@@ -45,6 +47,26 @@ export default function ApprovalsPage() {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [team, setTeam] = useState('');
+  const [linkedIncidents, setLinkedIncidents] = useState([]);
+
+  useEffect(() => {
+    if (!active?.entity_id) {
+      setLinkedIncidents([]);
+      return undefined;
+    }
+    let cancelled = false;
+    listIncidents()
+      .then((all) => {
+        if (cancelled) return;
+        setLinkedIncidents(all.filter((inc) => inc.submission_id === active.entity_id));
+      })
+      .catch(() => {
+        if (!cancelled) setLinkedIncidents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [active?.entity_id]);
 
   const teams = useMemo(() => {
     const present = new Set(rows.map((row) => row.entity?.group).filter(Boolean));
@@ -262,6 +284,21 @@ export default function ApprovalsPage() {
             <p className="mt-3 text-sm">
               Status <StatusPill status={active.entity?.status} />
             </p>
+
+            {linkedIncidents.length > 0 && (
+              <p className="mt-3 text-sm text-ink">
+                <span className="text-muted">Incidents raised: </span>
+                {formatIncidentSummary(linkedIncidents)}
+                {' · '}
+                <Link
+                  to={`/incidents/${linkedIncidents[0].id}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  View{linkedIncidents.length > 1 ? ` (${linkedIncidents.length})` : ''}
+                </Link>
+              </p>
+            )}
+
             <p className="mt-3 text-xs text-muted">
               Rejection of a submitted regulatory record is pending BACC confirmation. Notes are
               stored either way.
@@ -335,4 +372,13 @@ function Detail({ label, value }) {
 function ageDays(iso) {
   if (!iso) return 0;
   return Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 86400000));
+}
+
+function formatIncidentSummary(incidents) {
+  const counts = new Map();
+  for (const inc of incidents) {
+    const label = incidentStatusLabel(inc.status).toLowerCase();
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([status, n]) => `${n} ${status}`).join(', ');
 }

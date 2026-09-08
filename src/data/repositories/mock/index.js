@@ -126,8 +126,7 @@ export function createMockRepositories() {
       async listMine(userId) {
         const rows = getStore().submissions;
         if (!userId) return rows;
-        const user = getStore().users.find((u) => u.id === userId);
-        if (user && ['om', 'coo', 'admin'].includes(user.role)) return rows;
+        // Match live: My Checklists is always the signed-in person's own records.
         return rows.filter((row) => row.inspector_id === userId);
       },
       async listAll() {

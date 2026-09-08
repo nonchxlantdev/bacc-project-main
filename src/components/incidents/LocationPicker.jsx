@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers } from 'lucide-react';
+import { Layers, MapPin } from 'lucide-react';
 import { tokens } from '../../lib/tokens.js';
 
 export const PGIA_CENTER = { lat: 17.539, lng: -88.308 };
@@ -46,6 +46,23 @@ export default function LocationPicker({
   const tileRef = useRef(null);
   const idRef = useRef(`map-${Math.random().toString(36).slice(2)}`);
   const [layer, setLayer] = useState(defaultLayer);
+  const hasCoords = latitude != null && longitude != null;
+  const [locked, setLocked] = useState(() => hasCoords);
+  const lockedRef = useRef(locked);
+
+  useEffect(() => {
+    lockedRef.current = locked;
+    const marker = markerRef.current;
+    if (!marker || !draggable) return;
+    if (locked) marker.dragging?.disable();
+    else marker.dragging?.enable();
+  }, [locked, draggable]);
+
+  useEffect(() => {
+    if (latitude != null && longitude != null) {
+      setLocked(true);
+    }
+  }, [latitude, longitude]);
 
   useEffect(() => {
     const map = L.map(idRef.current).setView(
@@ -60,10 +77,11 @@ export default function LocationPicker({
 
     const marker = L.marker([latitude || PGIA_CENTER.lat, longitude || PGIA_CENTER.lng], {
       icon: pinIcon,
-      draggable,
+      draggable: draggable && !lockedRef.current,
     }).addTo(map);
 
     marker.on('dragend', () => {
+      if (lockedRef.current) return;
       const pos = marker.getLatLng();
       onChange?.({
         latitude: +pos.lat.toFixed(6),
@@ -72,8 +90,10 @@ export default function LocationPicker({
         location_user_adjusted: true,
         location_captured_at: new Date().toISOString(),
       });
+      setLocked(true);
     });
     map.on('click', (event) => {
+      if (lockedRef.current) return;
       marker.setLatLng(event.latlng);
       onChange?.({
         latitude: +event.latlng.lat.toFixed(6),
@@ -82,6 +102,7 @@ export default function LocationPicker({
         location_user_adjusted: true,
         location_captured_at: new Date().toISOString(),
       });
+      setLocked(true);
     });
 
     mapRef.current = map;
@@ -131,18 +152,30 @@ export default function LocationPicker({
         className="overflow-hidden rounded-md border border-line/15"
         style={{ height }}
       />
-      {showLayerToggle && (
-        <button
-          type="button"
-          onClick={() => setLayer((v) => (v === 'satellite' ? 'street' : 'satellite'))}
-          title={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
-          aria-label={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
-          className="absolute bottom-3 right-3 z-10 inline-flex min-h-11 items-center gap-1.5 rounded border border-line/20 bg-surface px-3 text-xs font-semibold text-ink shadow-card hover:bg-surface-2 desk:min-h-9 desk:px-2.5"
-        >
-          <Layers size={14} aria-hidden />
-          {LAYERS[layer]?.label}
-        </button>
-      )}
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
+        {hasCoords && locked && (
+          <button
+            type="button"
+            onClick={() => setLocked(false)}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded border border-line/20 bg-surface px-3 text-xs font-semibold text-ink shadow-card hover:bg-surface-2 desk:min-h-9 desk:px-2.5"
+          >
+            <MapPin size={14} aria-hidden />
+            Edit location
+          </button>
+        )}
+        {showLayerToggle && (
+          <button
+            type="button"
+            onClick={() => setLayer((v) => (v === 'satellite' ? 'street' : 'satellite'))}
+            title={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
+            aria-label={`Switch to ${layer === 'satellite' ? 'street' : 'satellite'} view`}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded border border-line/20 bg-surface px-3 text-xs font-semibold text-ink shadow-card hover:bg-surface-2 desk:min-h-9 desk:px-2.5"
+          >
+            <Layers size={14} aria-hidden />
+            {LAYERS[layer]?.label}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

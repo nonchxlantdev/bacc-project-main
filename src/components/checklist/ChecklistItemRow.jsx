@@ -1,4 +1,5 @@
 import { Camera, ChevronRight, Check, X } from 'lucide-react';
+import { incidentStatusLabel } from '../../lib/incidentLifecycle.js';
 import { CHECKLIST_GRID } from './checklistGrid.js';
 
 /**
@@ -38,9 +39,11 @@ export default function ChecklistItemRow({
   disabled,
   remarksError,
   hasPhoto,
+  linkedIncident,
   onSelect,
   onChange,
   onPhotoClick,
+  onViewIncident,
 }) {
   const result = row?.result ?? null;
   const noSat = result === 'no_sat';
@@ -67,7 +70,7 @@ export default function ChecklistItemRow({
           <span className="min-w-0 flex-1 text-[13px] leading-snug text-ink">{item.text}</span>
         </button>
 
-        <div className="flex gap-2 px-3 pt-2.5">
+        <div className="flex flex-wrap items-center gap-2 px-3 pt-2.5">
           <ResultToggle
             itemCode={item.code}
             label="SAT"
@@ -87,6 +90,9 @@ export default function ChecklistItemRow({
             }}
             tone="no_sat"
           />
+          {noSat && linkedIncident && (
+            <LinkedIncidentBadge incident={linkedIncident} onView={onViewIncident} />
+          )}
         </div>
 
         <div className="flex items-center gap-1 px-3 pt-2">
@@ -142,7 +148,7 @@ export default function ChecklistItemRow({
           <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted" aria-hidden />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ResultToggle
             itemCode={item.code}
             label="SAT"
@@ -162,6 +168,9 @@ export default function ChecklistItemRow({
             }}
             tone="no_sat"
           />
+          {noSat && linkedIncident && (
+            <LinkedIncidentBadge incident={linkedIncident} onView={onViewIncident} />
+          )}
         </div>
       </div>
 
@@ -204,6 +213,9 @@ export default function ChecklistItemRow({
         />
 
         <div className="flex items-center gap-1 border-l border-line/10 p-1.5">
+          {noSat && linkedIncident ? (
+            <LinkedIncidentBadge incident={linkedIncident} onView={onViewIncident} className="mr-1 shrink-0" />
+          ) : null}
           <input
             value={row?.remarks ?? ''}
             disabled={disabled}
@@ -273,5 +285,19 @@ function ResultToggle({ itemCode, label, checked, disabled, onChange, tone }) {
       </span>
       <span className="xl:hidden">{label}</span>
     </label>
+  );
+}
+
+function LinkedIncidentBadge({ incident, onView, className = '' }) {
+  const ref = incident?.incident_ref || incident?.noc_no || 'Incident';
+  const status = incidentStatusLabel(incident?.status);
+  return (
+    <button
+      type="button"
+      onClick={() => onView?.(incident)}
+      className={`inline-flex min-h-9 max-w-full items-center truncate rounded border border-primary/30 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10 ${className}`}
+    >
+      {ref} · {status}
+    </button>
   );
 }
