@@ -1,0 +1,1 @@
+import{i,s as a}from"./index-BErryMBe.js";async function c(n,e={}){const s=new Headers(e.headers||{});if(!s.has("Content-Type")&&e.body&&typeof e.body=="string"&&s.set("Content-Type","application/json"),i&&a){const{data:o}=await a.auth.getSession(),t=o?.session?.access_token;t&&s.set("Authorization",`Bearer ${t}`)}return fetch(n,{...e,headers:s})}export{c as apiFetch};
