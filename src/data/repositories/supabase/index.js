@@ -408,6 +408,12 @@ async function replaceSubmissionChildren(submissionId, record) {
   }
 
   for (const sg of record.signoffs || []) {
+    // Skip empty stubs — mapSignoffToDb would invent name "Signed" and we
+    // must not persist forged secondary blocks (OM/supervisor) on every save.
+    if (!sg?.role) continue;
+    const hasSig = Boolean(sg.signature_data_uri || sg.signature_image_path);
+    const hasName = Boolean(String(sg.name || '').trim());
+    if (!hasSig && !hasName) continue;
     await sb(
       client()
         .from('checklist_signoffs')
