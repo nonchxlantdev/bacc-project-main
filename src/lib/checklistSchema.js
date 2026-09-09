@@ -92,6 +92,46 @@ export function unresolvedNoSatCodes(schema, items) {
     .map((item) => item.code);
 }
 
+/**
+ * Which header field is "today" — the date this inspection/log itself is
+ * being filled out on, as opposed to some OTHER date a form happens to also
+ * record (Annex C's "Previous TOI Date", Annex K's BDCA submission/acceptance
+ * dates, the Hazard Reporting Form's "date the hazard was observed"). An
+ * allow-list of the exact phrasings the 36 approved forms actually use,
+ * rather than a "contains 'date'" match, because getting this wrong means
+ * silently stamping today's date onto a field that is supposed to record a
+ * different one.
+ *
+ * Matched by label only, not by declared `type` — the wildlife/attendance
+ * family types its Date and Time fields as plain `text` (free-form, no native
+ * picker) rather than `date`/`time`, but they still mean the same thing and
+ * still deserve a same-day default. A YYYY-MM-DD / HH:MM string reads fine
+ * typed into a text box either way.
+ */
+const TODAYS_DATE_LABELS = new Set(['date', 'date of inspection', 'inspection date']);
+
+/** Same idea for the field that captures when the inspection/activity began —
+ * never a field for when it ENDED ("Time End", "Time Completed"). */
+const START_TIME_LABELS = new Set([
+  'time',
+  'time start',
+  'start time',
+  'time commenced',
+  'time of inspection',
+]);
+
+export function todaysDateField(schema) {
+  return (schema?.headerFields ?? []).find((f) =>
+    TODAYS_DATE_LABELS.has((f.label ?? '').trim().toLowerCase()),
+  );
+}
+
+export function startTimeField(schema) {
+  return (schema?.headerFields ?? []).find((f) =>
+    START_TIME_LABELS.has((f.label ?? '').trim().toLowerCase()),
+  );
+}
+
 export function missingRequiredHeaderKeys(schema, header) {
   return (schema?.headerFields ?? [])
     .filter((field) => field.required && !String(header?.[field.key] ?? '').trim())

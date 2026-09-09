@@ -15,7 +15,13 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { missingRequiredHeaderKeys, unresolvedNoSatCodes } from '../../lib/checklistSchema.js';
+import { airportHm, airportYmd } from '../../lib/belizeTime.js';
+import {
+  missingRequiredHeaderKeys,
+  startTimeField,
+  todaysDateField,
+  unresolvedNoSatCodes,
+} from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
 import { selfSignoffRole } from '../../lib/storedSignature.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
@@ -96,6 +102,28 @@ export default function ChecklistForm({
     if ((current?.name ?? '') === signerName && (current?.position ?? '') === wantPosition) return;
     onSignoffChange?.(selfRole, { name: signerName, position: wantPosition });
   }, [readOnly, schema, signoffs, signerName, signerPosition, onSignoffChange]);
+
+  // A blank date/start-time is a real gap on any draft that was created
+  // before this default existed (or opened through a path that predates it)
+  // — not just brand-new ones. Give it today's date and the current time as
+  // a starting point the first time the form is opened while it's still
+  // blank, same as a freshly-started inspection gets. Deliberately once per
+  // mount, not tied to `header` — otherwise clearing the field by hand would
+  // just get overwritten right back on the next render.
+  useEffect(() => {
+    if (readOnly) return;
+    const dateField = todaysDateField(schema);
+    const timeField = startTimeField(schema);
+    const patch = {};
+    if (dateField && !String(header?.[dateField.key] ?? '').trim()) {
+      patch[dateField.key] = airportYmd(Date.now());
+    }
+    if (timeField && !String(header?.[timeField.key] ?? '').trim()) {
+      patch[timeField.key] = airportHm(Date.now());
+    }
+    if (Object.keys(patch).length) onHeaderChange?.(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!selectedCode) return;
@@ -389,7 +417,7 @@ export default function ChecklistForm({
                     </div>
                   ) : (
                     <p className="mb-3 text-xs text-alert">
-                      This item has been marked NO SAT. Please provide remarks and select an action.
+                      All NO SAT items require incident creation.
                     </p>
                   )}
                   <p className="mb-2 text-sm font-medium text-ink">
@@ -401,7 +429,7 @@ export default function ChecklistForm({
                     className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-alert px-3 py-2.5 text-sm font-semibold text-white hover:bg-alert/90"
                   >
                     <Plus className="h-4 w-4" />
-                    {linkedIncidentByCode[selectedItem.code] ? 'View Incident' : 'Create Incident'}
+                    {linkedIncidentByCode[selectedItem.code] ? 'View Incident' : 'Submit Incident'}
                   </button>
                 </div>
               )}
@@ -575,6 +603,14 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
   // is a list of full-width answers, however old the snapshot is.
   const numbered = fields.filter((f) => /^\s*\d+\./.test(f.label ?? '')).length >= 3;
   const stacked = schema.headerLayout === 'stacked' || numbered;
+  // Several approved forms (the wildlife family, the hazard report, Annex K)
+  // mark none of their header fields required — every field on the source
+  // paper form is optional/best-effort. The footer note below used to claim
+  // "fields marked with * are required" unconditionally, which read as a
+  // bug on those forms: no field ever showed a *, yet the note insisted one
+  // would. It only prints now when this schema actually has a required field
+  // for it to describe.
+  const hasRequiredField = fields.some((f) => f.required);
   return (
     // No `overflow-hidden` here (unlike the other card wrappers in this file):
     // this card's "Conducted by — title" field opens a dropdown that has to be
@@ -690,7 +726,9 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
           <div>
-            <p className="text-xs font-semibold text-ink">All fields marked with * are required.</p>
+            {hasRequiredField && (
+              <p className="text-xs font-semibold text-ink">All fields marked with * are required.</p>
+            )}
             <p className="text-xs text-muted">Please ensure all information is accurate before proceeding.</p>
           </div>
         </div>

@@ -17,6 +17,18 @@ export function airportYmd(ms) {
   return ymdFmt.format(new Date(ms));
 }
 
+const hmFmt = new Intl.DateTimeFormat('en-GB', {
+  timeZone: AIRPORT_TZ,
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+/** "HH:MM", airport-local — what an <input type="time"> expects. */
+export function airportHm(ms) {
+  return hmFmt.format(new Date(ms));
+}
+
 export function airportStartMs(ymd) {
   return Date.parse(`${ymd}T00:00:00.000${AIRPORT_OFFSET}`);
 }

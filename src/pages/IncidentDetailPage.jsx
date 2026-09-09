@@ -840,6 +840,14 @@ export default function IncidentDetailPage() {
         <aside className="h-fit space-y-4 xl:sticky xl:top-4">
           <Card title="Status & Workflow">
             <div className="space-y-3">
+              {/* This used to also have a second "Workflow Step" dropdown here —
+                  bound to the exact same incident.status value and the exact
+                  same changeStatus handler as this one, just with slightly
+                  different option labels (Reported/Closed vs Open/Verified-
+                  Closed). It wasn't a second, independent field; it was this
+                  field rendered twice. The stepper below already shows
+                  workflow progress without inviting someone to "set" it a
+                  second time. */}
               <SelectField
                 label="Current Status"
                 value={incident.status}
@@ -853,12 +861,6 @@ export default function IncidentDetailPage() {
                   {level?.label ?? '—'}
                 </div>
               </div>
-              <SelectField
-                label="Workflow Step"
-                value={incident.status}
-                onChange={(v) => changeStatus(v)}
-                options={INCIDENT_STATUSES.map((s, i) => ({ value: s.value, label: STEP_LABELS[i] }))}
-              />
             </div>
 
             <ol className="mt-4 flex items-start justify-between gap-1">

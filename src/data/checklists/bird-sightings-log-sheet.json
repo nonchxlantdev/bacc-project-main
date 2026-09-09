@@ -33,12 +33,6 @@
       "key": "date",
       "label": "Date",
       "type": "text",
-      "required": false
-    },
-    {
-      "key": "date",
-      "label": "Date",
-      "type": "text",
       "required": false,
       "mapKey": "date"
     },

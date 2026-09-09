@@ -105,12 +105,45 @@ before any code was written. Five parts, all built:
 
 ---
 
-## Phase 4 — Ship the two approved polish rounds (spec + instructions already written, just needs building)
+## Phase 4 — Ship the two approved polish rounds
 
-These are already fully planned — someone just needs to sit down and build them:
+- [x] **Round 1 (Sept 6) — confirmed already built, verified against the actual source on Sept 9:**
+  - Notification bell dropdown — `NotificationDropdown.jsx`, wired into `TopBar.jsx`, keeps `/notifications` for full history.
+  - Help dropdown — `HelpDropdown.jsx` (searchable FAQ groups), wired into `TopBar.jsx`, keeps `/help` for full history.
+  - Offline UX — fully wired in `AppShell.jsx`: a toast the moment you go offline, a "still works offline / needs a connection" modal (`OfflineModal.jsx`) that only shows once per offline episode, a periodic reachability probe (`reachability.js`) that catches broken airfield links even when the browser still thinks it's online, and a "Back online, syncing…" → "All caught up" toast sequence on reconnect.
+  - Better map pins — `LocationsPage.jsx` now plots every incident with a captured location as a status-colored pin (with a legend), click-through to the incident, instead of just the static PGIA marker.
+  - Expanded reports — `ReportsPage.jsx` wires up all of `openDeficienciesByLevel`, `deficiencyAgeing`, `slaAdherence`, `nocRegisterStatus`, `reinspectionRate`, `workOrderTurnaround`, and `templateCompletion`.
+  - New settings sections — `AppearanceSection` (landing page + 12h/24h time format; theme toggle correctly stays in the sidebar) and `ApproversSection` (department/annex → who signs as OM/COO/CEC) in `AppearanceApprovers.jsx`, both admin-gated the same way as Users & roles (`ADMIN_ROLES = ['om','coo','admin']`).
 
-- [ ] **Round 1 (Sept 6):** notification/help dropdown menus, an offline "still works / needs connection" popup, better map pins, expanded reports, new settings sections.
-- [ ] **Round 2 (Sept 8):** simpler login screen, show/hide password, tighter delete permissions, one-time (not repeated) signature prompt, red "Create Incident" button, locked map pin by default, a few bug fixes (days-remaining counter, auto-scroll glitch, missing incident-link badge), a second submit-safety check, and a couple of role-specific field restrictions.
+  All six pieces are already in the code. Nothing to build here — this line item was stale, same as Round 2.
+
+- [x] **Round 2 (Sept 8) — confirmed already built, verified against the actual source on Sept 9:**
+  - Simpler login screen — `LoginPage.jsx` (demo account picker, glass card).
+  - Show/hide password toggle — `LoginPage.jsx` (`showPassword` state + eye icon button).
+  - Tighter delete permissions — migrations `014_restrict_draft_delete.sql` (RLS policy) and `017_delete_draft_with_incidents.sql` (`delete_draft_submission` function), both restricted to `role in ('om', 'admin')`.
+  - One-time (not repeated) signature prompt — `SignaturePromptModal.jsx`'s "Don't show this again" checkbox.
+  - Red "Create Incident" button — confirmed in place.
+  - Locked map pin by default — `LocationPicker.jsx` (`locked` state defaults to `hasCoords`, explicit "Edit location" button to unlock).
+  - Days-remaining counter bug fix — `slaState()` (timezone-aware, Belize `-06:00`).
+  - Auto-scroll glitch bug fix — media-query-guarded `scrollIntoView` in `ChecklistForm.jsx`.
+  - Missing incident-link badge bug fix — `LinkedIncidentBadge` now renders in `ChecklistItemRow.jsx` across all three responsive layouts.
+  - Second submit-safety check — `noSatMissingIncident` check in the checklist submit flow.
+  - Role-specific field restrictions — e.g. `apron_supervisor` can only escalate to Operations Manager (`assignedUnitOptions` in `IncidentDetailPage.jsx`).
+
+  All ten items are already in the code. Nothing to build here — this line item was stale.
+
+- [x] **Two bugs found and fixed during the Round 2 audit (Sept 9), not part of the original Round 2 list:**
+  - Incident detail page showed two dropdowns bound to the same status value ("Current Status" and "Workflow Step" both read "In Progress" and changed together) — removed the duplicate "Workflow Step" control from `IncidentDetailPage.jsx`. The read-only step tracker underneath is unaffected.
+  - Several checklist forms said "All fields marked with * are required" at the bottom with no asterisk actually showing anywhere (worst on the wildlife/hazard forms) — turned out to be two issues: `ChecklistForm.jsx` was showing that note unconditionally regardless of whether the schema has any required field (now conditional), and `bird-sightings-log-sheet.json` had a literal duplicate `date` header field (the malformed copy is removed). A full audit of all 36 checklist schema files found 7 with zero required fields (mostly wildlife/hazard forms — that's just how those forms were designed, nothing wrong with them now that the note won't show) and only the one schema with an actual duplicate key.
+
+- [x] **NO SAT panel wording + a real header-prefill bug found and fixed (Sept 9):**
+  - The NO SAT side panel's warning text now reads "All NO SAT items require incident creation," and its action button reads "Submit Incident" instead of "Create Incident" (still "View Incident" once one exists). One shared component (`ChecklistForm.jsx`) used by every form, so this took effect on all 36 without any schema changes.
+  - Root-caused why "Date" and "Time Commenced/Start" show up blank when opening a new inspection: `startInspection.js` only ever prefilled header keys literally named `date`, `inspectionType`, and `conductedBy` — which only matches Annex D's own key names. Every other form spells its date/time keys differently (`dateOfInspection`, `timeCommenced`, `conductedByNamePosition`, …), so 35 of the 36 forms opened with the date and start-time fields empty, not just "Monthly Illuminated Guidance Signs Inspection." Fixed generically: `checklistSchema.js` now has `todaysDateField()`/`startTimeField()`, which find the right field on any schema by matching its **label** against the known phrasings the approved forms actually use ("Date", "Date of Inspection", "Inspection Date"; "Time", "Time Start", "Time Commenced", "Time of Inspection") — regardless of what the field's key or declared type is. `startInspection.js` uses these to stamp today's date and the current time (Belize local) into every new draft. 34 of 36 forms now get a same-day default; the two that don't are Annex K (a safety-plan template with no "today" concept, only submission/acceptance dates) and Annex L (no header fields at all — it's a reference-document list). One more, the Wildlife Incursion Report, keeps its date field blank on purpose: its own schema notes that the approved paper form itself prints the odd label "Date: _bn," and BACC's §14 forbids correcting an approved form for tidiness, so I left it exactly as authored rather than special-casing around it.
+  - "Conducted by" was never actually broken by this — that field re-locks itself to the signed-in account's name/position every time the form renders (from the Sept 9 identity-lock work), independent of whatever `startInspection.js` prefilled. Only the date/time fields were silently blank.
+  - Checked the "Show preview" PDF button per request: the pipeline itself is sound — it reads directly from the submission's live header values through each schema's own `mapKey`s, and every one of the 36 templates resolves its own field map and base PDF correctly (no cross-template mixups). It was only ever showing blank date/time because the header itself was blank, for the same reason as above — nothing further to fix there once the prefill bug is fixed.
+  - Still open, not yet acted on: only 4 of 36 forms (Annex B, D, E, F) show a "Conducted by" box near the top of the form the way the screenshot did — every other form still locks the inspector's identity, just down in the signature block at the bottom instead of near the top. Whether to add that same top-of-form box everywhere is a real design decision (touches how forms look, not just a text tweak) — flagged for the user to decide, not yet built.
+
+- [x] **Date/time default made retroactive, and a file-sync gotcha found (Sept 9, later same day):** The fix above only ran at the moment a NEW draft is created, so any checklist already sitting "In Progress" from before the fix (e.g. an Annex E draft the user already had open) still had its old blank Time. `ChecklistForm.jsx` now also fills a blank date/start-time the first time an in-progress draft is opened — once only, so clearing the field by hand afterward is never fought and put back — which covers every already-existing blank draft, not just new ones. Separately: a same-day edit to this same file (the NO SAT wording/button change) was found reverted on the device shortly after being committed, with nothing else in the file touched — almost certainly the file being open in an editor (Cursor/VS Code) on the user's machine and getting autosaved from that editor's own in-memory buffer, silently overwriting the on-disk write. Re-applied; worth keeping in mind if edits to a file "disappear" again — check whether that file is open and being saved elsewhere at the same time.
 
 ---
 
