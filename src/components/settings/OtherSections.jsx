@@ -1,7 +1,11 @@
-import { Clock } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Camera, Clock, Loader2 } from 'lucide-react';
 import { NumberInput, Panel, Row, StringList, TextArea, TextInput, Toggle, Note } from './settingsUi.jsx';
 import { EMAIL_INTEGRATION_READY } from '../../config/settingsDefaults.js';
 import SignaturePad from '../checklist/SignaturePad.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { compressImage } from '../../lib/imageCompress.js';
+import { removeAvatar, uploadAvatar, useAvatarUrl } from '../../lib/avatar.js';
 
 /**
  * Event names in BACC's own words, with a line saying when each one fires.
@@ -59,14 +63,38 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
       <Row label="Position" htmlFor="position" effect="Printed under your name on the approved form.">
         <TextInput id="position" value={draft.position} onChange={(v) => onChange({ ...draft, position: v })} />
       </Row>
-      <Row label="Sign-in email" effect="Set by your administrator. Historical records point at this address.">
-        <p className="min-h-11 text-sm text-muted desk:min-h-10">{email || '—'}</p>
-      </Row>
       <Row label="Role and department" effect="Determines which approved forms you may open and what you can approve.">
         <p className="min-h-11 text-sm text-muted desk:min-h-10">
           {role || '—'}
           {department ? ` · ${department}` : ''}
         </p>
+      </Row>
+    </Panel>
+    <Panel
+      title="Profile photo"
+      description="Shown next to your name in the top bar and the Users directory. Visible to everyone signed in — nothing about it is private, so there is nothing to approve before it's seen."
+    >
+      <Row label="Photo" effect="JPG or PNG. Cropped to a square and compressed automatically.">
+        <AvatarUploader />
+      </Row>
+    </Panel>
+    <Panel
+      title="Sign-in email"
+      description="Changing this sends a confirmation link to the NEW address. Nothing changes here — or on your account — until that link is opened. Historical records keep the address that was current when they were filed."
+    >
+      <Row label="Current" effect="What you sign in with today.">
+        <p className="min-h-11 text-sm text-muted desk:min-h-10">{email || '—'}</p>
+      </Row>
+      <Row label="New email" effect="You'll get a confirmation link at this address before it takes effect.">
+        <EmailChangeForm />
+      </Row>
+    </Panel>
+    <Panel
+      title="Password"
+      description="Change your own sign-in password. You are never asked for the current one here — you're already signed in as you."
+    >
+      <Row label="New password" effect="At least 10 characters. Takes effect immediately.">
+        <PasswordChangeForm />
       </Row>
     </Panel>
     <Panel
@@ -122,6 +150,217 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
       </Row>
     </Panel>
   </>
+  );
+}
+
+/**
+ * Upload/replace/remove the signed-in account's own photo. Deliberately not
+ * part of the page's draft/Save-changes cycle — it's a Storage upload, not a
+ * `profiles` field patch, so like the checklist's own photo capture it takes
+ * effect the moment it succeeds rather than waiting on a separate save.
+ */
+function AvatarUploader() {
+  const { profile, updateProfile } = useAuth();
+  const avatarUrl = useAvatarUrl(profile?.avatar_url);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const inputRef = useRef(null);
+
+  async function handleFile(file) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { blob } = await compressImage(file, { maxEdge: 480, quality: 0.82 });
+      const path = await uploadAvatar({ userId: profile.id, blob, contentType: 'image/jpeg' });
+      await updateProfile({ avatar_url: path });
+    } catch (err) {
+      setError(err.message || 'Could not upload that photo.');
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  }
+
+  async function handleRemove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await removeAvatar(profile?.avatar_url);
+      await updateProfile({ avatar_url: null });
+    } catch (err) {
+      setError(err.message || 'Could not remove that photo.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line/20 bg-stripe text-muted">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <Camera className="h-5 w-5" aria-hidden />
+        )}
+      </span>
+      <div className="min-w-0 space-y-1.5">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:border-primary/40 disabled:opacity-60"
+          >
+            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+            {profile?.avatar_url ? 'Replace photo' : 'Upload photo'}
+          </button>
+          {profile?.avatar_url && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleRemove}
+              className="inline-flex min-h-9 items-center rounded-md px-3 text-xs font-medium text-muted hover:text-alert disabled:opacity-60"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => handleFile(e.target.files?.[0])}
+        />
+        {error && <p className="text-xs text-alert">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
+/** Requests a Supabase-confirmed email change. Nothing on the account
+ * changes until the person clicks the link Supabase sends to the NEW
+ * address — see AuthContext.changeEmail and migration 018's
+ * sync_profile_email trigger, which is what copies it onto `profiles` once
+ * that confirmation actually lands. */
+function EmailChangeForm() {
+  const { changeEmail } = useAuth();
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  async function submit() {
+    const next = value.trim();
+    if (!next || !next.includes('@')) {
+      setMessage({ tone: 'error', text: 'Enter a valid email address.' });
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      await changeEmail(next);
+      setMessage({
+        tone: 'success',
+        text: `Confirmation link sent to ${next}. Your sign-in email won't change until you open it.`,
+      });
+      setValue('');
+    } catch (err) {
+      setMessage({ tone: 'error', text: err.message || 'Could not start that change.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <input
+          type="email"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="new.address@pgia.local"
+          className="min-h-11 min-w-0 flex-1 rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
+        />
+        <button
+          type="button"
+          disabled={busy || !value.trim()}
+          onClick={submit}
+          className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-primary bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50 desk:min-h-10"
+        >
+          {busy ? 'Sending…' : 'Send confirmation link'}
+        </button>
+      </div>
+      {message && (
+        <p className={`text-xs ${message.tone === 'error' ? 'text-alert' : 'text-success'}`}>{message.text}</p>
+      )}
+    </div>
+  );
+}
+
+/** Self-service password change via Supabase Auth. See
+ * AuthContext.changePassword — no admin involvement, and no current
+ * password is asked for since the session itself already proves who this is. */
+function PasswordChangeForm() {
+  const { changePassword } = useAuth();
+  const [value, setValue] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  async function submit() {
+    if (value.length < 10) {
+      setMessage({ tone: 'error', text: 'Use at least 10 characters.' });
+      return;
+    }
+    if (value !== confirm) {
+      setMessage({ tone: 'error', text: "Those two don't match." });
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      await changePassword(value);
+      setMessage({ tone: 'success', text: 'Password changed.' });
+      setValue('');
+      setConfirm('');
+    } catch (err) {
+      setMessage({ tone: 'error', text: err.message || 'Could not change your password.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <input
+        type="password"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="New password"
+        autoComplete="new-password"
+        className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
+      />
+      <input
+        type="password"
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+        placeholder="Confirm new password"
+        autoComplete="new-password"
+        className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
+      />
+      <button
+        type="button"
+        disabled={busy || !value || !confirm}
+        onClick={submit}
+        className="inline-flex min-h-11 items-center rounded-md border border-primary bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50 desk:min-h-10"
+      >
+        {busy ? 'Changing…' : 'Change password'}
+      </button>
+      {message && (
+        <p className={`text-xs ${message.tone === 'error' ? 'text-alert' : 'text-success'}`}>{message.text}</p>
+      )}
+    </div>
   );
 }
 

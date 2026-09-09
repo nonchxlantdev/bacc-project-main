@@ -1,4 +1,6 @@
+import { User } from 'lucide-react';
 import { useUsers } from '../hooks/useRepos.js';
+import { useAvatarUrl } from '../lib/avatar.js';
 
 /**
  * Who uses the portal.
@@ -51,7 +53,12 @@ export default function UsersPage() {
             )}
             {rows.map((row, i) => (
               <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
-                <td data-label="Name" className="px-4 py-3 font-medium text-ink">{row.full_name}</td>
+                <td data-label="Name" className="px-4 py-3 font-medium text-ink">
+                  <div className="flex items-center gap-2.5">
+                    <UserAvatar path={row.avatar_url} />
+                    {row.full_name}
+                  </div>
+                </td>
                 <td data-label="Position" className="px-4 py-3">{row.position}</td>
                 <td data-label="Department" className="px-4 py-3">{row.department}</td>
                 <td data-label="Email" className="break-all px-4 py-3 text-muted">{row.email}</td>
@@ -75,5 +82,14 @@ export default function UsersPage() {
         </table>
       </div>
     </div>
+  );
+}
+
+function UserAvatar({ path }) {
+  const url = useAvatarUrl(path);
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line/15 bg-stripe text-muted">
+      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <User className="h-3.5 w-3.5" aria-hidden />}
+    </span>
   );
 }

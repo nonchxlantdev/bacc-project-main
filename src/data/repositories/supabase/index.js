@@ -1171,7 +1171,7 @@ export function createSupabaseRepositories() {
           (await sb(
             client()
               .from('profiles')
-              .select('id, email, full_name, position, role, department, is_active, is_approver, can_login')
+              .select('id, email, full_name, position, role, department, is_active, is_approver, can_login, avatar_url')
               .order('full_name'),
           )) || [];
         return rows.map((p) => mapProfile(p));

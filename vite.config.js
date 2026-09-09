@@ -1,27 +1,14 @@
-import { copyFileSync, existsSync } from 'node:fs';
-import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { pdfExportApiPlugin } from './vite.pdf-api.js';
 
-const base = process.env.GITHUB_PAGES === 'true' ? '/bacc-project-main/' : '/';
-
-function spaFallback404Plugin() {
-  return {
-    name: 'spa-github-pages-404',
-    closeBundle() {
-      if (process.env.GITHUB_PAGES !== 'true') return;
-      const index = path.resolve('dist/index.html');
-      const dest = path.resolve('dist/404.html');
-      if (existsSync(index)) copyFileSync(index, dest);
-    },
-  };
-}
-
+// Vercel is the only supported deploy target for this app (it serves the
+// /api/* functions PDF export depends on, which a GitHub Pages deploy
+// cannot run) — no GITHUB_PAGES base-path branching or Pages 404 fallback.
 export default defineConfig({
-  base,
+  base: '/',
   define: {
     // Showcase sample data is retired — never auto-load fake submissions/incidents.
     'import.meta.env.VITE_SHOWCASE': JSON.stringify(''),
@@ -30,10 +17,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
     pdfExportApiPlugin(),
-    spaFallback404Plugin(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['pgia-logo.png', 'bacc-logo.jpeg'],
+      // pgia-logo.png/bacc-logo.jpeg stay precached — still used as the
+      // favicon and in-app brand assets. icon-192/512 are dedicated,
+      // properly-square install icons (see public/icon-*.png) — the old
+      // manifest pointed both sizes at pgia-logo.png, a 3999x1676 wide
+      // transparent wordmark, which the OS stretched/cropped into a
+      // distorted home-screen icon.
+      includeAssets: ['pgia-logo.png', 'bacc-logo.jpeg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'BACC Airport Portal',
         short_name: 'BACC Portal',
@@ -45,13 +37,13 @@ export default defineConfig({
         scope: './',
         icons: [
           {
-            src: 'pgia-logo.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: 'pgia-logo.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',

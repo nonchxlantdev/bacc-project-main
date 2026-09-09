@@ -18,7 +18,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { missingRequiredHeaderKeys, unresolvedNoSatCodes } from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
 import { selfSignoffRole } from '../../lib/storedSignature.js';
-import { ROLE_TITLES } from '../../lib/roleStaffing.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
@@ -27,7 +26,6 @@ import LogTable from './LogTable.jsx';
 import DrawingAttach from './DrawingAttach.jsx';
 import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
-import Select from '../ui/Select.jsx';
 
 export default function ChecklistForm({
   schema,
@@ -54,6 +52,14 @@ export default function ChecklistForm({
   onCreateIncident,
   storedSignatureUri,
   onApplySelfStoredSignature,
+  // The person actually signed in right now — never who originally created
+  // or last saved this draft. BACC §14 (and the Conducted-by/self-signoff
+  // fields this feeds) means nobody may fill either in with someone else's
+  // name, so both are always stamped from the live account, not from
+  // whatever the record already has stored.
+  signerName,
+  signerTitle,
+  signerPosition,
 }) {
   const unresolved = useMemo(() => unresolvedNoSatCodes(schema, items), [schema, items]);
   const missingHeader = useMemo(() => missingRequiredHeaderKeys(schema, header), [schema, header]);
@@ -75,6 +81,21 @@ export default function ChecklistForm({
       return next.size === prev.size ? prev : next;
     });
   }, [linkedIncidentByCode, sections]);
+
+  // Nobody signs the self block as someone else — the moment the account
+  // filling this in doesn't match what the record has stored (a fresh draft,
+  // or one a different (equally real) account has opened to continue), pull
+  // it back onto whoever is actually here. Skipped once the record is
+  // read-only: a submitted checklist keeps its historical signer forever.
+  useEffect(() => {
+    if (readOnly || !signerName) return;
+    const selfRole = selfSignoffRole(schema);
+    if (!selfRole) return;
+    const current = signoffs?.find((s) => s.role === selfRole);
+    const wantPosition = signerPosition ?? '';
+    if ((current?.name ?? '') === signerName && (current?.position ?? '') === wantPosition) return;
+    onSignoffChange?.(selfRole, { name: signerName, position: wantPosition });
+  }, [readOnly, schema, signoffs, signerName, signerPosition, onSignoffChange]);
 
   useEffect(() => {
     if (!selectedCode) return;
@@ -164,6 +185,8 @@ export default function ChecklistForm({
           header={header}
           disabled={readOnly}
           onChange={onHeaderChange}
+          signerName={signerName}
+          signerTitle={signerTitle}
         />
 
         {sections.map((section, sectionIndex) => {
@@ -281,8 +304,9 @@ export default function ChecklistForm({
                 role={def.role}
                 label={def.label}
                 dateLabel={def.dateLabel}
-                name={signed?.name ?? ''}
-                position={signed?.position ?? ''}
+                name={isSelf ? signerName ?? signed?.name ?? '' : signed?.name ?? ''}
+                position={isSelf ? signerPosition ?? signed?.position ?? '' : signed?.position ?? ''}
+                nameLocked={isSelf}
                 signedAt={signed?.signed_at}
                 signatureDataUri={signed?.signature_data_uri}
                 storedSignatureUri={storedSignatureUri}
@@ -539,7 +563,7 @@ function FieldIcon({ Icon }) {
   return <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />;
 }
 
-function HeaderFields({ schema, header, disabled, onChange }) {
+function HeaderFields({ schema, header, disabled, onChange, signerName, signerTitle }) {
   const fields = schema.headerFields ?? [];
   if (!fields.length) return null;
   // Most forms head with a handful of short entries (Date, Time, Vehicle No.),
@@ -601,6 +625,8 @@ function HeaderFields({ schema, header, disabled, onChange }) {
                     field={field}
                     value={header[field.key] ?? ''}
                     disabled={disabled}
+                    signerName={signerName}
+                    signerTitle={signerTitle}
                     onChange={onChange}
                   />
                 ) : field.type === 'yes_no' ? (
@@ -681,9 +707,6 @@ function isConductedBy(field) {
   return /^conducted by/i.test(field?.label ?? '');
 }
 
-/** The post names as printed on the approved forms, in picking order. */
-const CONDUCTED_BY_TITLES = [...new Set(Object.values(ROLE_TITLES))].sort((a, b) => a.localeCompare(b));
-
 /**
  * Split "Name / Position" the way a person wrote it.
  *
@@ -702,44 +725,27 @@ export function joinNamePosition(name, title) {
 }
 
 /**
- * Two controls, one stored value.
+ * Whoever is signed in, full stop.
  *
- * BACC §14 fixes the approved form's field, its label and the string that is
- * stamped onto the exported PDF — so the record still holds a single
- * "Name / Position". What changes is only how it is typed: the position half is
- * a post with a canonical name, and picking it beats retyping it whenever the
- * person who conducted the inspection is not the account holder.
- *
- * The halves are held locally so a half-finished entry stays put while it is
- * being made, and re-read from the value whenever the record changes underneath
- * — loading a draft saved before this control existed, or one typed by hand.
+ * This used to be free text plus a title picker, on the reasoning that the
+ * person who conducted an inspection is sometimes not the account holder —
+ * see the (now superseded) note that used to sit here about picking a title
+ * beating retyping it. BACC's own recordkeeping intent is stronger: nobody
+ * may fill this in with someone else's name, so the field no longer accepts
+ * typing at all. It always shows, and the record always stores, the
+ * currently signed-in account's name and post — kept in sync via `onChange`
+ * so a draft opened by a different (equally real) account picks up whoever
+ * is actually here, and the exported PDF always stamps the same identity
+ * this shows on screen.
  */
-function ConductedByField({ field, value, disabled, onChange }) {
-  const [parts, setParts] = useState(() => splitNamePosition(value));
+function ConductedByField({ field, value, disabled, signerName, signerTitle, onChange }) {
+  const locked = joinNamePosition(signerName ?? '', signerTitle ?? '');
 
   useEffect(() => {
-    setParts((prev) => (joinNamePosition(prev.name, prev.title) === (value ?? '') ? prev : splitNamePosition(value)));
-  }, [value]);
-
-  function commit(next) {
-    setParts(next);
-    onChange({ [field.key]: joinNamePosition(next.name, next.title) });
-  }
-
-  // A position typed before this control existed is not on the list. Dropping
-  // it would quietly rewrite what an inspector recorded, so it is offered as
-  // one more option instead.
-  const titles = CONDUCTED_BY_TITLES.includes(parts.title) || !parts.title
-    ? CONDUCTED_BY_TITLES
-    : [...CONDUCTED_BY_TITLES, parts.title];
-
-  const titleOptions = useMemo(
-    () => [
-      { value: '', label: 'Select a title…', Icon: Briefcase },
-      ...titles.map((title) => ({ value: title, label: title, Icon: Briefcase })),
-    ],
-    [titles],
-  );
+    if (disabled || !signerName) return;
+    if ((value ?? '') === locked) return;
+    onChange({ [field.key]: locked });
+  }, [disabled, signerName, locked, value, field.key, onChange]);
 
   return (
     // A name ("Glenrick Spain") is reliably shorter than the longest approved
@@ -747,27 +753,32 @@ function ConductedByField({ field, value, disabled, onChange }) {
     // Consultant"), so the pair splits unevenly rather than 50/50 — an equal
     // split still truncated the longest titles even after the wrapper above
     // was widened to span two header columns.
-    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
-      <div className="relative">
-        <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
-        <input
-          type="text"
-          aria-label="Conducted by — name"
-          placeholder="Name"
-          disabled={disabled}
-          value={parts.name}
-          onChange={(e) => commit({ ...parts, name: e.target.value })}
-          className="min-h-10 w-full rounded border border-line/20 bg-surface py-2 pl-9 pr-3 text-sm text-ink read-only:bg-stripe"
-        />
+    <div>
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
+        <div className="relative">
+          <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+          <input
+            type="text"
+            aria-label="Conducted by — name"
+            readOnly
+            disabled
+            value={signerName ?? ''}
+            className="min-h-10 w-full rounded border border-line/20 bg-stripe py-2 pl-9 pr-3 text-sm text-ink"
+          />
+        </div>
+        <div className="relative">
+          <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+          <input
+            type="text"
+            aria-label="Conducted by — title"
+            readOnly
+            disabled
+            value={signerTitle ?? ''}
+            className="min-h-10 w-full rounded border border-line/20 bg-stripe py-2 pl-9 pr-3 text-sm text-ink"
+          />
+        </div>
       </div>
-      <Select
-        label="Conducted by — title"
-        value={parts.title}
-        onChange={(title) => commit({ ...parts, title })}
-        options={titleOptions}
-        disabled={disabled}
-        className="w-full"
-      />
+      <p className="mt-1 text-[11px] text-muted">Locked to your account — signed in as {signerName || '…'}.</p>
     </div>
   );
 }

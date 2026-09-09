@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Dices } from 'lucide-react';
 import { useUsers } from '../../hooks/useRepos.js';
 import Select from '../ui/Select.jsx';
 import { Panel, TextInput, Toggle } from './settingsUi.jsx';
+import { apiFetch } from '../../lib/apiFetch.js';
 
 const ROLE_OPTIONS = [
   { value: 'om', label: 'Operations Manager' },
@@ -26,12 +28,31 @@ const EMPTY = {
   department: 'Operations',
   role: 'duty_manager',
   is_approver: false,
+  temp_password: '',
 };
+
+/** A temporary password the admin reads off screen and hands to the new
+ * hire directly — there is no invite email (see the create-user API doc).
+ * Random enough to not be guessable, short enough to read aloud or copy. */
+function generateTempPassword() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const bytes = new Uint32Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (n) => alphabet[n % alphabet.length]).join('');
+}
 
 /**
  * Admin CRUD for portal users. Soft-deactivate only — never hard-delete, so
  * historical submissions/sign-offs stay attributable.
  * The read-only `/users` page is unchanged.
+ *
+ * Creating a user is not the same request as editing one. A new account
+ * needs a real Supabase Auth login, which only `api/create-user.js` can
+ * make (it holds the service-role key this browser never sees) — `persist()`
+ * here only ever wrote a `profiles` row, so "Add user" used to produce an
+ * account nobody could actually sign into. Editing an existing person still
+ * goes through `persist()`/RLS, which migration 018 now actually allows for
+ * an admin/OM acting on someone else's row.
  */
 export default function UsersRolesSection() {
   const { rows, persist, setActive, reload } = useUsers();
@@ -39,11 +60,13 @@ export default function UsersRolesSection() {
   const [draft, setDraft] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [createdNotice, setCreatedNotice] = useState(null);
 
   function startCreate() {
     setEditing('new');
-    setDraft({ ...EMPTY });
+    setDraft({ ...EMPTY, temp_password: generateTempPassword() });
     setError(null);
+    setCreatedNotice(null);
   }
 
   function startEdit(user) {
@@ -55,8 +78,10 @@ export default function UsersRolesSection() {
       department: user.department || 'Operations',
       role: user.role || 'duty_manager',
       is_approver: Boolean(user.is_approver),
+      temp_password: '',
     });
     setError(null);
+    setCreatedNotice(null);
   }
 
   function cancel() {
@@ -70,22 +95,48 @@ export default function UsersRolesSection() {
       setError('Name and email are required.');
       return;
     }
+    if (editing === 'new' && draft.temp_password.trim().length < 10) {
+      setError('Temporary password must be at least 10 characters.');
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      await persist({
-        ...(editing !== 'new' ? { id: editing } : {}),
-        full_name: draft.full_name.trim(),
-        email: draft.email.trim().toLowerCase(),
-        position: draft.position.trim(),
-        department: draft.department,
-        role: draft.role,
-        is_approver: Boolean(draft.is_approver),
-        is_active: true,
-        can_login: true,
-      });
+      if (editing === 'new') {
+        const res = await apiFetch('/api/create-user', {
+          method: 'POST',
+          body: JSON.stringify({
+            full_name: draft.full_name.trim(),
+            email: draft.email.trim().toLowerCase(),
+            password: draft.temp_password.trim(),
+            position: draft.position.trim(),
+            department: draft.department,
+            role: draft.role,
+            is_approver: Boolean(draft.is_approver),
+          }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error || `Could not create that account (${res.status}).`);
+        setCreatedNotice({
+          email: draft.email.trim().toLowerCase(),
+          password: draft.temp_password.trim(),
+        });
+      } else {
+        await persist({
+          id: editing,
+          full_name: draft.full_name.trim(),
+          email: draft.email.trim().toLowerCase(),
+          position: draft.position.trim(),
+          department: draft.department,
+          role: draft.role,
+          is_approver: Boolean(draft.is_approver),
+          is_active: true,
+          can_login: true,
+        });
+      }
       await reload();
-      cancel();
+      setEditing(null);
+      setDraft(EMPTY);
     } catch (err) {
       setError(err.message || 'Could not save that user.');
     } finally {
@@ -135,6 +186,19 @@ export default function UsersRolesSection() {
       >
         {error && <p className="mb-3 text-sm text-alert">{error}</p>}
 
+        {createdNotice && (
+          <div className="mb-3 rounded-md border border-success/30 bg-success-soft p-3 text-sm text-success">
+            <p className="font-semibold">Account created for {createdNotice.email}.</p>
+            <p className="mt-1">
+              Temporary password: <code className="rounded bg-white/60 px-1.5 py-0.5 font-mono">{createdNotice.password}</code>
+            </p>
+            <p className="mt-1 text-xs">
+              There is no invite email — share this with them directly. They can change it themselves from Settings
+              → My profile once signed in.
+            </p>
+          </div>
+        )}
+
         {editing && (
           <div className="mb-4 space-y-3 rounded-md border border-primary/25 bg-primary/5 p-4">
             <p className="text-sm font-semibold text-ink">
@@ -178,6 +242,27 @@ export default function UsersRolesSection() {
                   label={draft.is_approver ? 'Can approve' : 'Cannot approve'}
                 />
               </Field>
+              {editing === 'new' && (
+                <Field label="Temporary password">
+                  <div className="flex gap-2">
+                    <TextInput
+                      value={draft.temp_password}
+                      onChange={(v) => setDraft({ ...draft, temp_password: v })}
+                    />
+                    <button
+                      type="button"
+                      title="Generate a new temporary password"
+                      onClick={() => setDraft({ ...draft, temp_password: generateTempPassword() })}
+                      className="min-h-11 shrink-0 rounded-md border border-line/20 px-2.5 text-muted hover:border-primary/40 hover:text-primary desk:min-h-10"
+                    >
+                      <Dices className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    At least 10 characters. Not emailed — you share this with them yourself.
+                  </p>
+                </Field>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <button

@@ -191,6 +191,28 @@ export function AuthProvider({ children }) {
       return profile;
     }
 
+    // Self-service, both calling Supabase Auth directly rather than the
+    // `profiles` table — a password never lives there, and an email only
+    // ever changes on `profiles` once migration 018's sync trigger sees the
+    // confirmed change land on auth.users. There is no demo-mode
+    // equivalent: changing either only means something against a real
+    // account.
+    async function changePassword(newPassword) {
+      if (!live || !supabase) {
+        throw new Error('Password changes need the portal connected to Supabase.');
+      }
+      const { error: pwError } = await supabase.auth.updateUser({ password: newPassword });
+      if (pwError) throw pwError;
+    }
+
+    async function changeEmail(newEmail) {
+      if (!live || !supabase) {
+        throw new Error('Email changes need the portal connected to Supabase.');
+      }
+      const { error: emailError } = await supabase.auth.updateUser({ email: newEmail });
+      if (emailError) throw emailError;
+    }
+
     return {
       user,
       profile,
@@ -203,6 +225,8 @@ export function AuthProvider({ children }) {
       signIn,
       signOut,
       updateProfile,
+      changePassword,
+      changeEmail,
       displayName: profile?.full_name || user?.email || 'Inspector',
       position: profile?.position || 'Inspector',
     };
@@ -226,7 +250,9 @@ async function fetchProfile(user) {
   if (!supabase) return fallback;
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, email, full_name, position, role, department, is_active, is_approver, can_login, has_ever_signed')
+    .select(
+      'id, email, full_name, position, role, department, is_active, is_approver, can_login, has_ever_signed, avatar_url',
+    )
     .eq('id', user.id)
     .maybeSingle();
   if (!profile) return fallback;

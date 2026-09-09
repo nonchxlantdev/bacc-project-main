@@ -246,12 +246,13 @@ export default function ChecklistDetailPage() {
     const selfSignoff = selfRole
       ? {
           role: selfRole,
-          // "Conducted by" is whoever the person says conducted it — it is
-          // prefilled from the account and editable, so submitting must not
-          // stamp the account holder back over a colleague's name and
-          // title once one has actually been entered on this block.
-          name: existingSelf?.name || displayName,
-          position: existingSelf?.position || position,
+          // Name/Position are locked to the signed-in account throughout
+          // editing (ChecklistForm keeps them synced), so this always
+          // matches what's already on the block — never a colleague's name
+          // on their behalf, which the old on-behalf-of design here used to
+          // preserve.
+          name: displayName,
+          position,
           signature_data_uri: existingSelf?.signature_data_uri,
           signed_at: signedAt,
         }
@@ -734,6 +735,13 @@ export default function ChecklistDetailPage() {
         }}
         storedSignatureUri={profile?.stored_signature_data_uri ?? null}
         onApplySelfStoredSignature={applySelfStoredSignature}
+        // Whoever is signed in right now, for the locked Conducted-by field
+        // and the self sign-off block — never the account that created or
+        // last saved this draft. See ChecklistForm's signerName/signerTitle
+        // handling.
+        signerName={displayName}
+        signerTitle={ROLE_TITLES[profile?.role] || position}
+        signerPosition={position}
       />
       )}
 

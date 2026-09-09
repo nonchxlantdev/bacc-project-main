@@ -11,6 +11,11 @@ export default function SignoffBlock({
   signatureDataUri,
   storedSignatureUri,
   readOnly,
+  // Set only for the form's own signer (see ChecklistForm's `isSelf`).
+  // Name/Position are locked to the signed-in account there — nobody signs
+  // this block as someone else — while the signature pad and "use my saved
+  // signature" stay governed by `readOnly` alone, same as always.
+  nameLocked = false,
   onChange,
   onApplyStored,
 }) {
@@ -63,8 +68,8 @@ export default function SignoffBlock({
       </label>
       <input
         value={name ?? ''}
-        readOnly={readOnly}
-        onChange={(e) => onChange?.({ name: e.target.value })}
+        readOnly={readOnly || nameLocked}
+        onChange={nameLocked ? undefined : (e) => onChange?.({ name: e.target.value })}
         className="mb-3 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink read-only:bg-stripe"
       />
       <label className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -72,10 +77,13 @@ export default function SignoffBlock({
       </label>
       <input
         value={position ?? ''}
-        readOnly={readOnly}
-        onChange={(e) => onChange?.({ position: e.target.value })}
+        readOnly={readOnly || nameLocked}
+        onChange={nameLocked ? undefined : (e) => onChange?.({ position: e.target.value })}
         className="mb-3 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink read-only:bg-stripe"
       />
+      {nameLocked && !readOnly && (
+        <p className="-mt-2 mb-3 text-[11px] text-muted">Locked to your account — nobody signs as someone else.</p>
+      )}
       <p className="mb-2 font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
         Drawn signature
       </p>

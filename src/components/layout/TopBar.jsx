@@ -4,10 +4,12 @@ import HelpDropdown from '../help/HelpDropdown.jsx';
 import NotificationDropdown from '../notifications/NotificationDropdown.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useAirportClock } from '../../hooks/useAirportClock.js';
+import { useAvatarUrl } from '../../lib/avatar.js';
 
 export default function TopBar({ online, onMenuClick }) {
   const { displayName, position, user, profile, signOut } = useAuth();
   const clock = useAirportClock();
+  const avatarUrl = useAvatarUrl(profile?.avatar_url);
 
   const initials = displayName
     .split(' ')
@@ -61,8 +63,8 @@ export default function TopBar({ online, onMenuClick }) {
               <span className="block max-w-[13rem] truncate text-sm font-semibold text-ink">{displayName}</span>
               <span className="block max-w-[13rem] truncate text-[11px] text-muted">{position}</span>
             </span>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal text-xs font-bold text-navy">
-              {initials}
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal text-xs font-bold text-navy">
+              {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
             </span>
           </Dropdown.Toggle>
           <Dropdown.Menu className="w-64 max-w-[calc(100vw-1rem)] text-ink" offset="mt-2">
