@@ -1,10 +1,9 @@
 /**
  * Request/response wrapper for the /api routes inside the Worker.
  *
- * Replaces the per-file Vercel handler boilerplate. Order matters and matches
- * the old handlers: method → body size → rate limit → auth → parse → build.
- * Every response carries the same security headers as static assets
- * (public/_headers only applies to assets, not Worker responses).
+ * Order: route → method → CSRF → body size → rate limit → auth → parse →
+ * build. Every response carries the security headers (public/_headers only
+ * covers static assets), and any session-renewal cookie from authenticate().
  */
 import { HttpError, LIMITS, rateLimit } from '../api/_shared.js';
 
@@ -23,17 +22,24 @@ const LOCAL_DEV_USER = { user: { id: 'local-dev' }, profile: { id: 'local-dev', 
 function json(status, payload, extra = {}) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: {
-      ...SECURITY_HEADERS,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-      ...extra,
-    },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...extra },
   });
 }
 
-/** Local `vite dev` in mock mode has no Supabase session to send. */
-function isLocalDevBypass(request, env) {
+function finalize(response, authCtx) {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  if (authCtx?.setCookie) headers.append('Set-Cookie', authCtx.setCookie);
+  return new Response(response.body, { status: response.status, headers });
+}
+
+/** Local `vite dev` in mock mode has no session to send. Never applies to
+ * the D1 login routes (public/session), which must behave exactly as in prod. */
+function isLocalDevBypass(request, env, route) {
+  const mode = route.auth?.mode;
+  if (mode === 'public' || mode === 'session') return false;
   if (env?.DEV_SKIP_AUTH !== '1') return false;
   const host = new URL(request.url).hostname;
   return host === 'localhost' || host === '127.0.0.1';
@@ -41,49 +47,64 @@ function isLocalDevBypass(request, env) {
 
 export function createApiHandler({ routes, forms, authenticate }) {
   return async function handleApi(request, env) {
-    const { pathname } = new URL(request.url);
+    const { pathname, origin } = new URL(request.url);
     const route = Object.prototype.hasOwnProperty.call(routes, pathname) ? routes[pathname] : null;
-    if (!route) return json(404, { error: 'Not found' });
-    if (request.method !== 'POST') return json(405, { error: 'Method not allowed' }, { Allow: 'POST' });
+    if (!route) return finalize(json(404, { error: 'Not found' }));
+    const methods = route.methods ?? ['POST'];
+    if (!methods.includes(request.method)) {
+      return finalize(json(405, { error: 'Method not allowed' }, { Allow: methods.join(', ') }));
+    }
 
+    let authCtx = null;
     try {
+      if (route.csrf && request.method !== 'GET') {
+        if (request.headers.get('origin') !== origin) throw new HttpError(403, 'Cross-site request blocked');
+        const type = (request.headers.get('content-type') || '').toLowerCase();
+        if (!type.includes('application/json')) throw new HttpError(403, 'Requests must be sent as JSON');
+      }
+
       const declared = Number(request.headers.get('content-length') || 0);
       if (declared > LIMITS.bodyBytes) throw new HttpError(413, 'Request body too large');
 
       const ip = request.headers.get('cf-connecting-ip') || 'unknown';
       rateLimit(`${ip}:${pathname}`, { limit: route.limit ?? 20 });
 
-      const user = isLocalDevBypass(request, env)
-        ? LOCAL_DEV_USER
-        : await authenticate(request, env, route.auth ?? {});
+      if (route.auth?.mode === 'public') authCtx = null;
+      else if (isLocalDevBypass(request, env, route)) authCtx = LOCAL_DEV_USER;
+      else authCtx = await authenticate(request, env, route.auth ?? {});
 
-      const text = await request.text();
-      // Chunked uploads have no Content-Length; check what actually arrived.
-      if (text.length > LIMITS.bodyBytes) throw new HttpError(413, 'Request body too large');
-      let body;
-      try {
-        body = text ? JSON.parse(text) : {};
-      } catch {
-        throw new HttpError(400, 'Request body must be JSON');
-      }
-      if (body === null || typeof body !== 'object' || Array.isArray(body)) {
-        throw new HttpError(400, 'Request body must be a JSON object');
+      let body = {};
+      if (request.method !== 'GET') {
+        const text = await request.text();
+        // Chunked uploads have no Content-Length; check what actually arrived.
+        if (text.length > LIMITS.bodyBytes) throw new HttpError(413, 'Request body too large');
+        try {
+          body = text ? JSON.parse(text) : {};
+        } catch {
+          throw new HttpError(400, 'Request body must be JSON');
+        }
+        if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+          throw new HttpError(400, 'Request body must be a JSON object');
+        }
       }
 
-      const result = await route.build(body, { env, forms, user });
+      const result = await route.build(body, { env, forms, user: authCtx, request });
 
       if (route.kind === 'pdf') {
-        return new Response(result.bytes, {
-          status: 200,
-          headers: {
-            ...SECURITY_HEADERS,
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="${result.filename}"`,
-            'Cache-Control': 'no-store',
-          },
-        });
+        return finalize(
+          new Response(result.bytes, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition': `attachment; filename="${result.filename}"`,
+              'Cache-Control': 'no-store',
+            },
+          }),
+          authCtx,
+        );
       }
-      return json(200, result);
+      if (route.kind === 'response') return finalize(result, authCtx);
+      return finalize(json(200, result), authCtx);
     } catch (err) {
       const status = Number.isInteger(err?.status) ? err.status : 500;
       if (status >= 500) {
@@ -91,7 +112,9 @@ export function createApiHandler({ routes, forms, authenticate }) {
           JSON.stringify({ level: 'error', path: pathname, msg: err?.message || String(err), stack: err?.stack }),
         );
       }
-      return json(status, { error: err?.message || 'Request failed' });
+      const payload = { error: err?.message || 'Request failed' };
+      if (err?.code && typeof err.code === 'string') payload.code = err.code;
+      return finalize(json(status, payload), authCtx);
     }
   };
 }
