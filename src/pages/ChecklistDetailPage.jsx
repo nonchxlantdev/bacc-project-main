@@ -31,6 +31,11 @@ import { signatureImages } from '../lib/signoffFields.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
 import { applyStoredSignature, selfSignoffRole } from '../lib/storedSignature.js';
+import { isD1Data } from '../lib/dataMode.js';
+
+// Who sees the acknowledge block. On D1 the Worker allows only OM/admin to
+// sign the OM acknowledgment (spec 3a §3), so the button follows that rule.
+const ACK_ROLES = isD1Data() ? ['om', 'admin'] : ['om', 'coo'];
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
@@ -614,7 +619,7 @@ export default function ChecklistDetailPage() {
         </p>
       )}
 
-      {record.status === 'submitted' && ['om', 'coo'].includes(profile?.role) && (
+      {record.status === 'submitted' && ACK_ROLES.includes(profile?.role) && (
         <section className="rounded-md border border-line/15 bg-surface p-4">
           <h2 className="text-sm font-semibold text-ink">OM acknowledgment</h2>
           <p className="mt-1 text-sm text-muted">
