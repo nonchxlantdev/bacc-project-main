@@ -7,11 +7,13 @@
  */
 import { createClient } from '@supabase/supabase-js';
 
-/** An error that carries the HTTP status the API should answer with. */
+/** An error that carries the HTTP status the API should answer with, and an
+ * optional machine-readable code the browser can branch on. */
 export class HttpError extends Error {
-  constructor(status, message) {
+  constructor(status, message, code) {
     super(message);
     this.status = status;
+    if (code) this.code = code;
   }
 }
 
