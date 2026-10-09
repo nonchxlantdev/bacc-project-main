@@ -214,3 +214,17 @@ test('error codes are passed through to the body', async () => {
   assert.equal(res.status, 403);
   assert.deepEqual(await res.json(), { error: 'Password change required', code: 'PASSWORD_CHANGE_REQUIRED' });
 });
+
+test('rejected requests still consume their body (dev keep-alive safety)', async () => {
+  for (const [path, opts] of [
+    ['/api/nope', {}],
+    ['/api/csrf', { origin: 'https://evil.example' }],
+    ['/api/session-only', { auth: false }],
+    ['/api/get-only', { method: 'POST' }],
+  ]) {
+    const request = extReq(path, { ...opts, body: '{"email":"a@b.bz","password":"x"}' });
+    const res = await extHandle(request, {});
+    assert.ok(res.status >= 400, path);
+    assert.equal(request.bodyUsed, true, `${path} left its body unread`);
+  }
+});

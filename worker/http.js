@@ -1,8 +1,8 @@
 /**
  * Request/response wrapper for the /api routes inside the Worker.
  *
- * Order: route → method → CSRF → body size → rate limit → auth → parse →
- * build. Every response carries the security headers (public/_headers only
+ * Order: body size → read body → route → method → CSRF → rate limit →
+ * auth → parse → build. Every response carries the security headers (public/_headers only
  * covers static assets), and any session-renewal cookie from authenticate().
  */
 import { HttpError, LIMITS, rateLimit } from '../api/_shared.js';
@@ -48,6 +48,18 @@ function isLocalDevBypass(request, env, route) {
 export function createApiHandler({ routes, forms, authenticate }) {
   return async function handleApi(request, env) {
     const { pathname, origin } = new URL(request.url);
+
+    // Always consume the request body before any early return. If a request is
+    // rejected (404/405/CSRF/401/...) with its body left unread, the local dev
+    // server (Vite + workerd) leaves those bytes on the keep-alive connection
+    // and the NEXT request on it arrives garbled (seen as random 500s/400s).
+    const declared = Number(request.headers.get('content-length') || 0);
+    if (declared > LIMITS.bodyBytes) {
+      return finalize(json(413, { error: 'Request body too large' }, { Connection: 'close' }));
+    }
+    const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+    const text = hasBody ? await request.text().catch(() => '') : '';
+
     const route = Object.prototype.hasOwnProperty.call(routes, pathname) ? routes[pathname] : null;
     if (!route) return finalize(json(404, { error: 'Not found' }));
     const methods = route.methods ?? ['POST'];
@@ -57,14 +69,11 @@ export function createApiHandler({ routes, forms, authenticate }) {
 
     let authCtx = null;
     try {
-      if (route.csrf && request.method !== 'GET') {
+      if (route.csrf && hasBody) {
         if (request.headers.get('origin') !== origin) throw new HttpError(403, 'Cross-site request blocked');
         const type = (request.headers.get('content-type') || '').toLowerCase();
         if (!type.includes('application/json')) throw new HttpError(403, 'Requests must be sent as JSON');
       }
-
-      const declared = Number(request.headers.get('content-length') || 0);
-      if (declared > LIMITS.bodyBytes) throw new HttpError(413, 'Request body too large');
 
       const ip = request.headers.get('cf-connecting-ip') || 'unknown';
       rateLimit(`${ip}:${pathname}`, { limit: route.limit ?? 20 });
@@ -74,8 +83,7 @@ export function createApiHandler({ routes, forms, authenticate }) {
       else authCtx = await authenticate(request, env, route.auth ?? {});
 
       let body = {};
-      if (request.method !== 'GET') {
-        const text = await request.text();
+      if (hasBody) {
         // Chunked uploads have no Content-Length; check what actually arrived.
         if (text.length > LIMITS.bodyBytes) throw new HttpError(413, 'Request body too large');
         try {
