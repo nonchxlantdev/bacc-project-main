@@ -2,11 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { pdfExportApiPlugin } from './vite.pdf-api.js';
+import { cloudflare } from '@cloudflare/vite-plugin';
 
-// Vercel is the only supported deploy target for this app (it serves the
-// /api/* functions PDF export depends on, which a GitHub Pages deploy
-// cannot run) — no GITHUB_PAGES base-path branching or Pages 404 fallback.
+// Cloudflare Workers is the deploy target (wrangler.jsonc). The Cloudflare
+// plugin runs the real Worker — including /api/* PDF export — inside
+// `vite dev`, so dev and production share one code path.
 export default defineConfig({
   base: '/',
   define: {
@@ -16,7 +16,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    pdfExportApiPlugin(),
+    cloudflare(),
     VitePWA({
       registerType: 'autoUpdate',
       // pgia-logo.png/bacc-logo.jpeg stay precached — still used as the
