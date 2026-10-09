@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test \"tests/**/*.test.js\"",
     "predev": "node scripts/build-form-manifest.mjs",
     "dev": "vite",
     "prebuild": "node scripts/build-form-manifest.mjs",

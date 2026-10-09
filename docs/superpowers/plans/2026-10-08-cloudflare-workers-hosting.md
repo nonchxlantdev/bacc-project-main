@@ -1,6 +1,6 @@
 # Cloudflare Workers Hosting — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Serve the BACC portal and its six `/api` routes from one Cloudflare Worker at `bacc.visionforgestudio.app`. It still talks to the existing Supabase backend, and every exported PDF must be visually identical to today's.
 
@@ -57,7 +57,7 @@
 
 ### Task 0: Branch
 
-- [ ] **Step 1: Create the branch from an up-to-date `main`**
+- [x] **Step 1: Create the branch from an up-to-date `main`**
 
 ```powershell
 git checkout main
@@ -79,7 +79,7 @@ Captures today's PDF output **before any code changes**, so every later task can
 - Produces: `node scripts/parity-exports.mjs <outDir> [--url <baseUrl>]` writes `<outDir>/<case>.pdf` for each case in `PARITY_CASES`. `node scripts/parity-compare.mjs <dirA> <dirB>` exits 0 only if every page of every case matches 100%.
 - Consumes, in-process mode: `buildExport`, `buildNocRegisterExport`, `buildWorkOrderExport` and `buildReportExport` from `api/*.js`, called as `build(body, ctx)`. Before Task 4, `ctx` is ignored by the old signatures. After Task 4, `ctx.forms` comes from `scripts/lib/nodeFormStore.mjs` (Task 3).
 
-- [ ] **Step 1: Create `scripts/parity-exports.mjs`**
+- [x] **Step 1: Create `scripts/parity-exports.mjs`**
 
 ```js
 /**
@@ -273,7 +273,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 }
 ```
 
-- [ ] **Step 2: Create `scripts/parity-compare.mjs`**
+- [x] **Step 2: Create `scripts/parity-compare.mjs`**
 
 ```js
 /**
@@ -331,17 +331,17 @@ for (const name of readdirSync(dirA).filter((f) => f.endsWith('.pdf')).sort()) {
 process.exit(failed ? 1 : 0);
 ```
 
-- [ ] **Step 3: Capture the baseline from the untouched code**
+- [x] **Step 3: Capture the baseline from the untouched code**
 
 Run: `node scripts/parity-exports.mjs tmp-pdf-diff/parity-before`
 Expected: six `wrote tmp-pdf-diff/parity-before/<case>.pdf (… bytes)` lines and exit code 0. If any case throws, **stop and report it.** It means the fixture body doesn't fit the current builder, and the case has to be corrected before anything else changes.
 
-- [ ] **Step 4: Prove the comparator works (self-compare)**
+- [x] **Step 4: Prove the comparator works (self-compare)**
 
 Run: `node scripts/parity-compare.mjs tmp-pdf-diff/parity-before tmp-pdf-diff/parity-before`
 Expected: six `ok … 100% match` lines and exit 0. Requires Poppler's `pdftoppm` on PATH, which `npm run verify:pdf` already needs.
 
-- [ ] **Step 5: Commit** (the `tmp-pdf-diff/` outputs are already gitignored)
+- [x] **Step 5: Commit** (the `tmp-pdf-diff/` outputs are already gitignored)
 
 ```powershell
 git add scripts/parity-exports.mjs scripts/parity-compare.mjs
@@ -359,7 +359,7 @@ git commit -m "test: add PDF parity harness for the Workers port"
 **Interfaces:**
 - Produces: `dataUriToBytes(dataUri: string | null | undefined): Uint8Array | null`. It returns a plain `Uint8Array` (not a `Buffer`), and returns `null` for empty input, non-data-URIs or corrupt base64.
 
-- [ ] **Step 1: Write the failing test** in `tests/dataUriToBytes.test.js`
+- [x] **Step 1: Write the failing test** in `tests/dataUriToBytes.test.js`
 
 ```js
 import { test } from 'node:test';
@@ -392,12 +392,12 @@ test('returns null for corrupt base64 instead of throwing', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `node --test tests/dataUriToBytes.test.js`
 Expected: FAIL on "returns a plain Uint8Array, not a Node Buffer", and on "corrupt base64".
 
-- [ ] **Step 3: Replace `dataUriToBytes`** in `server/overlayChecklistPdf.js`
+- [x] **Step 3: Replace `dataUriToBytes`** in `server/overlayChecklistPdf.js`
 
 Replace the whole existing function:
 
@@ -438,7 +438,7 @@ function base64ToBytes(b64) {
 }
 ```
 
-- [ ] **Step 4: Run the tests and the existing PDF checks**
+- [x] **Step 4: Run the tests and the existing PDF checks**
 
 Run: `node --test tests/dataUriToBytes.test.js`
 Expected: 4 passing.
@@ -446,7 +446,7 @@ Expected: 4 passing.
 Run: `npm run verify:signoffs` then `npm run verify:pdf`
 Expected: both pass as before. The fixtures embed signature PNGs through `dataUriToBytes`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add server/overlayChecklistPdf.js tests/dataUriToBytes.test.js
@@ -480,7 +480,7 @@ git commit -m "refactor: decode data URIs with atob so overlay runs on Workers"
   - `createNodeFormStore(): FormStore` from `scripts/lib/nodeFormStore.mjs`.
 - Consumes: `assertSafeKey(value, label)` from `api/_shared.js`. It exists today and Task 4 keeps the same name and behaviour.
 
-- [ ] **Step 1: Add `HttpError` to `api/_shared.js`**
+- [x] **Step 1: Add `HttpError` to `api/_shared.js`**
 
 Add this directly below the imports (leave everything else in the file as is for now):
 
@@ -494,7 +494,7 @@ export class HttpError extends Error {
 }
 ```
 
-- [ ] **Step 2: Write the failing test** in `tests/formStore.test.js`
+- [x] **Step 2: Write the failing test** in `tests/formStore.test.js`
 
 ```js
 import { test } from 'node:test';
@@ -567,12 +567,12 @@ test('accepts ArrayBuffer PDFs (the Worker manifest imports .bin as ArrayBuffer)
 });
 ```
 
-- [ ] **Step 3: Run it and confirm it fails**
+- [x] **Step 3: Run it and confirm it fails**
 
 Run: `node --test tests/formStore.test.js`
 Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `api/_formStore.js`.
 
-- [ ] **Step 4: Create `api/_formStore.js`**
+- [x] **Step 4: Create `api/_formStore.js`**
 
 ```js
 /**
@@ -622,7 +622,7 @@ export function createFormStore({ fieldMaps = {}, basePdfs = {}, schemas = {} } 
 }
 ```
 
-- [ ] **Step 5: Make `assertSafeKey` throw `HttpError`** in `api/_shared.js`
+- [x] **Step 5: Make `assertSafeKey` throw `HttpError`** in `api/_shared.js`
 
 Replace the existing `assertSafeKey` function with:
 
@@ -636,7 +636,7 @@ export function assertSafeKey(value, label = 'key') {
 }
 ```
 
-- [ ] **Step 6: Create `scripts/lib/nodeFormStore.mjs`**
+- [x] **Step 6: Create `scripts/lib/nodeFormStore.mjs`**
 
 ```js
 /**
@@ -686,12 +686,12 @@ export function createNodeFormStore(rootDir = defaultRoot) {
 }
 ```
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `node --test tests/formStore.test.js`
 Expected: 7 passing. If "every field map resolves" fails for a specific stem, **stop and report it**. A field map pointing at a missing PDF is a pre-existing data bug, not something to paper over.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```powershell
 git add api/_formStore.js api/_shared.js scripts/lib/nodeFormStore.mjs tests/formStore.test.js
@@ -723,7 +723,7 @@ Every `api/*.js` file becomes pure `build*(body, ctx)` functions with no `req`/`
   - `buildGenerateInstances(body)` returns `{ created, instances }` (unchanged)
   - `buildCreateUser(body, { env })` returns `{ id, email }`
 
-- [ ] **Step 1: Write the failing test** in `tests/createUser.test.js`
+- [x] **Step 1: Write the failing test** in `tests/createUser.test.js`
 
 ```js
 import { test } from 'node:test';
@@ -751,12 +751,12 @@ test('400 for each invalid field, before any network call', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `node --test tests/createUser.test.js`
 Expected: FAIL with `buildCreateUser` not exported.
 
-- [ ] **Step 3: Rewrite `api/_shared.js`** with the complete file:
+- [x] **Step 3: Rewrite `api/_shared.js`** with the complete file:
 
 ```js
 /**
@@ -854,7 +854,7 @@ export function rateLimit(key, { limit = 30, windowMs = 60_000, now = Date.now()
 }
 ```
 
-- [ ] **Step 4: Rewrite `api/export-checklist-pdf.js`** with the complete file:
+- [x] **Step 4: Rewrite `api/export-checklist-pdf.js`** with the complete file:
 
 ```js
 import {
@@ -919,7 +919,7 @@ function hasMappingMetadata(schema) {
 }
 ```
 
-- [ ] **Step 5: Rewrite `api/export-noc-register.js`** with the complete file:
+- [x] **Step 5: Rewrite `api/export-noc-register.js`** with the complete file:
 
 ```js
 import {
@@ -950,7 +950,7 @@ export async function buildNocRegisterExport(body, { forms }) {
 }
 ```
 
-- [ ] **Step 6: Rewrite `api/export-work-order.js`** with the complete file:
+- [x] **Step 6: Rewrite `api/export-work-order.js`** with the complete file:
 
 ```js
 import { overlayChecklistPdf, dataUriToBytes } from '../server/overlayChecklistPdf.js';
@@ -988,7 +988,7 @@ export async function buildWorkOrderExport(body, { forms }) {
 }
 ```
 
-- [ ] **Step 7: Rewrite `api/export-report-pdf.js`** with the complete file:
+- [x] **Step 7: Rewrite `api/export-report-pdf.js`** with the complete file:
 
 ```js
 import { buildReportPdf } from '../server/reportPdf.js';
@@ -1005,7 +1005,7 @@ export async function buildReportExport(body) {
 }
 ```
 
-- [ ] **Step 8: Rewrite `api/generate-checklist-instances.js`** with the complete file:
+- [x] **Step 8: Rewrite `api/generate-checklist-instances.js`** with the complete file:
 
 ```js
 import { generatePendingInstances } from '../src/lib/instanceGeneration.js';
@@ -1040,7 +1040,7 @@ export async function buildGenerateInstances(body = {}) {
 }
 ```
 
-- [ ] **Step 9: Rewrite `api/create-user.js`** with the complete file:
+- [x] **Step 9: Rewrite `api/create-user.js`** with the complete file:
 
 ```js
 /**
@@ -1123,28 +1123,28 @@ export async function buildCreateUser(body, { env }) {
 }
 ```
 
-- [ ] **Step 10: Confirm no Vercel or Node-filesystem code is left in `api/`**
+- [x] **Step 10: Confirm no Vercel or Node-filesystem code is left in `api/`**
 
 Run: `Select-String -Path api\*.js -Pattern "node:fs|node:path|process\.env|export default|export const config|req\.|res\."`
 Expected: no output.
 
-- [ ] **Step 11: Run all tests**
+- [x] **Step 11: Run all tests**
 
 Run: `npm test`
 Expected: all suites pass, including `createUser.test.js` (2 tests), `formStore.test.js` (7), `dataUriToBytes.test.js` (4) and the existing three.
 
-- [ ] **Step 12: Parity check through the new Node path**
+- [x] **Step 12: Parity check through the new Node path**
 
 Run: `node scripts/parity-exports.mjs tmp-pdf-diff/parity-node`
 Then: `node scripts/parity-compare.mjs tmp-pdf-diff/parity-before tmp-pdf-diff/parity-node`
 Expected: six `ok … 100% match` lines, exit 0. **Any FAIL blocks this task.**
 
-- [ ] **Step 13: Run the existing PDF verification**
+- [x] **Step 13: Run the existing PDF verification**
 
 Run: `npm run verify:pdf` and `npm run verify:signoffs`
 Expected: pass.
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 
 ```powershell
 git add api tests/createUser.test.js
@@ -1171,7 +1171,7 @@ git commit -m "refactor: make api builders pure (form store + HttpError), drop V
     - The `ctx` passed to `build` is `{ env, forms, user }`
     - When `env.DEV_SKIP_AUTH === '1'` **and** the request host is `localhost` or `127.0.0.1`, auth is skipped and the user is `{ user: { id: 'local-dev' }, profile: { id: 'local-dev', role: 'admin' } }`
 
-- [ ] **Step 1: Write the failing test** in `tests/workerHttp.test.js`
+- [x] **Step 1: Write the failing test** in `tests/workerHttp.test.js`
 
 ```js
 import { test } from 'node:test';
@@ -1308,12 +1308,12 @@ test('DEV_SKIP_AUTH only works on localhost', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `node --test tests/workerHttp.test.js`
 Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `worker/http.js`.
 
-- [ ] **Step 3: Create `worker/http.js`**
+- [x] **Step 3: Create `worker/http.js`**
 
 ```js
 /**
@@ -1415,7 +1415,7 @@ export function createApiHandler({ routes, forms, authenticate }) {
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `node --test tests/workerHttp.test.js`
 Expected: 13 passing.
@@ -1423,7 +1423,7 @@ Expected: 13 passing.
 Run: `npm test`
 Expected: everything passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add worker/http.js tests/workerHttp.test.js
@@ -1445,12 +1445,12 @@ git commit -m "feat: add Worker /api request wrapper with auth, limits and secur
   - `worker/formAssets.js` (generated), exporting `formStore: FormStore`
   - `worker/index.js`, which default-exports `{ fetch(request, env) }` and exports `ROUTES`
 
-- [ ] **Step 1: Install the Cloudflare tooling**
+- [x] **Step 1: Install the Cloudflare tooling**
 
 Run: `npm install --save-dev wrangler@^4 @cloudflare/vite-plugin@^1`
 Expected: `package.json` devDependencies now list both. If npm can't find `@cloudflare/vite-plugin@^1`, run `npm view @cloudflare/vite-plugin version` and install that major instead, then note it in the commit message.
 
-- [ ] **Step 2: Create `scripts/build-form-manifest.mjs`**
+- [x] **Step 2: Create `scripts/build-form-manifest.mjs`**
 
 ```js
 /**
@@ -1501,12 +1501,12 @@ console.log(
 );
 ```
 
-- [ ] **Step 3: Run it**
+- [x] **Step 3: Run it**
 
 Run: `node scripts/build-form-manifest.mjs`
 Expected: `form manifest: 36 PDFs, 36 field maps, 35 schemas`. The exact counts may differ by one or two; what matters is that the PDF and field-map counts match the files in `src/assets/forms` and `src/data/field-maps`. Also check that `worker/formAssets.js` and `worker/generated/forms/annex-d-drainage-ed01.pdf.bin` exist.
 
-- [ ] **Step 4: Create `worker/index.js`**
+- [x] **Step 4: Create `worker/index.js`**
 
 ```js
 /**
@@ -1555,7 +1555,7 @@ export default {
 };
 ```
 
-- [ ] **Step 5: Create `wrangler.jsonc`**
+- [x] **Step 5: Create `wrangler.jsonc`**
 
 Copy the two values from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your local `.env.local` into `vars`. Both are public values that already ship in the browser bundle. **Do not** put the service-role key here.
 
@@ -1586,7 +1586,7 @@ Copy the two values from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in you
 }
 ```
 
-- [ ] **Step 6: Create `public/_headers`**
+- [x] **Step 6: Create `public/_headers`**
 
 ```
 /*
@@ -1598,7 +1598,7 @@ Copy the two values from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in you
   Permissions-Policy: camera=(self), microphone=(), geolocation=(self)
 ```
 
-- [ ] **Step 7: Update `vite.config.js`**
+- [x] **Step 7: Update `vite.config.js`**
 
 Replace:
 
@@ -1622,11 +1622,11 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 
 and in `plugins: [...]` replace `pdfExportApiPlugin(),` with `cloudflare(),`.
 
-- [ ] **Step 8: Delete the Node dev shim**
+- [x] **Step 8: Delete the Node dev shim**
 
 Run: `git rm vite.pdf-api.js`
 
-- [ ] **Step 9: Update `package.json` scripts**
+- [x] **Step 9: Update `package.json` scripts**
 
 Add these three entries to `"scripts"` and leave every existing script as it is:
 
@@ -1636,7 +1636,7 @@ Add these three entries to `"scripts"` and leave every existing script as it is:
 "deploy": "npm run build && wrangler deploy",
 ```
 
-- [ ] **Step 10: Update `.gitignore`**
+- [x] **Step 10: Update `.gitignore`**
 
 Append:
 
@@ -1648,13 +1648,13 @@ worker/formAssets.js
 worker/generated/
 ```
 
-- [ ] **Step 11: Create `.dev.vars`** (local only; Step 10 gitignores it)
+- [x] **Step 11: Create `.dev.vars`** (local only; Step 10 gitignores it)
 
 ```
 DEV_SKIP_AUTH=1
 ```
 
-- [ ] **Step 12: Build and check the output**
+- [x] **Step 12: Build and check the output**
 
 Run: `npm run build`
 Expected: `form manifest: …` printed first, then a client build and a Worker build with no errors.
@@ -1664,12 +1664,12 @@ Expected: `sw.js`, `_headers` and `index.html` all present in the **same** clien
 
 **Fallback, only if `sw.js` is missing:** vite-plugin-pwa didn't emit into the Cloudflare client environment. Revert Step 7 so `vite build` produces a plain `dist/` again, and keep `cloudflare()` out of the config. In `wrangler.jsonc`, add `"directory": "./dist"` inside `"assets"`. Wrangler then bundles `worker/index.js` itself (its default Data rule already reads `**/*.bin`). Change `package.json` `"dev"` to `"wrangler dev --port 5173"`, and run `npm run build` once before the first `npm run dev`. Re-run this step, and record the fallback in the commit message.
 
-- [ ] **Step 13: Confirm the custom Tailwind variant still reaches the CSS** (CLAUDE.md rule)
+- [x] **Step 13: Confirm the custom Tailwind variant still reaches the CSS** (CLAUDE.md rule)
 
 Run: `Select-String -Path dist\client\assets\*.css -Pattern 'pointer:\s*(fine|coarse)'`
 Expected: at least one match. With the fallback, use `dist\assets\*.css`.
 
-- [ ] **Step 14: Run the Worker locally and check every route's guard**
+- [x] **Step 14: Run the Worker locally and check every route's guard**
 
 Run in terminal 1: `npm run dev`
 Expected: Vite starts on `http://localhost:5173`, and the Cloudflare plugin logs that the Worker is running.
@@ -1691,7 +1691,7 @@ Expected, in order:
 - `{"error":"Not found"}` then `404`
 - `200 application/pdf`. `tmp-pdf-diff\dev-report.pdf` opens as the house-style report. This works without a token because `.dev.vars` has `DEV_SKIP_AUTH=1` and the host is localhost.
 
-- [ ] **Step 15: Parity through the real Worker runtime**
+- [x] **Step 15: Parity through the real Worker runtime**
 
 With `npm run dev` still running:
 
@@ -1699,17 +1699,17 @@ Run: `node scripts/parity-exports.mjs tmp-pdf-diff/parity-worker --url http://lo
 Then: `node scripts/parity-compare.mjs tmp-pdf-diff/parity-before tmp-pdf-diff/parity-worker`
 Expected: six `ok … 100% match` lines, exit 0. **Any FAIL blocks this task.**
 
-- [ ] **Step 16: Click-through in the browser**
+- [x] **Step 16: Click-through in the browser**
 
 In mock mode (`VITE_DATA_SOURCE=mock` in `.env.local`), open `http://localhost:5173`, sign in, open any submitted checklist, and press **Export PDF**. Then do the same for a work order and the NOC register.
 Expected: each downloads and opens.
 
-- [ ] **Step 17: Run every existing check plus the tests**
+- [x] **Step 17: Run every existing check plus the tests**
 
 Run: `npm test`, `npm run verify:palette`, `npm run verify:content`, `npm run verify:signoffs`, `npm run verify:walkthrough`, `npm run verify:pdf`
 Expected: all pass.
 
-- [ ] **Step 18: Commit** (`.dev.vars`, `worker/formAssets.js` and `worker/generated/` must **not** appear in `git status`)
+- [x] **Step 18: Commit** (`.dev.vars`, `worker/formAssets.js` and `worker/generated/` must **not** appear in `git status`)
 
 ```powershell
 git status
@@ -1724,7 +1724,7 @@ git commit -m "feat: serve app and /api from a Cloudflare Worker (vite plugin, f
 **Files:**
 - Modify: `.github/workflows/verify.yml`
 
-- [ ] **Step 1: Replace `.github/workflows/verify.yml`** with the complete file:
+- [x] **Step 1: Replace `.github/workflows/verify.yml`** with the complete file:
 
 ```yaml
 name: Verify
@@ -1781,12 +1781,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 ```
 
-- [ ] **Step 2: Lint the YAML**
+- [x] **Step 2: Lint the YAML**
 
 Run: `npx --yes yaml-lint .github/workflows/verify.yml`
 Expected: `✔ YAML Lint successful.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```powershell
 git add .github/workflows/verify.yml
@@ -1800,7 +1800,7 @@ git commit -m "ci: run unit tests and deploy to Cloudflare Workers from main"
 **Files:**
 - Modify: `CLAUDE.md`, `.env.example`
 
-- [ ] **Step 1: Add a Hosting section to `CLAUDE.md`** directly after the `## Stack` section:
+- [x] **Step 1: Add a Hosting section to `CLAUDE.md`** directly after the `## Stack` section:
 
 ```markdown
 ## Hosting: one Cloudflare Worker
@@ -1829,11 +1829,11 @@ Rules that are easy to break:
   visual difference is the bar.
 ```
 
-- [ ] **Step 2: Fix the build-output path in `CLAUDE.md`'s "Verify custom Tailwind variants" section**
+- [x] **Step 2: Fix the build-output path in `CLAUDE.md`'s "Verify custom Tailwind variants" section**
 
 Replace `Select-String -Path dist/assets/*.css -Pattern 'pointer:\s*(fine|coarse)'` with `Select-String -Path dist/client/assets/*.css -Pattern 'pointer:\s*(fine|coarse)'`. If Task 6 used the fallback, leave it as `dist/assets`.
 
-- [ ] **Step 3: Replace the last two comment lines of `.env.example`**
+- [x] **Step 3: Replace the last two comment lines of `.env.example`**
 
 Replace:
 
@@ -1851,7 +1851,7 @@ with:
 # Local-only Worker settings live in .dev.vars (gitignored), e.g. DEV_SKIP_AUTH=1.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add CLAUDE.md .env.example
