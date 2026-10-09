@@ -383,5 +383,22 @@ export function dataUriToBytes(dataUri) {
   if (!dataUri) return null;
   const match = String(dataUri).match(/^data:([^;]+);base64,(.+)$/);
   if (!match) return null;
-  return Buffer.from(match[2], 'base64');
+  return base64ToBytes(match[2]);
+}
+
+/**
+ * atob-based decode so this module runs unchanged on Cloudflare Workers, in
+ * the browser and in Node 22 (all three have atob). Returns null on corrupt
+ * input rather than Buffer's silent partial decode.
+ */
+function base64ToBytes(b64) {
+  let binary;
+  try {
+    binary = atob(b64);
+  } catch {
+    return null;
+  }
+  const out = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i);
+  return out;
 }

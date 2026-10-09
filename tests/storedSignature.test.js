@@ -2,24 +2,31 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyStoredSignature,
-  schemaHasInspectorSignoff,
+  selfSignoffRole,
   shouldShowSignaturePrompt,
 } from '../src/lib/storedSignature.js';
 
+// The person filling the form is always the FIRST sign-off block, whatever the
+// annex calls it ("inspector", "responsible", "cec", …) — see
+// selfSignoffRole() in src/lib/storedSignature.js.
 const SCHEMA_WITH_INSPECTOR = {
   signoffs: [{ role: 'inspector', label: 'Inspector' }, { role: 'om_acknowledgment', label: 'OM' }],
 };
 
-const SCHEMA_WITHOUT_INSPECTOR = {
+const SCHEMA_WITH_RESPONSIBLE = {
   signoffs: [{ role: 'responsible', label: 'Responsible' }],
 };
 
-test('schemaHasInspectorSignoff recognises inspector blocks', () => {
-  assert.equal(schemaHasInspectorSignoff(SCHEMA_WITH_INSPECTOR), true);
-  assert.equal(schemaHasInspectorSignoff(SCHEMA_WITHOUT_INSPECTOR), false);
+const SCHEMA_WITHOUT_SIGNOFFS = { signoffs: [] };
+
+test('selfSignoffRole is the first sign-off block, whatever it is called', () => {
+  assert.equal(selfSignoffRole(SCHEMA_WITH_INSPECTOR), 'inspector');
+  assert.equal(selfSignoffRole(SCHEMA_WITH_RESPONSIBLE), 'responsible');
+  assert.equal(selfSignoffRole(SCHEMA_WITHOUT_SIGNOFFS), null);
+  assert.equal(selfSignoffRole(undefined), null);
 });
 
-test('shouldShowSignaturePrompt on editable drafts with inspector sign-off', () => {
+test('shouldShowSignaturePrompt on editable drafts with a self sign-off', () => {
   assert.equal(
     shouldShowSignaturePrompt({
       record: { status: 'draft' },
@@ -28,6 +35,24 @@ test('shouldShowSignaturePrompt on editable drafts with inspector sign-off', () 
       readOnly: false,
     }),
     true,
+  );
+  assert.equal(
+    shouldShowSignaturePrompt({
+      record: { status: 'draft' },
+      profile: {},
+      schema: SCHEMA_WITH_RESPONSIBLE,
+      readOnly: false,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldShowSignaturePrompt({
+      record: { status: 'draft' },
+      profile: {},
+      schema: SCHEMA_WITHOUT_SIGNOFFS,
+      readOnly: false,
+    }),
+    false,
   );
   assert.equal(
     shouldShowSignaturePrompt({
@@ -49,7 +74,7 @@ test('shouldShowSignaturePrompt on editable drafts with inspector sign-off', () 
   );
 });
 
-test('applyStoredSignature fills inspector only', () => {
+test('applyStoredSignature fills the self sign-off only', () => {
   const record = {
     schema: SCHEMA_WITH_INSPECTOR,
     signoffs: [{ role: 'om_acknowledgment', name: 'OM', position: 'Mgr', signature_data_uri: null }],
@@ -69,8 +94,20 @@ test('applyStoredSignature fills inspector only', () => {
   assert.equal(next.signoffs.find((s) => s.role === 'om_acknowledgment')?.name, 'OM');
 });
 
-test('applyStoredSignature is a no-op without stored signature or inspector role', () => {
-  const record = { schema: SCHEMA_WITHOUT_INSPECTOR, signoffs: [] };
+test('applyStoredSignature works for annexes whose self role is not "inspector"', () => {
+  const next = applyStoredSignature({
+    record: { schema: SCHEMA_WITH_RESPONSIBLE, signoffs: [] },
+    profile: { stored_signature_data_uri: 'data:image/png;base64,abc' },
+    displayName: 'Display',
+    position: 'Pos',
+  });
+  assert.equal(next.signoffs.length, 1);
+  assert.equal(next.signoffs[0].role, 'responsible');
+  assert.equal(next.signoffs[0].signature_data_uri, 'data:image/png;base64,abc');
+});
+
+test('applyStoredSignature is a no-op without a stored signature or any sign-off block', () => {
+  const record = { schema: SCHEMA_WITHOUT_SIGNOFFS, signoffs: [] };
   assert.equal(
     applyStoredSignature({ record, profile: { stored_signature_data_uri: 'data:x' }, displayName: 'X', position: 'Y' }),
     record,

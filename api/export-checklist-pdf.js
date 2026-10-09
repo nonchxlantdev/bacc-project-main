@@ -1,63 +1,23 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   overlayChecklistPdf,
   submissionToOverlayValues,
   dataUriToBytes,
 } from '../server/overlayChecklistPdf.js';
-import {
-  LIMITS,
-  capArray,
-  enforceBodySize,
-  rateLimit,
-  readApprovedBasePdf,
-  rejectClientBasePdf,
-  requireUser,
-  resolveFieldMap,
-  sendError,
-} from './_shared.js';
+import { HttpError, LIMITS, capArray, rejectClientBasePdf } from './_shared.js';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-export const config = {
-  maxDuration: 30,
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-
-  try {
-    enforceBodySize(req);
-    rateLimit(req, { limit: 20 });
-    await requireUser(req);
-    const body = req.body ?? {};
-    const { bytes, filename } = await buildExport(body);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'no-store');
-    res.end(Buffer.from(bytes));
-  } catch (err) {
-    sendError(res, err);
-  }
-}
-
-export async function buildExport(body) {
+/** POST /api/export-checklist-pdf */
+export async function buildExport(body, { forms }) {
   rejectClientBasePdf(body);
   const templateKey = body.templateKey || 'annex-d-drainage';
   const templateVersion = body.templateVersion || 'ed01';
-  // Always resolve server-side — ignore client fieldMap.basePdf for filesystem access.
-  const fieldMap = resolveFieldMap(templateKey, templateVersion);
-  const basePdfBytes = readApprovedBasePdf(fieldMap);
+  // Always resolved server-side from the allow-listed form store.
+  const fieldMap = forms.resolveFieldMap(templateKey, templateVersion);
+  const basePdfBytes = forms.readApprovedBasePdf(fieldMap);
 
   const record = body.submission ?? body;
   const schemaForMapping = hasMappingMetadata(record.schema ?? record.content_schema)
     ? record.schema ?? record.content_schema
-    : loadSchema(fieldMap.templateKey) ?? record.schema ?? record.content_schema;
+    : forms.loadSchema(fieldMap.templateKey) ?? record.schema ?? record.content_schema;
 
   const values = body.values ?? submissionToOverlayValues({ ...record, schema: schemaForMapping });
   const images = {};
@@ -66,9 +26,7 @@ export async function buildExport(body) {
     if (bytes) images[key] = bytes;
   }
   if (Object.keys(images).length > LIMITS.images) {
-    const err = new Error(`images exceeds limit of ${LIMITS.images}`);
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, `images exceeds limit of ${LIMITS.images}`);
   }
 
   const photos = [];
@@ -99,13 +57,4 @@ export async function buildExport(body) {
 
 function hasMappingMetadata(schema) {
   return (schema?.headerFields ?? []).some((f) => f.markPrefix || f.mapKey);
-}
-
-function loadSchema(templateKey) {
-  if (!templateKey) return null;
-  try {
-    return JSON.parse(readFileSync(path.join(root, 'src/data/checklists', `${templateKey}.json`), 'utf8'));
-  } catch {
-    return null;
-  }
 }

@@ -4,10 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "predev": "node scripts/build-form-manifest.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-form-manifest.mjs",
     "build": "vite build",
     "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy",
     "verify:pdf": "node scripts/verify-pdf.mjs",
     "verify:signoffs": "node scripts/verify-signoffs.mjs",
     "verify:walkthrough": "node scripts/verify-walkthrough.mjs",
@@ -27,6 +30,7 @@
     "react-router-dom": "^7.8.2"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.1",
     "@tailwindcss/vite": "^4.1.12",
     "@vitejs/plugin-react": "^5.0.2",
     "pg": "^8.23.0",
@@ -36,7 +40,8 @@
     "sharp": "^0.35.4",
     "tailwindcss": "^4.1.12",
     "vite": "^7.1.5",
-    "vite-plugin-pwa": "^1.0.3"
+    "vite-plugin-pwa": "^1.0.3",
+    "wrangler": "^4.149.0"
   },
   "allowScripts": {
     "esbuild@0.28.2": true

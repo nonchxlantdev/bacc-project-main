@@ -1,44 +1,16 @@
-import { overlayRegisterPdf, incidentToRegisterRow, filterIncidentsForPeriod, currentMonthRange } from '../server/overlayRegisterPdf.js';
 import {
-  LIMITS,
-  capArray,
-  enforceBodySize,
-  rateLimit,
-  readApprovedBasePdf,
-  rejectClientBasePdf,
-  requireUser,
-  resolveFieldMap,
-  sendError,
-} from './_shared.js';
+  overlayRegisterPdf,
+  incidentToRegisterRow,
+  filterIncidentsForPeriod,
+  currentMonthRange,
+} from '../server/overlayRegisterPdf.js';
+import { LIMITS, capArray, rejectClientBasePdf } from './_shared.js';
 
-export const config = {
-  maxDuration: 30,
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-  try {
-    enforceBodySize(req);
-    rateLimit(req, { limit: 20 });
-    await requireUser(req);
-    const { bytes, filename } = await buildNocRegisterExport(req.body ?? {});
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'no-store');
-    res.end(Buffer.from(bytes));
-  } catch (err) {
-    sendError(res, err);
-  }
-}
-
-export async function buildNocRegisterExport(body) {
+/** POST /api/export-noc-register */
+export async function buildNocRegisterExport(body, { forms }) {
   rejectClientBasePdf(body);
-  const fieldMap = resolveFieldMap('annex-g-noc-register', 'ed01');
-  const basePdfBytes = readApprovedBasePdf(fieldMap);
+  const fieldMap = forms.resolveFieldMap('annex-g-noc-register', 'ed01');
+  const basePdfBytes = forms.readApprovedBasePdf(fieldMap);
   const range = currentMonthRange();
   const from = body.from || range.from;
   const to = body.to || range.to;

@@ -37,3 +37,9 @@ tmp-annex-*-coords.json
 
 # QA harness screenshots
 tmp-qa/
+
+# Cloudflare
+.wrangler
+.dev.vars
+worker/formAssets.js
+worker/generated/
