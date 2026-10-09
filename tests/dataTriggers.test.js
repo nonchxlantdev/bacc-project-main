@@ -116,7 +116,7 @@ test('non-OM sign-offs are frozen on a locked row; the OM block is not', async (
 test('drawings are frozen on a locked row', async () => {
   const db = await lockedSubmission();
   await assert.rejects(drawing(db, 's1', 'd2').run(), /Drawings on a locked checklist/);
-  await assert.rejects(db.prepare("DELETE FROM checklist_drawings WHERE id = 'd1'").run(), /Drawings on a locked/);
+  await assert.rejects(db.prepare("DELETE FROM checklist_drawings WHERE submission_id = 's1' AND id = 'd1'").run(), /Drawings on a locked/);
 });
 
 test('a failed batch leaves nothing behind', async () => {

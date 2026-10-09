@@ -94,8 +94,10 @@ CREATE TABLE checklist_signoffs (
   PRIMARY KEY (submission_id, role)
 );
 
+-- id is the browser's drawing id, unique within its checklist (a correction
+-- copies the original's drawings, ids and all).
 CREATE TABLE checklist_drawings (
-  id             TEXT PRIMARY KEY,
+  id             TEXT NOT NULL,
   submission_id  TEXT NOT NULL REFERENCES checklist_submissions(id) ON DELETE CASCADE,
   section_key    TEXT,
   position       INTEGER NOT NULL DEFAULT 0,
@@ -103,9 +105,9 @@ CREATE TABLE checklist_drawings (
   content_type   TEXT,
   data_uri       TEXT NOT NULL CHECK (length(data_uri) <= 820000),
   added_by       TEXT REFERENCES users(id),
-  added_at       TEXT NOT NULL
+  added_at       TEXT NOT NULL,
+  PRIMARY KEY (submission_id, id)
 );
-CREATE INDEX checklist_drawings_submission ON checklist_drawings(submission_id);
 
 -- ── Approvals, notifications, settings, audit ───────────────────────────────
 CREATE TABLE approvals (
