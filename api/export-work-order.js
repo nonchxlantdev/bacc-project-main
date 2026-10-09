@@ -1,44 +1,12 @@
 import { overlayChecklistPdf, dataUriToBytes } from '../server/overlayChecklistPdf.js';
 import { workOrderToOverlayValues } from '../server/overlayWorkOrderPdf.js';
-import {
-  LIMITS,
-  enforceBodySize,
-  rateLimit,
-  readApprovedBasePdf,
-  rejectClientBasePdf,
-  requireUser,
-  resolveFieldMap,
-  sendError,
-} from './_shared.js';
+import { HttpError, LIMITS, rejectClientBasePdf } from './_shared.js';
 
-export const config = {
-  maxDuration: 30,
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-  try {
-    enforceBodySize(req);
-    rateLimit(req, { limit: 20 });
-    await requireUser(req);
-    const { bytes, filename } = await buildWorkOrderExport(req.body ?? {});
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'no-store');
-    res.end(Buffer.from(bytes));
-  } catch (err) {
-    sendError(res, err);
-  }
-}
-
-export async function buildWorkOrderExport(body) {
+/** POST /api/export-work-order */
+export async function buildWorkOrderExport(body, { forms }) {
   rejectClientBasePdf(body);
-  const fieldMap = resolveFieldMap('annex-h-work-order', 'ed01');
-  const basePdfBytes = readApprovedBasePdf(fieldMap);
+  const fieldMap = forms.resolveFieldMap('annex-h-work-order', 'ed01');
+  const basePdfBytes = forms.readApprovedBasePdf(fieldMap);
   const wo = body.workOrder ?? body;
   const values = body.values ?? workOrderToOverlayValues(wo);
   const images = {};
@@ -47,9 +15,7 @@ export async function buildWorkOrderExport(body) {
     if (bytes) images[key] = bytes;
   }
   if (Object.keys(images).length > LIMITS.images) {
-    const err = new Error(`images exceeds limit of ${LIMITS.images}`);
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, `images exceeds limit of ${LIMITS.images}`);
   }
   const pdfBytes = await overlayChecklistPdf({
     basePdfBytes,
