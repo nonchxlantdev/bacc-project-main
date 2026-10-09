@@ -51,12 +51,43 @@ clock), `routes.js` + `authenticate.js` (HTTP wiring).
 - `must_change_password` blocks every route except `/api/auth/me`,
   `/change-password`, `/logout` (403 `PASSWORD_CHANGE_REQUIRED`).
 - Non-GET auth/users routes require same-origin `Origin` + JSON (`csrf: true`).
-- `VITE_DATA_SOURCE=d1` = D1 login with mock data in this phase.
+- `VITE_DATA_SOURCE=d1` = D1 login **and** the D1 data API (since 3a).
 - First admin: `npm run auth:create-admin -- --email … --name "…" [--remote]`.
 - Check end to end: `npm run auth:smoke [-- --url https://bacc.visionforgestudio.app]`.
 - Migrations: `d1/migrations/`, applied by hand with
   `npx wrangler d1 migrations apply bacc-portal-db --local|--remote`
   (the CI token has no D1 permission, by design).
+
+## Data: D1 data API (sub-project 3a) — built, production still on Supabase
+
+`/api/data/<group>.<op>` (one route per repository method) →
+`worker/data/routes.js` → `service.js` (one method per op, `(actor, args)`) →
+`rules.js` (ALL permissions + payload validation, pure, unit-tested) →
+`store.js` (ALL data SQL; writes are statement builders run as one
+`db.batch`). Op names live in `worker/data/ops.js`, shared with the browser.
+
+- Reads are GET with args as JSON in `?a=`; writes are POST `{ args }` with
+  `csrf: true`. Every data route is auth mode `session`.
+- MANAGERS = om/admin (delete drafts, acknowledge, settings writes);
+  SUPERVISORS = om/coo/admin (amend a filed item, reject, generate schedule,
+  see all approvals/instances, see others' signatures).
+- Migration `0002_core.sql` has triggers that freeze a locked checklist
+  (§11): content, sign-offs (except `om_acknowledgment`) and drawings. Item
+  corrections must set a new `reopened_at` in the SAME UPDATE. Submit writes
+  children first and the lock LAST, in one batch.
+- Templates are NOT in D1: `template_id` is the registry key; the browser
+  adapter (`src/data/repositories/d1/`) adds schema/field map from the
+  registry. The Worker checks keys against `forms.templateKeys`.
+- Light run: photo data → 400; drawings ≤ 6 per checklist, compressed,
+  ≤ ~600 KB each. Incidents/work orders return empty reads and refuse writes
+  until 3b.
+- Tests run the real migrations on Node's built-in SQLite
+  (`tests/helpers/sqliteD1.js`) — add a test there, not a mock.
+- Local end to end: `npm run data:smoke` (local only — it files records that
+  can never be deleted) and `npm run d1:trigger-check`. The login limit is
+  20/min per IP, so wait a minute between smoke runs.
+- `npm run d1:import-config [-- --remote]` copies schedule rules + settings
+  from Supabase. Run it at the 3c cutover, not before.
 
 ## Responsive density: use `desk:`, not `lg:`
 

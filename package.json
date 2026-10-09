@@ -18,7 +18,10 @@
     "verify:palette": "node scripts/validate-palette.mjs",
     "verify:content": "node scripts/audit-pmm-content.mjs",
     "auth:create-admin": "node scripts/auth-create-admin.mjs",
-    "auth:smoke": "node scripts/auth-smoke.mjs"
+    "auth:smoke": "node scripts/auth-smoke.mjs",
+    "data:smoke": "node scripts/data-smoke.mjs",
+    "d1:trigger-check": "node scripts/d1-trigger-check.mjs",
+    "d1:import-config": "node scripts/d1-import-config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
