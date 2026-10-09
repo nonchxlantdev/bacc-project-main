@@ -8,40 +8,9 @@
 import { HttpError } from '../../api/_shared.js';
 import { createDataService } from './service.js';
 import { createD1DataStore } from './store.js';
+import { READ_OPS, WRITE_OPS } from './ops.js';
 
-export const READ_OPS = [
-  'users.list',
-  'users.listLogins',
-  'users.getById',
-  'users.getByEmail',
-  'checklists.listMine',
-  'checklists.listAll',
-  'checklists.get',
-  'approvals.list',
-  'approvals.listInbox',
-  'approvals.get',
-  'instances.rules',
-  'instances.list',
-  'instances.getClock',
-  'notifications.listForUser',
-  'notifications.unreadCount',
-  'settings.get',
-  'settings.audit',
-];
-
-export const WRITE_OPS = [
-  'users.update',
-  'checklists.persist',
-  'checklists.deleteDraft',
-  'checklists.amendItemResult',
-  'checklists.acknowledge',
-  'approvals.decide',
-  'instances.generate',
-  'notifications.markRead',
-  'notifications.markAllRead',
-  'settings.save',
-  'settings.resetSection',
-];
+export { READ_OPS, WRITE_OPS };
 
 const MAX_QUERY_ARGS = 4000;
 
