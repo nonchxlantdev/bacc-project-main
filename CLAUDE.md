@@ -11,6 +11,31 @@ maps, `vite-plugin-pwa`. State is React context (`AuthContext`, `SettingsContext
 `ThemeContext`) over a `localStorage`-backed mock store in `mock/store.js`; there is no
 live backend in this build.
 
+## Hosting: one Cloudflare Worker
+
+Production is the `bacc-portal` Worker on `bacc.visionforgestudio.app`
+(`wrangler.jsonc`). Static assets serve the SPA; only `/api/*` runs Worker
+code (`worker/index.js` → `worker/http.js` → pure `build*()` functions in
+`api/`). `npm run dev` runs the same Worker through `@cloudflare/vite-plugin`.
+
+Rules that are easy to break:
+
+- **No `node:fs` in `api/` or `server/`.** Workers have no filesystem. Approved
+  PDFs, field maps and schemas come from the form store (`api/_formStore.js`),
+  built from the generated `worker/formAssets.js`. Add a form by dropping its
+  files in `src/assets/forms`, `src/data/field-maps`, `src/data/checklists` —
+  `predev`/`prebuild` regenerate the manifest.
+- **No `Buffer`** in code the Worker runs — use `Uint8Array`/`atob`.
+- **Secrets are Wrangler secrets** (`npx wrangler secret put …`), never `vars`
+  or `VITE_*`. `SUPABASE_URL`/`SUPABASE_ANON_KEY` are public `vars`.
+- **Workers Paid is required** (`limits.cpu_ms: 30000`) — PDF overlay exceeds
+  the free plan's 10 ms CPU.
+- Local mock-mode exports work because `.dev.vars` sets `DEV_SKIP_AUTH=1`,
+  honoured only when the host is localhost/127.0.0.1.
+- Any change to export code: `node scripts/parity-exports.mjs <dir>` before
+  and after, then `node scripts/parity-compare.mjs <before> <after>` — zero
+  visual difference is the bar.
+
 ## Responsive density: use `desk:`, not `lg:`
 
 Defined in `src/index.css`:
@@ -114,5 +139,5 @@ After changing one, confirm it in the emitted CSS:
 
 ```powershell
 npm run build
-Select-String -Path dist/assets/*.css -Pattern 'pointer:\s*(fine|coarse)'
+Select-String -Path dist/client/assets/*.css -Pattern 'pointer:\s*(fine|coarse)'
 ```
