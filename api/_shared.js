@@ -10,6 +10,14 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** An error that carries the HTTP status the API should answer with. */
+export class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -60,11 +68,9 @@ function loadRegistryAllowList() {
 }
 
 export function assertSafeKey(value, label = 'key') {
-  const s = String(value || '');
+  const s = String(value ?? '');
   if (!s || /[\\/\0]/.test(s) || s.includes('..')) {
-    const err = new Error(`Invalid ${label}`);
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, `Invalid ${label}`);
   }
   return s;
 }
