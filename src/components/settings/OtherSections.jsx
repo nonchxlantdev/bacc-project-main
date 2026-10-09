@@ -4,6 +4,7 @@ import { NumberInput, Panel, Row, StringList, TextArea, TextInput, Toggle, Note 
 import { EMAIL_INTEGRATION_READY } from '../../config/settingsDefaults.js';
 import SignaturePad from '../checklist/SignaturePad.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { isD1Auth } from '../../lib/authMode.js';
 import { compressImage } from '../../lib/imageCompress.js';
 import { removeAvatar, uploadAvatar, useAvatarUrl } from '../../lib/avatar.js';
 
@@ -86,12 +87,20 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
         <p className="min-h-11 text-sm text-muted desk:min-h-10">{email || '—'}</p>
       </Row>
       <Row label="New email" effect="You'll get a confirmation link at this address before it takes effect.">
-        <EmailChangeForm />
+        {isD1Auth() ? (
+          <p className="min-h-11 text-sm text-muted desk:min-h-10">To change your sign-in email, ask an administrator.</p>
+        ) : (
+          <EmailChangeForm />
+        )}
       </Row>
     </Panel>
     <Panel
       title="Password"
-      description="Change your own sign-in password. You are never asked for the current one here — you're already signed in as you."
+      description={
+        isD1Auth()
+          ? 'Change your own sign-in password. Enter your current password to confirm it is you; your other devices will be signed out.'
+          : "Change your own sign-in password. You are never asked for the current one here — you're already signed in as you."
+      }
     >
       <Row label="New password" effect="At least 10 characters. Takes effect immediately.">
         <PasswordChangeForm />
@@ -305,10 +314,15 @@ function PasswordChangeForm() {
   const { changePassword } = useAuth();
   const [value, setValue] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [current, setCurrent] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
 
   async function submit() {
+    if (isD1Auth() && !current) {
+      setMessage({ tone: 'error', text: 'Enter your current password.' });
+      return;
+    }
     if (value.length < 10) {
       setMessage({ tone: 'error', text: 'Use at least 10 characters.' });
       return;
@@ -320,10 +334,11 @@ function PasswordChangeForm() {
     setBusy(true);
     setMessage(null);
     try {
-      await changePassword(value);
+      await changePassword(value, current);
       setMessage({ tone: 'success', text: 'Password changed.' });
       setValue('');
       setConfirm('');
+      setCurrent('');
     } catch (err) {
       setMessage({ tone: 'error', text: err.message || 'Could not change your password.' });
     } finally {
@@ -333,6 +348,16 @@ function PasswordChangeForm() {
 
   return (
     <div className="space-y-2">
+      {isD1Auth() && (
+        <input
+          type="password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          placeholder="Current password"
+          autoComplete="current-password"
+          className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-10"
+        />
+      )}
       <input
         type="password"
         value={value}
@@ -351,7 +376,7 @@ function PasswordChangeForm() {
       />
       <button
         type="button"
-        disabled={busy || !value || !confirm}
+        disabled={busy || !value || !confirm || (isD1Auth() && !current)}
         onClick={submit}
         className="inline-flex min-h-11 items-center rounded-md border border-primary bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50 desk:min-h-10"
       >

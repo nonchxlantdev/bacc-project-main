@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getRepos } from '../data/repositories/index.js';
 import { isLiveSupabase, isSupabaseConfigured, supabase } from '../lib/supabase.js';
+import { authClient } from '../lib/authClient.js';
+import { isD1Auth } from '../lib/authMode.js';
 
 const AuthContext = createContext(null);
 const AUTH_KEY = 'bacc-local-auth';
@@ -20,11 +22,24 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
   const [demoUsers, setDemoUsers] = useState([]);
   const live = isLiveSupabase();
+  const d1 = isD1Auth();
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
+      if (d1) {
+        // Cloudflare login: the HttpOnly cookie is the session; ask who we are.
+        const me = await authClient.me().catch(() => null);
+        if (cancelled) return;
+        setDemoUsers([]);
+        if (me) {
+          setSession({ user: toSessionUser(me) });
+          setProfile(me);
+        }
+        setLoading(false);
+        return;
+      }
       const repos = getRepos();
       // Sign-in roster only. The full user directory is wider — seeded history
       // references people who are not sign-in accounts.
@@ -66,13 +81,24 @@ export function AuthProvider({ children }) {
       cancelled = true;
       cleanupPromise?.then?.((fn) => fn?.());
     };
-  }, [live]);
+  }, [live, d1]);
 
   const value = useMemo(() => {
     const user = session?.user ?? null;
 
     async function signIn(email, password) {
       setError(null);
+      if (d1) {
+        try {
+          const me = await authClient.login(email, password);
+          setSession({ user: toSessionUser(me) });
+          setProfile(me);
+          return { user: toSessionUser(me) };
+        } catch (err) {
+          setError(err.message);
+          throw err;
+        }
+      }
       if (!live || !supabase) {
         const repos = getRepos();
         const key = String(email || '').trim().toLowerCase();
@@ -100,6 +126,12 @@ export function AuthProvider({ children }) {
     }
 
     async function signOut() {
+      if (d1) {
+        await authClient.logout().catch(() => {});
+        setSession(null);
+        setProfile(null);
+        return;
+      }
       if (!live || !supabase) {
         sessionStorage.removeItem(AUTH_KEY);
         setSession(null);
@@ -111,6 +143,10 @@ export function AuthProvider({ children }) {
 
     async function updateProfile(patch) {
       if (!user) return;
+      if (d1) {
+        // Self-service profile saving moves to D1 with the data API (sub-project 3).
+        throw new Error('Saving your profile is not available yet on the new login.');
+      }
       if (!live || !supabase) {
         const repos = getRepos();
         const next = { ...profile, ...patch };
@@ -197,7 +233,13 @@ export function AuthProvider({ children }) {
     // confirmed change land on auth.users. There is no demo-mode
     // equivalent: changing either only means something against a real
     // account.
-    async function changePassword(newPassword) {
+    async function changePassword(newPassword, currentPassword) {
+      if (d1) {
+        const me = await authClient.changePassword(currentPassword ?? '', newPassword);
+        setProfile(me);
+        setSession({ user: toSessionUser(me) });
+        return;
+      }
       if (!live || !supabase) {
         throw new Error('Password changes need the portal connected to Supabase.');
       }
@@ -206,6 +248,9 @@ export function AuthProvider({ children }) {
     }
 
     async function changeEmail(newEmail) {
+      if (d1) {
+        throw new Error('To change your sign-in email, ask an administrator.');
+      }
       if (!live || !supabase) {
         throw new Error('Email changes need the portal connected to Supabase.');
       }
@@ -219,7 +264,9 @@ export function AuthProvider({ children }) {
       loading,
       error,
       // Login UI: demo picker when not on live Supabase, even if keys are present.
-      configured: live,
+      configured: live || d1,
+      authMode: d1 ? 'd1' : live ? 'supabase' : 'mock',
+      mustChangePassword: Boolean(d1 && profile?.must_change_password),
       keysPresent: isSupabaseConfigured,
       demoUsers,
       signIn,
@@ -230,7 +277,7 @@ export function AuthProvider({ children }) {
       displayName: profile?.full_name || user?.email || 'Inspector',
       position: profile?.position || 'Inspector',
     };
-  }, [session, profile, loading, error, demoUsers, live]);
+  }, [session, profile, loading, error, demoUsers, live, d1]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import ForcePasswordChange from '../auth/ForcePasswordChange.jsx';
 import { ToastProvider, useToast } from '../../context/ToastContext.jsx';
 import { queueHandlers } from '../../lib/queueHandlers.js';
 import { probeReachability } from '../../lib/reachability.js';
@@ -30,7 +31,7 @@ export default function AppShell() {
 }
 
 function AppShellInner() {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword } = useAuth();
   const location = useLocation();
   const toast = useToast();
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -207,6 +208,10 @@ function AppShellInner() {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (mustChangePassword) {
+    return <ForcePasswordChange />;
   }
 
   return (

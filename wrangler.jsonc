@@ -15,6 +15,14 @@
   // Workers Paid: pdf-lib overlay needs far more than the free plan's 10 ms.
   "limits": { "cpu_ms": 30000 },
   "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bacc-portal-db",
+      "database_id": "560ca310-3fb3-4b20-906c-7e262745a925",
+      "migrations_dir": "d1/migrations"
+    }
+  ],
   "routes": [{ "pattern": "bacc.visionforgestudio.app", "custom_domain": true }],
   "vars": {
     "SUPABASE_URL": "https://ecrgipyebbgrvmkntxqe.supabase.co",

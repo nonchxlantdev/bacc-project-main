@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Dices } from 'lucide-react';
 import { useUsers } from '../../hooks/useRepos.js';
+import { isD1Auth } from '../../lib/authMode.js';
+import { usersAdminClient } from '../../lib/authClient.js';
+import { useD1Users } from '../../hooks/useD1Users.js';
 import Select from '../ui/Select.jsx';
 import { Panel, TextInput, Toggle } from './settingsUi.jsx';
 import { apiFetch } from '../../lib/apiFetch.js';
@@ -14,6 +17,11 @@ const ROLE_OPTIONS = [
   { value: 'sms', label: 'SMS' },
   { value: 'admin', label: 'Administrator' },
 ];
+
+const D1 = isD1Auth();
+// Build-time constant, so the hook choice never changes between renders.
+const useUserRows = D1 ? useD1Users : useUsers;
+const ROLE_CHOICES = D1 ? [{ value: 'inspector', label: 'Inspector' }, ...ROLE_OPTIONS] : ROLE_OPTIONS;
 
 const DEPT_OPTIONS = [
   { value: 'Operations', label: 'Operations' },
@@ -55,7 +63,7 @@ function generateTempPassword() {
  * an admin/OM acting on someone else's row.
  */
 export default function UsersRolesSection() {
-  const { rows, persist, setActive, reload } = useUsers();
+  const { rows, persist, setActive, reload } = useUserRows();
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
@@ -64,7 +72,7 @@ export default function UsersRolesSection() {
 
   function startCreate() {
     setEditing('new');
-    setDraft({ ...EMPTY, temp_password: generateTempPassword() });
+    setDraft({ ...EMPTY, temp_password: D1 ? '' : generateTempPassword() });
     setError(null);
     setCreatedNotice(null);
   }
@@ -95,14 +103,34 @@ export default function UsersRolesSection() {
       setError('Name and email are required.');
       return;
     }
-    if (editing === 'new' && draft.temp_password.trim().length < 10) {
+    if (!D1 && editing === 'new' && draft.temp_password.trim().length < 10) {
       setError('Temporary password must be at least 10 characters.');
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      if (editing === 'new') {
+      if (D1 && editing === 'new') {
+        const { temporary_password } = await usersAdminClient.create({
+          full_name: draft.full_name.trim(),
+          email: draft.email.trim().toLowerCase(),
+          position: draft.position.trim(),
+          department: draft.department,
+          role: draft.role,
+          is_approver: Boolean(draft.is_approver),
+        });
+        setCreatedNotice({ email: draft.email.trim().toLowerCase(), password: temporary_password });
+      } else if (D1) {
+        await persist({
+          id: editing,
+          full_name: draft.full_name.trim(),
+          email: draft.email.trim().toLowerCase(),
+          position: draft.position.trim(),
+          department: draft.department,
+          role: draft.role,
+          is_approver: Boolean(draft.is_approver),
+        });
+      } else if (editing === 'new') {
         const res = await apiFetch('/api/create-user', {
           method: 'POST',
           body: JSON.stringify({
@@ -169,6 +197,22 @@ export default function UsersRolesSection() {
     }
   }
 
+  async function resetPassword(user) {
+    if (!window.confirm(`Reset the password for ${user.full_name}? They will be signed out everywhere and must choose a new password at next sign-in.`)) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const temporary = await usersAdminClient.resetPassword(user.id);
+      setCreatedNotice({ email: user.email, password: temporary, reset: true });
+    } catch (err) {
+      setError(err.message || 'Could not reset that password.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Panel
@@ -188,13 +232,23 @@ export default function UsersRolesSection() {
 
         {createdNotice && (
           <div className="mb-3 rounded-md border border-success/30 bg-success-soft p-3 text-sm text-success">
-            <p className="font-semibold">Account created for {createdNotice.email}.</p>
-            <p className="mt-1">
+            <p className="font-semibold">
+              {createdNotice.reset ? `Password reset for ${createdNotice.email}.` : `Account created for ${createdNotice.email}.`}
+            </p>
+            <p className="mt-1 flex flex-wrap items-center gap-2">
               Temporary password: <code className="rounded bg-white/60 px-1.5 py-0.5 font-mono">{createdNotice.password}</code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(createdNotice.password)}
+                className="min-h-9 rounded border border-success/40 px-2 text-xs font-semibold"
+              >
+                Copy
+              </button>
             </p>
             <p className="mt-1 text-xs">
-              There is no invite email — share this with them directly. They can change it themselves from Settings
-              → My profile once signed in.
+              {D1
+                ? 'Shown once — share it with them directly. They will be asked to choose their own password the first time they sign in.'
+                : 'There is no invite email — share this with them directly. They can change it themselves from Settings → My profile once signed in.'}
             </p>
           </div>
         )}
@@ -213,7 +267,7 @@ export default function UsersRolesSection() {
                   type="email"
                   value={draft.email}
                   onChange={(v) => setDraft({ ...draft, email: v })}
-                  disabled={editing !== 'new'}
+                  disabled={editing !== 'new' && !D1}
                 />
               </Field>
               <Field label="Position">
@@ -232,7 +286,7 @@ export default function UsersRolesSection() {
                   label="Role"
                   value={draft.role}
                   onChange={(v) => setDraft({ ...draft, role: v })}
-                  options={ROLE_OPTIONS}
+                  options={ROLE_CHOICES}
                 />
               </Field>
               <Field label="Approver">
@@ -242,7 +296,7 @@ export default function UsersRolesSection() {
                   label={draft.is_approver ? 'Can approve' : 'Cannot approve'}
                 />
               </Field>
-              {editing === 'new' && (
+              {editing === 'new' && !D1 && (
                 <Field label="Temporary password">
                   <div className="flex gap-2">
                     <TextInput
@@ -338,6 +392,16 @@ export default function UsersRolesSection() {
                         >
                           {inactive ? 'Reactivate' : 'Deactivate'}
                         </button>
+                        {D1 && (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => resetPassword(user)}
+                            className="min-h-11 rounded border border-line/20 px-3 text-xs font-semibold text-muted hover:border-primary hover:text-primary desk:min-h-9"
+                          >
+                            Reset password
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

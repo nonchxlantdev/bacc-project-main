@@ -130,3 +130,101 @@ test('DEV_SKIP_AUTH only works on localhost', async () => {
   const offLocal = await handle(req('/api/json', { auth: false, host: 'localhost:5173' }), {});
   assert.equal(offLocal.status, 401);
 });
+
+// ── Sub-project 2 additions ────────────────────────────────────────────────
+const extRoutes = {
+  '/api/get-only': { kind: 'json', methods: ['GET'], build: async (body, ctx) => ({ body, hasRequest: ctx.request instanceof Request }) },
+  '/api/public': { kind: 'json', auth: { mode: 'public' }, build: async (_b, ctx) => ({ user: ctx.user }) },
+  '/api/session-only': { kind: 'json', auth: { mode: 'session' }, build: async (_b, ctx) => ({ role: ctx.user.profile.role }) },
+  '/api/csrf': { kind: 'json', csrf: true, auth: { mode: 'public' }, build: async () => ({ ok: true }) },
+  '/api/raw': {
+    kind: 'response',
+    auth: { mode: 'public' },
+    build: async () => new Response(null, { status: 204, headers: { 'Set-Cookie': 'x=1' } }),
+  },
+  '/api/renew': { kind: 'json', build: async () => ({ ok: true }) },
+  '/api/coded': { kind: 'json', build: async () => { throw new HttpError(403, 'Password change required', 'PASSWORD_CHANGE_REQUIRED'); } },
+};
+let extAuthCalls = 0;
+const extHandle = createApiHandler({
+  routes: extRoutes,
+  forms: {},
+  authenticate: async (request) => {
+    extAuthCalls += 1;
+    if (!request.headers.get('authorization')) throw new HttpError(401, 'Not signed in');
+    return { user: { id: 'u1' }, profile: { id: 'u1', role: 'om' }, setCookie: 'renewed=1' };
+  },
+});
+function extReq(path, { method = 'POST', body = '{}', auth = true, host = 'bacc.visionforgestudio.app', origin, contentType = 'application/json' } = {}) {
+  const headers = new Headers({ 'cf-connecting-ip': `10.1.0.${++ipSeq}` });
+  if (auth) headers.set('authorization', 'Bearer t');
+  if (origin !== undefined) headers.set('origin', origin);
+  if (contentType && method !== 'GET') headers.set('content-type', contentType);
+  return new Request(`https://${host}${path}`, { method, headers, body: method === 'GET' ? undefined : body });
+}
+
+test('GET routes work, get an empty body and the request in ctx', async () => {
+  const res = await extHandle(extReq('/api/get-only', { method: 'GET' }), {});
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { body: {}, hasRequest: true });
+});
+
+test('405 lists the route methods in Allow', async () => {
+  const res = await extHandle(extReq('/api/get-only', { method: 'POST' }), {});
+  assert.equal(res.status, 405);
+  assert.equal(res.headers.get('allow'), 'GET');
+});
+
+test('public routes never call authenticate', async () => {
+  const before = extAuthCalls;
+  const res = await extHandle(extReq('/api/public', { auth: false }), {});
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { user: null });
+  assert.equal(extAuthCalls, before);
+});
+
+test('DEV_SKIP_AUTH does not bypass session-mode routes', async () => {
+  const res = await extHandle(extReq('/api/session-only', { auth: false, host: 'localhost:5173' }), { DEV_SKIP_AUTH: '1' });
+  assert.equal(res.status, 401);
+});
+
+test('csrf routes require same Origin and JSON', async () => {
+  const origin = 'https://bacc.visionforgestudio.app';
+  assert.equal((await extHandle(extReq('/api/csrf', { origin }), {})).status, 200);
+  assert.equal((await extHandle(extReq('/api/csrf', { origin: 'https://evil.example' }), {})).status, 403);
+  assert.equal((await extHandle(extReq('/api/csrf'), {})).status, 403);
+  assert.equal((await extHandle(extReq('/api/csrf', { origin, contentType: 'text/plain' }), {})).status, 403);
+});
+
+test('response-kind routes keep status/headers and gain security headers', async () => {
+  const res = await extHandle(extReq('/api/raw', { auth: false }), {});
+  assert.equal(res.status, 204);
+  assert.equal(res.headers.get('set-cookie'), 'x=1');
+  assert.equal(res.headers.get('x-frame-options'), 'DENY');
+});
+
+test('a renewal cookie from authenticate is appended to the response', async () => {
+  const res = await extHandle(extReq('/api/renew'), {});
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('set-cookie'), 'renewed=1');
+});
+
+test('error codes are passed through to the body', async () => {
+  const res = await extHandle(extReq('/api/coded'), {});
+  assert.equal(res.status, 403);
+  assert.deepEqual(await res.json(), { error: 'Password change required', code: 'PASSWORD_CHANGE_REQUIRED' });
+});
+
+test('rejected requests still consume their body (dev keep-alive safety)', async () => {
+  for (const [path, opts] of [
+    ['/api/nope', {}],
+    ['/api/csrf', { origin: 'https://evil.example' }],
+    ['/api/session-only', { auth: false }],
+    ['/api/get-only', { method: 'POST' }],
+  ]) {
+    const request = extReq(path, { ...opts, body: '{"email":"a@b.bz","password":"x"}' });
+    const res = await extHandle(request, {});
+    assert.ok(res.status >= 400, path);
+    assert.equal(request.bodyUsed, true, `${path} left its body unread`);
+  }
+});
