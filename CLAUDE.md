@@ -36,6 +36,28 @@ Rules that are easy to break:
   and after, then `node scripts/parity-compare.mjs <before> <after>` — zero
   visual difference is the bar.
 
+## Login: Cloudflare (D1) — built, switched on with the D1 data move
+
+`worker/auth/` holds the whole login: `password.js` (PBKDF2, 100k — the
+Workers max; the count is stored per hash), `session.js` (`__Host-bacc_session`
+HttpOnly cookie; D1 stores only the token's SHA-256), `permissions.js` (who may
+manage whom — the single source of truth, unit-tested), `store.js` (ALL login
+SQL; `createMemoryAuthStore()` is its test twin), `service.js` (logic, injectable
+clock), `routes.js` + `authenticate.js` (HTTP wiring).
+
+- Route `auth.mode`: `public` | `session` (D1 cookie required) | `either`
+  (D1 cookie if present, else Supabase bearer — the export routes, until
+  sub-project 3) | `supabase` (`/api/create-user`, until sub-project 3).
+- `must_change_password` blocks every route except `/api/auth/me`,
+  `/change-password`, `/logout` (403 `PASSWORD_CHANGE_REQUIRED`).
+- Non-GET auth/users routes require same-origin `Origin` + JSON (`csrf: true`).
+- `VITE_DATA_SOURCE=d1` = D1 login with mock data in this phase.
+- First admin: `npm run auth:create-admin -- --email … --name "…" [--remote]`.
+- Check end to end: `npm run auth:smoke [-- --url https://bacc.visionforgestudio.app]`.
+- Migrations: `d1/migrations/`, applied by hand with
+  `npx wrangler d1 migrations apply bacc-portal-db --local|--remote`
+  (the CI token has no D1 permission, by design).
+
 ## Responsive density: use `desk:`, not `lg:`
 
 Defined in `src/index.css`:
