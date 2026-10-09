@@ -16,7 +16,9 @@
     "verify:walkthrough": "node scripts/verify-walkthrough.mjs",
     "generate:security-pdf": "node scripts/generate-security-assessment-pdf.mjs",
     "verify:palette": "node scripts/validate-palette.mjs",
-    "verify:content": "node scripts/audit-pmm-content.mjs"
+    "verify:content": "node scripts/audit-pmm-content.mjs",
+    "auth:create-admin": "node scripts/auth-create-admin.mjs",
+    "auth:smoke": "node scripts/auth-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
