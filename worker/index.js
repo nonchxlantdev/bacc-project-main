@@ -8,6 +8,7 @@ import { createApiHandler } from './http.js';
 import { formStore } from './formAssets.js';
 import { createAuthenticator } from './auth/authenticate.js';
 import { AUTH_ROUTES } from './auth/routes.js';
+import { DATA_ROUTES } from './data/routes.js';
 import { buildExport } from '../api/export-checklist-pdf.js';
 import { buildNocRegisterExport } from '../api/export-noc-register.js';
 import { buildWorkOrderExport } from '../api/export-work-order.js';
@@ -34,7 +35,7 @@ export const ROUTES = {
   },
 };
 
-Object.assign(ROUTES, AUTH_ROUTES);
+Object.assign(ROUTES, AUTH_ROUTES, DATA_ROUTES);
 
 const handleApi = createApiHandler({ routes: ROUTES, forms: formStore, authenticate: createAuthenticator() });
 

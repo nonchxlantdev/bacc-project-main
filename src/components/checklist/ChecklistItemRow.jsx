@@ -105,6 +105,8 @@ export default function ChecklistItemRow({
               remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
             }`}
           />
+          {/* No photo control when photos are off (d1 mode passes no handler). */}
+          {onPhotoClick && (
           <button
             type="button"
             onClick={() => {
@@ -118,6 +120,7 @@ export default function ChecklistItemRow({
           >
             <Camera className="h-5 w-5" />
           </button>
+          )}
         </div>
       </div>
 
@@ -225,6 +228,7 @@ export default function ChecklistItemRow({
               remarksError ? 'border-alert bg-surface' : 'border-line/15 bg-surface'
             }`}
           />
+          {onPhotoClick && (
           <button
             type="button"
             onClick={() => {
@@ -238,6 +242,7 @@ export default function ChecklistItemRow({
           >
             <Camera className="h-4 w-4" />
           </button>
+          )}
         </div>
       </div>
     </div>

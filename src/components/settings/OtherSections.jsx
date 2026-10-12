@@ -76,7 +76,11 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
       description="Shown next to your name in the top bar and the Users directory. Visible to everyone signed in — nothing about it is private, so there is nothing to approve before it's seen."
     >
       <Row label="Photo" effect="JPG or PNG. Cropped to a square and compressed automatically.">
-        <AvatarUploader />
+        {isD1Auth() ? (
+          <p className="min-h-11 text-sm text-muted desk:min-h-10">Profile photos are not available on the new login yet.</p>
+        ) : (
+          <AvatarUploader />
+        )}
       </Row>
     </Panel>
     <Panel

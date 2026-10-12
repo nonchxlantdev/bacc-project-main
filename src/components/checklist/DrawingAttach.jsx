@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Paperclip, Trash2 } from 'lucide-react';
+import { compressDrawing } from '../../lib/drawings.js';
 
 /**
  * Attach a drawing to one section of a form.
@@ -17,23 +18,50 @@ import { Paperclip, Trash2 } from 'lucide-react';
  *
  * Images are held as data URIs on the submission, which keeps a drawing with
  * the record it belongs to and keeps it working offline.
+ *
+ * `cap`/`room` (d1 mode only): the checklist-wide drawing limit and how many
+ * more fit. With a cap, each image is compressed before it is attached and an
+ * image still too large afterwards is refused. Without one (mock/Supabase),
+ * behaviour is unchanged.
  */
-export default function DrawingAttach({ sectionKey, sectionLabel, items = [], disabled, onChange }) {
+export default function DrawingAttach({ sectionKey, sectionLabel, items = [], disabled, onChange, cap = null, room = null }) {
   const inputRef = useRef(null);
+  const [error, setError] = useState(null);
+  const capped = cap != null;
+  const full = capped && room != null && room <= 0;
 
   async function addFiles(files) {
+    setError(null);
+    const accepted = capped ? files.slice(0, Math.max(0, room ?? 0)) : files;
+    const problems = [];
+    if (capped && accepted.length < files.length) {
+      problems.push(`A checklist can carry at most ${cap} drawings.`);
+    }
     const added = [];
-    for (const file of files) {
+    for (const file of accepted) {
+      let dataUri;
+      let contentType = file.type || 'image/png';
+      try {
+        if (capped) {
+          ({ dataUri, contentType } = await compressDrawing(file));
+        } else {
+          dataUri = await readAsDataUri(file);
+        }
+      } catch (err) {
+        problems.push(`${file.name}: ${err.message || 'could not be attached.'}`);
+        continue;
+      }
       added.push({
         id: crypto.randomUUID(),
         // The file name is the caption someone already recognises, so it beats
         // "Drawing 1" as a starting point.
         label: file.name.replace(/\.[^.]+$/, ''),
-        contentType: file.type || 'image/png',
-        dataUri: await readAsDataUri(file),
+        contentType,
+        dataUri,
         addedAt: new Date().toISOString(),
       });
     }
+    if (problems.length) setError(problems.join(' '));
     if (added.length) onChange([...items, ...added]);
   }
 
@@ -43,6 +71,11 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
         <Paperclip className="h-3.5 w-3.5 text-primary" aria-hidden />
         Drawing
         {items.length > 0 && <span className="font-normal normal-case tracking-normal text-muted">· {items.length}</span>}
+        {capped && (
+          <span className="ml-auto font-normal normal-case tracking-normal text-muted">
+            {cap - Math.max(0, room ?? 0)} of {cap} on this checklist
+          </span>
+        )}
       </p>
 
       {items.length > 0 && (
@@ -81,11 +114,12 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
         <>
           <button
             type="button"
+            disabled={full}
             onClick={() => inputRef.current?.click()}
-            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary desk:min-h-9"
+            className="mt-2 inline-flex min-h-11 items-center gap-2 rounded border border-line/25 bg-surface px-3 text-xs font-semibold text-primary hover:border-primary disabled:opacity-50 desk:min-h-9"
           >
             <Paperclip className="h-3.5 w-3.5" />
-            {items.length ? 'Attach another drawing' : 'Attach drawing'}
+            {full ? `Limit of ${cap} drawings reached` : items.length ? 'Attach another drawing' : 'Attach drawing'}
           </button>
           <input
             ref={inputRef}
@@ -102,6 +136,8 @@ export default function DrawingAttach({ sectionKey, sectionLabel, items = [], di
           />
         </>
       )}
+
+      {error && <p role="alert" className="mt-2 text-xs text-alert">{error}</p>}
 
       {items.length === 0 && disabled && <p className="mt-1 text-xs text-muted">No drawing attached.</p>}
     </div>

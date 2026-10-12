@@ -30,6 +30,12 @@ import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
 import ResolutionChip from './ResolutionChip.jsx';
 import LogTable from './LogTable.jsx';
 import DrawingAttach from './DrawingAttach.jsx';
+import { DRAWING_LIMIT, isD1Data } from '../../lib/dataMode.js';
+import { countDrawings } from '../../lib/drawings.js';
+
+// Light run on D1: no photo evidence, drawings capped per checklist.
+const PHOTOS_ENABLED = !isD1Data();
+const DRAWING_CAP = isD1Data() ? DRAWING_LIMIT : null;
 import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
 
@@ -254,7 +260,7 @@ export default function ChecklistForm({
                       linkedIncident={linkedIncidentByCode[item.code]}
                       onSelect={onSelectItem}
                       onChange={(patch) => onItemChange(item.code, patch)}
-                      onPhotoClick={onSelectItem}
+                      onPhotoClick={PHOTOS_ENABLED ? onSelectItem : null}
                       onViewIncident={() => onCreateIncident?.(item, items[item.code])}
                     />
                   ))}
@@ -287,6 +293,7 @@ export default function ChecklistForm({
             disabled={readOnly}
             onChange={(value) => onSummaryChange?.({ [field.key]: value })}
             drawings={attachments?.[field.key] ?? []}
+            drawingRoom={DRAWING_CAP == null ? null : DRAWING_CAP - countDrawings(attachments)}
             onDrawingsChange={(next) => onAttachmentsChange?.({ [field.key]: next })}
           />
         ))}
@@ -434,6 +441,7 @@ export default function ChecklistForm({
                 </div>
               )}
 
+              {PHOTOS_ENABLED && (
               <PhotoUpload
                 itemCode={selectedItem.code}
                 previewUrl={photoPreviewByCode[selectedItem.code] || selectedRow?.photo_url}
@@ -441,6 +449,7 @@ export default function ChecklistForm({
                 onSelect={(file) => onPhotoSelect(selectedItem.code, file)}
                 onClear={() => onPhotoClear(selectedItem.code)}
               />
+              )}
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
@@ -490,7 +499,7 @@ export default function ChecklistForm({
  * `hint` is the completion guidance the form itself prints in brackets under the
  * heading, so it is shown rather than paraphrased.
  */
-function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsChange }) {
+function SummaryBlock({ field, value, disabled, onChange, drawings, drawingRoom = null, onDrawingsChange }) {
   const isChoice = field.type === 'yes_no' || field.type === 'radio';
   const isTable = field.type === 'table';
   return (
@@ -547,6 +556,8 @@ function SummaryBlock({ field, value, disabled, onChange, drawings, onDrawingsCh
           sectionLabel={field.label}
           items={drawings}
           disabled={disabled}
+          room={drawingRoom}
+          cap={DRAWING_CAP}
           onChange={onDrawingsChange}
         />
       )}

@@ -3,6 +3,7 @@ import { getRepos } from '../data/repositories/index.js';
 import { isLiveSupabase, isSupabaseConfigured, supabase } from '../lib/supabase.js';
 import { authClient } from '../lib/authClient.js';
 import { isD1Auth } from '../lib/authMode.js';
+import { loadSettings } from '../lib/settingsStore.js';
 
 const AuthContext = createContext(null);
 const AUTH_KEY = 'bacc-local-auth';
@@ -34,8 +35,10 @@ export function AuthProvider({ children }) {
         if (cancelled) return;
         setDemoUsers([]);
         if (me) {
-          setSession({ user: toSessionUser(me) });
-          setProfile(me);
+          const full = await withD1Profile(me);
+          if (cancelled) return;
+          setSession({ user: toSessionUser(full) });
+          setProfile(full);
         }
         setLoading(false);
         return;
@@ -90,7 +93,7 @@ export function AuthProvider({ children }) {
       setError(null);
       if (d1) {
         try {
-          const me = await authClient.login(email, password);
+          const me = await withD1Profile(await authClient.login(email, password));
           setSession({ user: toSessionUser(me) });
           setProfile(me);
           return { user: toSessionUser(me) };
@@ -144,8 +147,22 @@ export function AuthProvider({ children }) {
     async function updateProfile(patch) {
       if (!user) return;
       if (d1) {
-        // Self-service profile saving moves to D1 with the data API (sub-project 3).
-        throw new Error('Saving your profile is not available yet on the new login.');
+        // Role, access and email are admin-managed (/api/users/update); the
+        // data API accepts only the self-service fields and says so otherwise.
+        const {
+          role: _r,
+          is_approver: _a,
+          is_active: _ac,
+          can_login: _l,
+          id: _i,
+          email: _e,
+          department: _d,
+          must_change_password: _m,
+          ...selfPatch
+        } = patch;
+        const next = await getRepos().users.update(user.id, selfPatch);
+        setProfile((prev) => ({ ...prev, ...next }));
+        return next;
       }
       if (!live || !supabase) {
         const repos = getRepos();
@@ -235,8 +252,9 @@ export function AuthProvider({ children }) {
     // account.
     async function changePassword(newPassword, currentPassword) {
       if (d1) {
-        const me = await authClient.changePassword(currentPassword ?? '', newPassword);
-        setProfile(me);
+        const me = await withD1Profile(await authClient.changePassword(currentPassword ?? '', newPassword));
+        // Keep the profile fields /api/auth/me does not carry (signature etc.).
+        setProfile((prev) => ({ ...prev, ...me }));
         setSession({ user: toSessionUser(me) });
         return;
       }
@@ -280,6 +298,25 @@ export function AuthProvider({ children }) {
   }, [session, profile, loading, error, demoUsers, live, d1]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/**
+ * D1 mode: /api/auth/me answers with the login fields; the profile extras
+ * (stored signature, has_ever_signed, location) come from the data API.
+ * A user still forced to change their password can't call the data API yet,
+ * so that case — and any failure — falls back to the login fields alone.
+ * Also refreshes settings, which the signed-out boot could not read.
+ */
+async function withD1Profile(me) {
+  if (!me || me.must_change_password) return me;
+  // Settings need a session on D1; the boot-time read ran signed out.
+  loadSettings().catch(() => {});
+  try {
+    const extra = await getRepos().users.getById(me.id);
+    return extra ? { ...extra, ...me } : me;
+  } catch {
+    return me;
+  }
 }
 
 async function fetchProfile(user) {

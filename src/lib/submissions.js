@@ -2,6 +2,7 @@ import { getRepos } from '../data/repositories/index.js';
 import { getPhotoRecord } from '../utils/offlineQueue.js';
 import { probeReachability } from './reachability.js';
 import { isLiveSupabase, supabase } from './supabase.js';
+import { isD1Data } from './dataMode.js';
 
 export function newSubmissionId() {
   return crypto.randomUUID();
@@ -148,9 +149,14 @@ export async function syncQueuedPhoto(payload) {
   }
 }
 
+/** Photos are off on D1: a leftover queued upload is dropped, not retried forever. */
+async function dropQueuedPhoto(payload) {
+  console.warn('Photo uploads are disabled; dropping a queued photo for', payload?.submissionId, payload?.itemCode);
+}
+
 export const queueHandlers = {
   upsert_submission: async (payload) => getRepos().checklists.persist(payload),
-  upload_photo: syncQueuedPhoto,
+  upload_photo: isD1Data() ? dropQueuedPhoto : syncQueuedPhoto,
   delete_submission: async ({ id }) => {
     const rec = await getSubmission(id);
     if (rec) await deleteDraft(rec);
