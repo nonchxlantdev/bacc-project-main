@@ -9,13 +9,13 @@
  *   - adds the registry's template fields (schema, field map, codes) to
  *     records — the database stores only `template_id` (the registry key),
  *   - avoids re-uploading drawings that have not changed, and
- *   - answers for groups that arrive in 3b (incidents, work orders).
+ *   - adds the owning team to incidents and hides work-order approvals while
+ *     the work-order screens are switched off.
  */
-import { isQualifyingReinspection } from '../../../lib/incidentLifecycle.js';
+import { WORK_ORDERS_ENABLED, isQualifyingReinspection } from '../../../lib/incidentLifecycle.js';
 import { groupForCode } from '../../templates/templateMeta.js';
 import { createReportAggregations } from '../reportAggregations.js';
 
-export const IN_3B = 'Incidents and work orders arrive with the next part of the D1 move (3b).';
 const DEMO_ONLY = 'Demo-only method is not available with the live database';
 const REGISTRY_FIELDS = ['schema', 'content_schema', 'field_map'];
 
@@ -73,7 +73,8 @@ export function createD1Adapter({ call, registry }) {
   }
 
   function enrichApproval(row) {
-    if (!row?.entity) return row;
+    // Work-order approvals carry their own title (the WO number).
+    if (!row?.entity || row.entity_type === 'work_order') return row;
     const entry = getEntry(row.entity.template_id);
     const code = entry?.code ?? null;
     return {
@@ -104,9 +105,14 @@ export function createD1Adapter({ call, registry }) {
     return (await call('instances.rules')) ?? [];
   }
 
-  const notYet = async () => {
-    throw new Error(IN_3B);
-  };
+  /** The team that owns the form an incident came from (derived, as Supabase did). */
+  const withSourceTeam = (inc) => (inc ? { ...inc, source_group: groupForCode(inc.source_template_code) } : inc);
+
+  /** Drop what the server owns or does not store before sending an incident. */
+  function outgoingIncident(record) {
+    const { updates: _u, source_group: _g, pending_sync: _p, ...rest } = record;
+    return rest;
+  }
   const demoOnly = (name) => async () => {
     throw new Error(`${DEMO_ONLY} (${name}).`);
   };
@@ -156,22 +162,31 @@ export function createD1Adapter({ call, registry }) {
       },
     },
 
-    // 3b: reads are empty so pages that glance at incidents still load;
-    // anything that would write says plainly that it is not here yet.
     incidents: {
-      list: async () => [],
-      get: async () => null,
-      persist: notYet,
-      addUpdate: notYet,
+      list: async () => ((await call('incidents.list')) ?? []).map(withSourceTeam),
+      get: async (id) => withSourceTeam(await call('incidents.get', { id })),
+      persist: async (record) => withSourceTeam(await call('incidents.persist', { record: outgoingIncident(record) })),
+      addUpdate: async (incident, update) =>
+        call('incidents.addUpdate', {
+          incidentId: incident?.id ?? update?.incident_id,
+          body: update?.body,
+          status_from: update?.status_from ?? null,
+          status_to: update?.status_to ?? null,
+        }),
     },
     workOrders: {
-      listByIncident: async () => [],
-      get: async () => null,
-      persist: notYet,
+      listByIncident: async (incidentId) => (await call('workOrders.listByIncident', { incidentId })) ?? [],
+      get: (id) => call('workOrders.get', { id }),
+      persist: (record) => call('workOrders.persist', { record }),
     },
 
     approvals: {
-      listInbox: async () => ((await call('approvals.listInbox')) ?? []).map(enrichApproval),
+      // Work orders have no screen while WORK_ORDERS_ENABLED is false, so an
+      // approval pointing at one would have nowhere to go (same as Supabase).
+      listInbox: async () =>
+        ((await call('approvals.listInbox')) ?? [])
+          .filter((row) => WORK_ORDERS_ENABLED || row.entity_type !== 'work_order')
+          .map(enrichApproval),
       get: async (id) => enrichApproval(await call('approvals.get', { id })),
       decide: async ({ id, decision, notes, signature_data_uri, name, position }) =>
         enrichApproval(
@@ -223,14 +238,24 @@ export function createD1Adapter({ call, registry }) {
   async function loadReportContext() {
     const t = Date.now();
     if (reportCache.value && t - reportCache.at < 5000) return reportCache.value;
-    const [templates, users, submissions, instances, approvals] = await Promise.all([
+    const [templates, users, submissions, instances, approvals, incidents, workOrders] = await Promise.all([
       repos.templates.list(),
       repos.users.list().catch(() => []),
       repos.checklists.listAll().catch(() => []),
       repos.instances.list().catch(() => []),
       call('approvals.list').catch(() => []),
+      repos.incidents.list().catch(() => []),
+      call('workOrders.listVisible').catch(() => []),
     ]);
-    const value = { templates, users, submissions, incidents: [], instances, approvals: approvals ?? [], workOrders: [] };
+    const value = {
+      templates,
+      users,
+      submissions,
+      incidents,
+      instances,
+      approvals: approvals ?? [],
+      workOrders: workOrders ?? [],
+    };
     reportCache.at = t;
     reportCache.value = value;
     return value;

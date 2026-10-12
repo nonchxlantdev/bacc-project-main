@@ -21,6 +21,7 @@ import {
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
 import DeficiencyLevelPicker from '../components/incidents/DeficiencyLevelPicker.jsx';
 import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
+import { isD1Data } from '../lib/dataMode.js';
 import { TeamChip } from './IncidentListPage.jsx';
 import {
   Card,
@@ -55,10 +56,13 @@ import {
   persistIncident,
 } from '../lib/incidents.js';
 
+// Light run on D1: photos and attachments are off, so their tab is not shown.
+const PHOTOS_ENABLED = !isD1Data();
+
 const TABS = [
   { id: 'details', label: 'Incident Details', icon: AlertTriangle },
   { id: 'location', label: 'Location', icon: MapPin },
-  { id: 'photos', label: 'Photos & Attachments', icon: Paperclip },
+  ...(PHOTOS_ENABLED ? [{ id: 'photos', label: 'Photos & Attachments', icon: Paperclip }] : []),
   { id: 'updates', label: 'Actions & Updates', icon: Clock },
   { id: 'history', label: 'History', icon: HistoryIcon },
 ];
@@ -113,7 +117,7 @@ export default function IncidentDetailPage() {
 
   useEffect(() => {
     const t = params.get('tab');
-    if (t) setTab(t);
+    if (t && TABS.some((row) => row.id === t)) setTab(t);
   }, [params]);
 
   const level = incident ? getDeficiencyLevel(incident.deficiency_level) : null;
@@ -405,7 +409,7 @@ export default function IncidentDetailPage() {
             </Dropdown.Toggle>
             <Dropdown.Menu className="w-56 border-line/15 py-1">
               <Dropdown.Item onClick={() => setTab('updates')}>Add an update</Dropdown.Item>
-              <Dropdown.Item onClick={() => setTab('photos')}>Attach a photo</Dropdown.Item>
+              {PHOTOS_ENABLED && <Dropdown.Item onClick={() => setTab('photos')}>Attach a photo</Dropdown.Item>}
               <Dropdown.Item onClick={() => setTab('history')}>View history</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
@@ -682,7 +686,7 @@ export default function IncidentDetailPage() {
                 onStartVerify={() => setVerifyDraft({ note: '', photo: null })}
                 onClearVerification={clearVerification}
                 onDraftChange={setVerifyDraft}
-                onAttachPhoto={attachVerificationPhoto}
+                onAttachPhoto={PHOTOS_ENABLED ? attachVerificationPhoto : null}
                 onConfirm={confirmVerification}
               />
             </>
@@ -717,7 +721,7 @@ export default function IncidentDetailPage() {
             </section>
           )}
 
-          {tab === 'photos' && (
+          {PHOTOS_ENABLED && tab === 'photos' && (
             <Card title="Photos & Attachments">
               <label className="mb-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid">
                 <ImagePlus size={16} aria-hidden /> Add Photo

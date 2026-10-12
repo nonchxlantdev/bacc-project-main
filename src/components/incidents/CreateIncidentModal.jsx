@@ -1,4 +1,5 @@
 import { AlertTriangle, Info, MapPin, Navigation, Paperclip, X } from 'lucide-react';
+import { isD1Data } from '../../lib/dataMode.js';
 import { useEffect, useMemo, useState } from 'react';
 import { INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../../lib/checklistSchema.js';
@@ -57,9 +58,11 @@ export default function CreateIncidentModal({
       location_captured_at: null,
       location_capture_method: 'manual',
       location_user_adjusted: false,
-      attachments: source.photo_local_id || source.photo_url || photoPreview
-        ? [{ photo_local_id: source.photo_local_id, photo_url: source.photo_url, previewUrl: photoPreview }]
-        : [],
+      // Photos are off on D1: nothing is carried over from the checklist item.
+      attachments:
+        !isD1Data() && (source.photo_local_id || source.photo_url || photoPreview)
+          ? [{ photo_local_id: source.photo_local_id, photo_url: source.photo_url, previewUrl: photoPreview }]
+          : [],
     });
   }, [open, source, photoPreview]);
 
@@ -257,7 +260,11 @@ export default function CreateIncidentModal({
                   className="h-28 rounded-md border border-line/15 object-cover"
                 />
               ) : (
-                <p className="text-sm text-muted">No photo on the checklist item. You can add photos after creating the incident.</p>
+                <p className="text-sm text-muted">
+                  {isD1Data()
+                    ? 'Photos are switched off for the pilot.'
+                    : 'No photo on the checklist item. You can add photos after creating the incident.'}
+                </p>
               )}
             </div>
           </div>
