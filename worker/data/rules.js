@@ -225,7 +225,7 @@ export function validateDrawings(raw) {
  * the capped drawings table and photos are off, so neither may ride in here
  * under another name.
  */
-function assertPlainFormData(value, depth = 0) {
+export function assertPlainFormData(value, depth = 0) {
   if (depth > 20) throw bad('Form data is nested too deeply');
   if (typeof value === 'string') {
     if (/^\s*data:/i.test(value)) throw bad('Images can only be attached as drawings');
