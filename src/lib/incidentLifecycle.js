@@ -21,6 +21,14 @@ export const WORK_ORDER_STATUSES = [
  */
 export const WORK_ORDERS_ENABLED = false;
 
+/**
+ * A verified-SAT incident flips its source checklist item back to SAT — see
+ * lib/checklistSync.js for why this is a flag. Kept here, with no browser
+ * imports, so the D1 Worker applies the very same rule.
+ */
+export const SYNC_SAT_ON_VERIFICATION = true;
+export const SAT_SYNC_REASON = 'incident_verified_sat';
+
 const INCIDENT_FLOW = ['open', 'assigned', 'in_progress', 'resolved', 'closed'];
 
 export function incidentStatusLabel(status) {

@@ -43,7 +43,7 @@ const notFound = (what) => new HttpError(404, `${what} not found`);
 
 export function createDataService({ store, forms = null, now = () => Date.now(), newId = () => crypto.randomUUID() }) {
   const iso = () => new Date(now()).toISOString();
-  const incidentOps = createIncidentOps({ store, now, newId });
+  const incidentOps = createIncidentOps({ store, forms, now, newId });
 
   function templateTitle(templateId) {
     try {
@@ -365,8 +365,12 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
     },
 
     // ── approvals (checklists from 3a, work orders from 3b) ────────────
-    'approvals.list': async () =>
-      (await store.listApprovals()).map((a) => ({ ...a, signed: Boolean(a.signed) })),
+    // Checklist approvals are open to all staff (any checklist is); work-order
+    // ones only to those who could act on them.
+    'approvals.list': async (actor) =>
+      (await store.listApprovals())
+        .filter((a) => a.entity_type === CHECKLIST || incidentOps.canSeeWorkOrderApproval(actor, a))
+        .map((a) => ({ ...a, signed: Boolean(a.signed) })),
     'approvals.listInbox': async (actor) => {
       const rows = await store.listApprovals({ status: 'pending' });
       const mine = rows.filter((r) =>

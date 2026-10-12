@@ -84,8 +84,11 @@ function bool01(value) {
 function ymd(value, label) {
   const s = text(value, label, 40);
   if (s === null) return null;
-  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) throw bad(`${label} must be a date`);
-  return s.slice(0, 10);
+  const day = s.slice(0, 10);
+  const parsed = new Date(`${day}T00:00:00Z`);
+  const real = /^\d{4}-\d{2}-\d{2}$/.test(day) && !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === day;
+  if (!real) throw bad(`${label} must be a real date`);
+  return day;
 }
 
 function level(value) {
@@ -149,7 +152,8 @@ export function validateIncidentPayload(record) {
     location_user_adjusted: record.location_user_adjusted ? 1 : 0,
     department: text(record.department, 'department', 64),
     assigned_to: optionalId(record.assigned_to, 'assigned_to'),
-    assigned_team: text(record.assigned_unit ?? record.assigned_team, 'assigned unit', 64),
+    // `assigned_unit` is what the screens edit; an explicit null clears it.
+    assigned_team: text(Object.hasOwn(record, 'assigned_unit') ? record.assigned_unit : record.assigned_team, 'assigned unit', 64),
     assigned_at: text(record.assigned_at, 'assigned_at', 40),
     target_date: ymd(record.target_date, 'target_date'),
     closure_notes: text(record.closure_notes, 'closure_notes'),

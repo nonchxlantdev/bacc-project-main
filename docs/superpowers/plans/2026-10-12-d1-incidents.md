@@ -55,5 +55,26 @@
 - Walkthrough.
 
 ### Task 7: Regression and independent review
+
+**Review fixes (2026-10-12).** Each one has a test written first, in `tests/dataIncidentService.test.js`. Where a fix changes the spec, this list is the source of truth.
+
+**Spec changes:**
+
+- **CEC clearance.** Completing a work order that needs CEC clearance now also creates the `cec_clearance` approval. Deciding it records the CEC sign-off and sets `cec_clearance_issued`, but doesn't lock. Only the OM/COO verification locks, and it's blocked until CEC has cleared. (Supabase and mock locked on whichever approval came first, which left the second one undecidable.)
+- **SAT write-back on the server.** When a verification changes on a filed checklist's incident, the server updates the checklist item in the same save, for whoever records it, including the reporting inspector. The flag and reason tag moved to `lib/incidentLifecycle.js`; `checklistSync.js` re-exports them. The browser's own sync then finds nothing left to do.
+- **Raising an incident.** An incident can only be raised from a checklist you filed, or by the OM, COO or an admin.
+
+**Other fixes:**
+
+- **Re-inspection link:** it must be a filed checklist that is a SAT re-inspection of that item, checked with `isQualifyingReinspection`. Linking any checklist that merely exists is no longer enough to close an incident.
+- **Numbering:**
+  - Numbers come from a `number_counters` table, so they're never reused after a draft and its incidents are deleted.
+  - A work order's number year is the airport's today.
+  - `date_issued` must be a real date and is fixed once saved.
+- **Draft delete:** it also clears stale re-inspection links and deletes the notifications for the incidents and work orders it removes.
+- **Clearing the assigned unit:** an explicit `assigned_unit: null` now really clears it, along with `assigned_at`.
+- **Work-order approvals in `approvals.list`:** only shown to people who could act on them.
+- **Reopening a completed work order:** its pending approvals are withdrawn. Only a completed work order can be signed off.
+- **Update history:** an update's `status_to` must be the incident's current status.
 - `npm test`, the `verify:*` checks, parity, the auth and data smokes, and a browser run-through.
 - Independent review, with fixes written test-first.

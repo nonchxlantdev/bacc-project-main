@@ -117,6 +117,15 @@ CREATE TABLE work_order_signoffs (
   PRIMARY KEY (work_order_id, role)
 );
 
+-- Number counters: a number is never handed out twice, even after the
+-- incident or work order holding it is deleted with its draft checklist.
+CREATE TABLE number_counters (
+  kind  TEXT NOT NULL CHECK (kind IN ('incident','work_order')),
+  year  INTEGER NOT NULL,
+  last  INTEGER NOT NULL,
+  PRIMARY KEY (kind, year)
+);
+
 -- ── Triggers ────────────────────────────────────────────────────────────────
 
 -- A closed incident is final (Supabase allowed updates only while not closed).

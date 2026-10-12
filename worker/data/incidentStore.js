@@ -33,14 +33,14 @@ const INCIDENT_CREATE_COLUMNS = [
 ];
 
 export const WORK_ORDER_EDIT_COLUMNS = [
-  'status', 'date_issued', 'assigned_to_name', 'assigned_to_user', 'deficiency_level', 'description_of_work',
+  'status', 'assigned_to_name', 'assigned_to_user', 'deficiency_level', 'description_of_work',
   'location_text', 'target_completion_date', 'notam_required', 'notam_ref', 'cec_clearance_required',
   'date_works_completed', 'completed_by', 'description_of_work_performed', 'materials_used',
   'test_verification_results', 'area_cleared_for_operations', 'area_not_cleared_explanation', 'cec_clearance_date',
 ];
 
 const WORK_ORDER_CREATE_COLUMNS = [
-  'id', 'incident_id', 'issued_by', 'issued_by_name', 'noc_reference_no', 'created_at', 'updated_at',
+  'id', 'incident_id', 'date_issued', 'issued_by', 'issued_by_name', 'noc_reference_no', 'created_at', 'updated_at',
   ...WORK_ORDER_EDIT_COLUMNS,
 ];
 
@@ -133,17 +133,25 @@ export function createIncidentStore(db) {
       const updates = rows.length ? await updatesFor(rows.map((r) => r.id)) : new Map();
       return rows.map((r) => toIncidentRecord(r, updates.get(r.id) ?? []));
     },
-    insertIncidentStmt(values, year) {
+    /** Bump the counter and insert, as two statements for the SAME batch. */
+    insertIncidentStmts(values, year) {
       const cols = INCIDENT_CREATE_COLUMNS;
       const placeholders = cols.map((_, i) => `?${i + 2}`).join(', ');
-      // ?1 is the year; the number comes from the same statement.
-      return stmt(
-        `INSERT INTO incidents (year, seq, incident_ref, noc_no, ${cols.join(', ')})
-         SELECT CAST(?1 AS INTEGER), nxt, printf('INC-%d-%04d', CAST(?1 AS INTEGER), nxt), printf('%04d', nxt), ${placeholders}
-         FROM (SELECT COALESCE(MAX(seq), 0) + 1 AS nxt FROM incidents WHERE year = CAST(?1 AS INTEGER))`,
-        year,
-        ...cols.map((c) => n(values[c])),
-      );
+      return [
+        stmt(
+          `INSERT INTO number_counters (kind, year, last)
+           VALUES ('incident', CAST(?1 AS INTEGER), (SELECT COALESCE(MAX(seq), 0) FROM incidents WHERE year = CAST(?1 AS INTEGER)) + 1)
+           ON CONFLICT(kind, year) DO UPDATE SET last = last + 1`,
+          year,
+        ),
+        stmt(
+          `INSERT INTO incidents (year, seq, incident_ref, noc_no, ${cols.join(', ')})
+           SELECT CAST(?1 AS INTEGER), nxt, printf('INC-%d-%04d', CAST(?1 AS INTEGER), nxt), printf('%04d', nxt), ${placeholders}
+           FROM (SELECT last AS nxt FROM number_counters WHERE kind = 'incident' AND year = CAST(?1 AS INTEGER))`,
+          year,
+          ...cols.map((c) => n(values[c])),
+        ),
+      ];
     },
     updateIncidentStmt(id, values) {
       const cols = [...INCIDENT_EDIT_COLUMNS, 'updated_at'];
@@ -163,6 +171,17 @@ export function createIncidentStore(db) {
     /** Incidents (and their work orders + approvals) raised from a draft, for deleteDraft. */
     deleteIncidentsForSubmissionStmts(submissionId) {
       return [
+        // A draft is never a valid re-inspection, but clear any stale link so the delete cannot trip a foreign key.
+        stmt(
+          `UPDATE incidents SET reinspection_submission_id = NULL WHERE reinspection_submission_id = ?1 AND status <> 'closed'`,
+          submissionId,
+        ),
+        stmt(
+          `DELETE FROM notifications WHERE (entity_type = 'work_order' AND entity_id IN
+             (SELECT w.id FROM work_orders w JOIN incidents i ON i.id = w.incident_id WHERE i.submission_id = ?1))
+             OR (entity_type = 'incident' AND entity_id IN (SELECT id FROM incidents WHERE submission_id = ?1))`,
+          submissionId,
+        ),
         stmt(
           `DELETE FROM approvals WHERE entity_type = 'work_order' AND entity_id IN
              (SELECT w.id FROM work_orders w JOIN incidents i ON i.id = w.incident_id WHERE i.submission_id = ?1)`,
@@ -191,16 +210,24 @@ export function createIncidentStore(db) {
       const signoffs = rows.length ? await woSignoffsFor(rows.map((r) => r.id)) : new Map();
       return rows.map((r) => toWorkOrderRecord(r, signoffs.get(r.id) ?? []));
     },
-    insertWorkOrderStmt(values, year) {
+    insertWorkOrderStmts(values, year) {
       const cols = WORK_ORDER_CREATE_COLUMNS;
       const placeholders = cols.map((_, i) => `?${i + 2}`).join(', ');
-      return stmt(
-        `INSERT INTO work_orders (year, seq, work_order_number, ${cols.join(', ')})
-         SELECT CAST(?1 AS INTEGER), nxt, printf('WO-%d-%04d', CAST(?1 AS INTEGER), nxt), ${placeholders}
-         FROM (SELECT COALESCE(MAX(seq), 0) + 1 AS nxt FROM work_orders WHERE year = CAST(?1 AS INTEGER))`,
-        year,
-        ...cols.map((c) => n(values[c])),
-      );
+      return [
+        stmt(
+          `INSERT INTO number_counters (kind, year, last)
+           VALUES ('work_order', CAST(?1 AS INTEGER), (SELECT COALESCE(MAX(seq), 0) FROM work_orders WHERE year = CAST(?1 AS INTEGER)) + 1)
+           ON CONFLICT(kind, year) DO UPDATE SET last = last + 1`,
+          year,
+        ),
+        stmt(
+          `INSERT INTO work_orders (year, seq, work_order_number, ${cols.join(', ')})
+           SELECT CAST(?1 AS INTEGER), nxt, printf('WO-%d-%04d', CAST(?1 AS INTEGER), nxt), ${placeholders}
+           FROM (SELECT last AS nxt FROM number_counters WHERE kind = 'work_order' AND year = CAST(?1 AS INTEGER))`,
+          year,
+          ...cols.map((c) => n(values[c])),
+        ),
+      ];
     },
     updateWorkOrderStmt(id, values) {
       const cols = [...WORK_ORDER_EDIT_COLUMNS, 'updated_at'];
@@ -216,14 +243,21 @@ export function createIncidentStore(db) {
         workOrderId, s.role, s.name, n(s.signature_data_uri), s.signed_at, s.signed_by,
       );
     },
-    verifyWorkOrderStmt(id, nowIso, { cecIssued = false } = {}) {
+    verifyWorkOrderStmt(id, nowIso) {
       return stmt(
-        `UPDATE work_orders SET status = 'verified', locked = 1, updated_at = ?2,
-           cec_clearance_issued = CASE WHEN ?3 = 1 THEN 1 ELSE cec_clearance_issued END,
-           cec_clearance_date = CASE WHEN ?3 = 1 AND cec_clearance_date IS NULL THEN substr(?2, 1, 10) ELSE cec_clearance_date END
-         WHERE id = ?1 AND locked = 0`,
-        id, nowIso, cecIssued ? 1 : 0,
+        `UPDATE work_orders SET status = 'verified', locked = 1, updated_at = ?2 WHERE id = ?1 AND locked = 0 AND status = 'completed'`,
+        id, nowIso,
       );
+    },
+    recordCecClearanceStmt(id, nowIso, ymd) {
+      return stmt(
+        `UPDATE work_orders SET cec_clearance_issued = 1, cec_clearance_date = COALESCE(cec_clearance_date, ?3), updated_at = ?2
+         WHERE id = ?1 AND locked = 0`,
+        id, nowIso, ymd,
+      );
+    },
+    deletePendingApprovalsStmt(entityType, entityId) {
+      return stmt(`DELETE FROM approvals WHERE entity_type = ?1 AND entity_id = ?2 AND status = 'pending'`, entityType, entityId);
     },
   };
 }

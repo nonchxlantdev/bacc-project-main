@@ -5,7 +5,7 @@ import { createD1DataStore } from '../worker/data/store.js';
 import { createDataService } from '../worker/data/service.js';
 
 const TEMPLATE = 'annex-d-drainage';
-const forms = { templateKeys: new Set([TEMPLATE]), loadSchema: () => ({ title: 'Drainage Inspection' }) };
+const forms = { templateKeys: new Set([TEMPLATE]), loadSchema: () => ({ title: 'Drainage Inspection', code: 'PGIA-PMM-F04' }) };
 const SIG = 'data:image/png;base64,iVBORw0KGgo=';
 let uid = 0;
 const uuid = () => `00000000-0000-4000-9000-${String(++uid).padStart(12, '0')}`;
@@ -160,7 +160,7 @@ test('updates: author is the session user; the trail is newest first', async () 
   const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
   await call('incidents.addUpdate', users.insp, { incidentId: inc.id, body: 'first', author_id: 'om', author_name: 'Fake' });
   tick();
-  const second = await call('incidents.addUpdate', users.om, { incidentId: inc.id, body: 'second', status_from: 'open', status_to: 'assigned' });
+  const second = await call('incidents.addUpdate', users.om, { incidentId: inc.id, body: 'second', status_to: 'open' });
   assert.equal(second.author_id, 'om');
   assert.equal(second.author_name, 'Olga OM');
   const got = await call('incidents.get', users.insp, { id: inc.id });
@@ -229,25 +229,6 @@ test('work-order verification is blocked until the area is cleared', async () =>
   assert.equal(rejected.status, 'rejected');
 });
 
-test('CEC clearance is decided by admin and marks clearance issued', async () => {
-  const { db, users, call, checklist } = await setup();
-  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
-  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc, { cec_clearance_required: true }) });
-  await db
-    .prepare(
-      `INSERT INTO approvals (id, entity_type, entity_id, approval_role, status, created_at)
-       VALUES ('cec1', 'work_order', ?1, 'cec_clearance', 'pending', '2026-10-12T00:00:00Z')`,
-    )
-    .bind(wo.id)
-    .run();
-  assert.equal(await status(call('approvals.decide', users.om, { id: 'cec1', decision: 'approved' })), 403);
-  assert.equal(await status(call('approvals.get', users.om, { id: 'cec1' })), 403);
-  await call('approvals.decide', users.admin, { id: 'cec1', decision: 'approved' });
-  const after = await call('workOrders.get', users.admin, { id: wo.id });
-  assert.equal(after.cec_clearance_issued, true);
-  assert.equal(after.locked, true);
-});
-
 test('deleting a draft takes its incidents, updates and work orders with it', async () => {
   const { db, users, call, checklist } = await setup();
   const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
@@ -271,4 +252,149 @@ test('a draft with a closed incident cannot be deleted', async () => {
   });
   await call('incidents.persist', users.insp, { record: { ...ready, status: 'closed' } });
   assert.equal(await status(call('checklists.deleteDraft', users.om, { id: checklist.id })), 409);
+});
+
+// ── Independent review fixes (2026-10-12) ─────────────────────────────────
+
+async function filedChecklist(call, actor, over = {}) {
+  return call('checklists.persist', actor, {
+    record: {
+      id: uuid(),
+      template_id: TEMPLATE,
+      status: 'submitted',
+      header: { date: '2026-10-12' },
+      items: { 'DR-01': { result: 'no_sat', remarks: 'Blocked' }, 'DR-02': { result: 'sat', remarks: '' } },
+      ...over,
+    },
+  });
+}
+
+test('a re-inspection link must really be a SAT re-inspection of that item', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const ready = { ...inc, status: 'resolved', assigned_unit: 'grounds', target_date: '2026-10-20' };
+  // A draft, and a filed checklist where DR-01 is still NO SAT, do not qualify.
+  const unrelated = await filedChecklist(call, users.other);
+  for (const link of [checklist.id, unrelated.id]) {
+    assert.equal(await status(call('incidents.persist', users.insp, { record: { ...ready, reinspection_submission_id: link } })), 400, link);
+  }
+  const reinspection = await filedChecklist(call, users.other, { items: { 'DR-01': { result: 'sat', remarks: '' } } });
+  const linked = await call('incidents.persist', users.insp, { record: { ...ready, reinspection_submission_id: reinspection.id } });
+  assert.equal((await call('incidents.persist', users.insp, { record: { ...linked, status: 'closed' } })).status, 'closed');
+});
+
+test('CEC clearance: its approval is created, it records clearance without locking, then OM/COO verify locks', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc, { cec_clearance_required: true }) });
+  await call('workOrders.persist', users.insp, { record: { ...wo, status: 'completed', area_cleared_for_operations: true } });
+  const inbox = (await call('approvals.listInbox', users.admin)).filter((a) => a.entity_type === 'work_order');
+  const cec = inbox.find((a) => a.approval_role === 'cec_clearance');
+  const omcoo = inbox.find((a) => a.approval_role === 'om_coo_verification');
+  assert.ok(cec && omcoo);
+  assert.equal(await status(call('approvals.decide', users.om, { id: omcoo.id, decision: 'approved' })), 409, 'blocked until CEC clears');
+  await call('approvals.decide', users.admin, { id: cec.id, decision: 'approved', signature_data_uri: SIG });
+  const cleared = await call('workOrders.get', users.admin, { id: wo.id });
+  assert.equal(cleared.cec_clearance_issued, true);
+  assert.equal(cleared.locked, false, 'CEC clearance alone does not verify');
+  await call('approvals.decide', users.om, { id: omcoo.id, decision: 'approved', signature_data_uri: SIG });
+  const done = await call('workOrders.get', users.admin, { id: wo.id });
+  assert.equal(done.locked, true);
+  assert.deepEqual(done.signoffs.map((s) => s.role).sort(), ['cec_clearance', 'om_coo_verification']);
+});
+
+test('work-order numbers use the server year; dates must be real; date issued is fixed', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  assert.equal(await status(call('workOrders.persist', users.insp, { record: woRecord(inc, { date_issued: '1999-02-30' }) })), 400);
+  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc, { date_issued: '1999-02-01' }) });
+  assert.equal(wo.work_order_number, 'WO-2026-0001');
+  const edited = await call('workOrders.persist', users.insp, { record: { ...wo, date_issued: '2001-01-01' } });
+  assert.equal(edited.date_issued, wo.date_issued);
+});
+
+test('numbers are never reused, even after a draft and its incidents are deleted', async () => {
+  const { users, call, checklist } = await setup();
+  await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const second = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  assert.equal(second.incident_ref, 'INC-2026-0002');
+  await call('checklists.deleteDraft', users.om, { id: checklist.id });
+  const other = await call('checklists.persist', users.insp, {
+    record: { id: uuid(), template_id: TEMPLATE, status: 'draft', header: {}, items: { 'DR-01': { result: 'no_sat', remarks: 'x' } } },
+  });
+  const third = await call('incidents.persist', users.insp, { record: incidentRecord(other) });
+  assert.equal(third.incident_ref, 'INC-2026-0003');
+});
+
+test("incidents can only be raised from a checklist you filed (or as a supervisor)", async () => {
+  const { users, call, checklist } = await setup();
+  assert.equal(await status(call('incidents.persist', users.other, { record: incidentRecord(checklist) })), 403);
+  assert.equal(await status(call('incidents.persist', users.om, { record: incidentRecord(checklist) })), 200);
+});
+
+test('a draft still deletes cleanly when it is linked somewhere, and its notifications go too', async () => {
+  const { db, users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc) });
+  await call('workOrders.persist', users.insp, { record: { ...wo, status: 'completed', area_cleared_for_operations: true } });
+  await call('checklists.deleteDraft', users.om, { id: checklist.id });
+  const left = await db.prepare("SELECT COUNT(*) AS c FROM notifications WHERE entity_type = 'work_order'").first();
+  assert.equal(left.c, 0);
+});
+
+test('clearing the assigned unit clears it', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist, { assigned_unit: 'grounds' }) });
+  assert.equal(inc.assigned_unit, 'grounds');
+  const cleared = await call('incidents.persist', users.insp, { record: { ...inc, assigned_unit: null, assigned_at: null } });
+  assert.equal(cleared.assigned_unit, null);
+  assert.equal(cleared.assigned_at, null);
+});
+
+test('approvals.list hides work-order approvals from people who cannot see them', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc) });
+  await call('workOrders.persist', users.insp, { record: { ...wo, status: 'completed', area_cleared_for_operations: true } });
+  assert.equal((await call('approvals.list', users.other)).filter((a) => a.entity_type === 'work_order').length, 0);
+  assert.equal((await call('approvals.list', users.om)).filter((a) => a.entity_type === 'work_order').length, 1);
+});
+
+test('reopening a completed work order withdraws its approval; only a completed one can be verified', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  const wo = await call('workOrders.persist', users.insp, { record: woRecord(inc) });
+  const done = await call('workOrders.persist', users.insp, { record: { ...wo, status: 'completed', area_cleared_for_operations: true } });
+  const [approval] = (await call('approvals.listInbox', users.om)).filter((a) => a.entity_type === 'work_order');
+  await call('workOrders.persist', users.insp, { record: { ...done, status: 'in_progress' } });
+  assert.equal((await call('approvals.listInbox', users.om)).filter((a) => a.entity_type === 'work_order').length, 0);
+  assert.ok([404, 409].includes(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'approved' }))));
+  assert.equal((await call('workOrders.get', users.om, { id: wo.id })).locked, false);
+});
+
+test('verifying an incident updates the filed checklist on the server, for the reporter too', async () => {
+  const { users, call } = await setup();
+  const filed = await filedChecklist(call, users.insp);
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(filed) });
+  const verified = await call('incidents.persist', users.insp, { record: { ...inc, verification: { result: 'sat', note: 'Cleared' } } });
+  let sub = await call('checklists.get', users.insp, { id: filed.id });
+  assert.equal(sub.items['DR-01'].result, 'sat');
+  assert.equal(sub.amendments[0].reason, 'incident_verified_sat');
+  assert.equal(sub.amendments[0].from, 'no_sat');
+  assert.equal(sub.amendments[0].incident_ref, verified.incident_ref);
+  // Re-saving with the same verification changes nothing; withdrawing puts NO SAT back.
+  await call('incidents.persist', users.insp, { record: { ...verified, title: 'Same verification' } });
+  sub = await call('checklists.get', users.insp, { id: filed.id });
+  assert.equal(sub.amendments.length, 1);
+  await call('incidents.persist', users.insp, { record: { ...verified, verification: null } });
+  sub = await call('checklists.get', users.insp, { id: filed.id });
+  assert.equal(sub.items['DR-01'].result, 'no_sat');
+  assert.deepEqual(sub.amendments, []);
+});
+
+test('update history cannot claim a status the incident is not in', async () => {
+  const { users, call, checklist } = await setup();
+  const inc = await call('incidents.persist', users.insp, { record: incidentRecord(checklist) });
+  assert.equal(await status(call('incidents.addUpdate', users.insp, { incidentId: inc.id, body: 'Closed!', status_from: 'open', status_to: 'closed' })), 400);
+  assert.equal(await status(call('incidents.addUpdate', users.insp, { incidentId: inc.id, body: 'Note' })), 200);
 });
