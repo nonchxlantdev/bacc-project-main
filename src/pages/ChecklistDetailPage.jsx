@@ -583,7 +583,8 @@ export default function ChecklistDetailPage() {
             {exporting ? 'Exporting…' : 'Export PDF'}
           </button>
           )}
-          {readOnly && !isReference && (
+          {/* On D1 only the inspector who filed it may correct it (the Worker's rule). */}
+          {readOnly && !isReference && (!isD1Data() || record.inspector_id === user?.id) && (
             <button
               type="button"
               onClick={async () => {

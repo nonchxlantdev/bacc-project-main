@@ -18,6 +18,7 @@ export const LIMITS = Object.freeze({
   itemsPerChecklist: 2000,
   remarksChars: 5000,
   recordJsonChars: 1_500_000,
+  formJsonChars: 200_000,
   settingsValueChars: 200_000,
 });
 
@@ -120,7 +121,7 @@ function plainObject(value, label) {
   return value;
 }
 
-function optionalText(value, label, max = 500) {
+export function optionalText(value, label, max = 500) {
   if (value === undefined || value === null || value === '') return null;
   if (typeof value !== 'string' && typeof value !== 'number') throw bad(`${label} must be text`);
   const s = String(value);
@@ -173,13 +174,15 @@ function validateSignoffs(raw) {
     if (!role || role === 'om_acknowledgment') continue;
     const signature = validateSignature(sg.signature_data_uri ?? sg.signature_image_path, `Signature for ${role}`);
     const name = optionalText(sg.name, 'Sign-off name', 200);
-    if (!signature && !(name && name.trim())) continue;
+    if (!signature && sg.has_signature !== true && !(name && name.trim())) continue;
     byRole.set(role, {
       role,
       name: name && name.trim() ? name : 'Signed',
       position: optionalText(sg.position, 'Sign-off position', 200),
       signature_data_uri: signature,
-      signed_at: optionalText(sg.signed_at, 'signed_at', 40),
+      // List reads omit signature images and flag them instead; a save built
+      // from such a record keeps the stored image (service.js).
+      has_signature: !signature && sg.has_signature === true,
     });
   }
   return [...byRole.values()];
@@ -218,6 +221,24 @@ export function validateDrawings(raw) {
 }
 
 /**
+ * Header and free form fields hold text and choices only. Images belong in
+ * the capped drawings table and photos are off, so neither may ride in here
+ * under another name.
+ */
+function assertPlainFormData(value, depth = 0) {
+  if (depth > 20) throw bad('Form data is nested too deeply');
+  if (typeof value === 'string') {
+    if (/^\s*data:/i.test(value)) throw bad('Images can only be attached as drawings');
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  for (const [key, inner] of Object.entries(value)) {
+    if ((key === 'photo_url' || key === 'photo_local_id') && inner != null) throw bad(PHOTO_MESSAGE);
+    assertPlainFormData(inner, depth + 1);
+  }
+}
+
+/**
  * Split a browser record into what each table stores. Throws 400 on anything
  * malformed, oversize, or carrying photo data.
  */
@@ -237,10 +258,13 @@ export function validateRecordPayload(record) {
     if (NON_FORM_KEYS.has(key) || value === undefined) continue;
     form[key] = value;
   }
+  assertPlainFormData(form);
 
+  assertPlainFormData(header);
   const header_json = JSON.stringify(header);
   const items_json = JSON.stringify(items);
   const form_json = JSON.stringify(form);
+  if (form_json.length > LIMITS.formJsonChars) throw bad('The free-text parts of this checklist are too long to save');
   if (header_json.length + items_json.length + form_json.length > LIMITS.recordJsonChars) {
     throw bad('This checklist is too large to save');
   }

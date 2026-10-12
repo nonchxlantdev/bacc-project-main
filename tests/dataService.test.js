@@ -345,3 +345,97 @@ test('users: public fields, signature visibility, self-only update', async () =>
   assert.ok(list.every((u) => u.password_hash === undefined && u.stored_signature_data_uri === undefined));
   assert.equal((await call('users.getByEmail', users.other, { email: 'nobody@x' })), null);
 });
+
+// ── Review fixes (2026-10-12) ──────────────────────────────────────────────
+
+test('only the original inspector can correct a checklist, and only on the same form', async () => {
+  const { users, call } = await setup();
+  const original = await call('checklists.persist', users.insp, {
+    record: draftRecord({ status: 'submitted', signoffs: [{ role: 'inspector', name: 'Ivy', signature_data_uri: SIG }] }),
+  });
+  const copy = (id) => ({ ...structuredClone(original), id, status: 'draft', locked: false, submitted_at: null, supersedes_id: original.id });
+  assert.equal(await status(call('checklists.persist', users.other, { record: copy('66666666-6666-4666-8666-666666666666') })), 403);
+  assert.equal(await status(call('checklists.persist', users.om, { record: copy('66666666-6666-4666-8666-666666666667') })), 403);
+  forms.templateKeys.add('annex-x');
+  try {
+    const otherForm = { ...copy('66666666-6666-4666-8666-666666666668'), template_id: 'annex-x' };
+    assert.equal(await status(call('checklists.persist', users.insp, { record: otherForm })), 400);
+  } finally {
+    forms.templateKeys.delete('annex-x');
+  }
+  assert.equal(await status(call('checklists.persist', users.insp, { record: copy('66666666-6666-4666-8666-666666666669') })), 200);
+});
+
+test('amend refuses item codes that are not on the checklist, including built-in names', async () => {
+  const { users, call } = await setup();
+  const filed = await call('checklists.persist', users.insp, { record: draftRecord({ status: 'submitted' }) });
+  for (const code of ['constructor', 'toString', '__proto__', 'NOPE']) {
+    assert.equal(await status(call('checklists.amendItemResult', users.coo, { id: filed.id, code, result: 'sat', reason: 'r' })), 400, code);
+  }
+  const after = await call('checklists.get', users.insp, { id: filed.id });
+  assert.deepEqual(Object.keys(after.items), ['A1', 'A2']);
+  assert.equal(after.reopened_at, null);
+});
+
+test('lists carry no signature images; saving a listed record keeps them', async () => {
+  const { users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, {
+    record: draftRecord({ signoffs: [{ role: 'inspector', name: 'Ivy', signature_data_uri: SIG }] }),
+  });
+  const [listed] = await call('checklists.listAll', users.other);
+  assert.equal(listed.signoffs[0].signature_data_uri, undefined);
+  assert.equal(listed.signoffs[0].has_signature, true);
+  // A save built from a list record must not wipe the stored signature.
+  await call('checklists.persist', users.insp, { record: { ...listed, header: { ...listed.header, x: 1 } } });
+  const full = await call('checklists.get', users.insp, { id: saved.id });
+  assert.equal(full.signoffs[0].signature_data_uri, SIG);
+});
+
+test('non-text name/position/notes on acknowledge and decide are 400, not 500', async () => {
+  const { users, call } = await setup();
+  const filed = await call('checklists.persist', users.insp, { record: draftRecord({ status: 'submitted' }) });
+  assert.equal(await status(call('checklists.acknowledge', users.om, { id: filed.id, position: { x: 1 } })), 400);
+  assert.equal(await status(call('checklists.acknowledge', users.om, { id: filed.id, name: ['x'] })), 400);
+  const [approval] = await call('approvals.listInbox', users.om);
+  assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'approved', notes: { x: 1 } })), 400);
+  assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'rejected', notes: 42 })), 200);
+});
+
+test('sign-off times are set by the server, never backdated by the browser', async () => {
+  const { users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, {
+    record: draftRecord({ signoffs: [{ role: 'inspector', name: 'Ivy', signature_data_uri: SIG, signed_at: '1999-01-01T00:00:00.000Z' }] }),
+  });
+  assert.equal(saved.signoffs[0].signed_at, '2026-10-09T18:00:00.000Z');
+});
+
+test('free form fields cannot smuggle images or photos, and are size-capped', async () => {
+  const { users, call } = await setup();
+  const img = `data:image/jpeg;base64,${'A'.repeat(100)}`;
+  assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ extra: img }) })), 400);
+  assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ summary: { plan: [img] } }) })), 400);
+  assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ photos: [{ photo_url: 'https://x/y.jpg' }] }) })), 400);
+  assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ summary: { note: 'x'.repeat(200_001) } }) })), 400);
+  assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ summary: { note: 'fine', photo_url: null } }) })), 200);
+});
+
+test('a save that loses the race with a submit is a 409, never a silent 200', async () => {
+  const { db, users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, { record: draftRecord() });
+  // Simulate the submit landing between this save's read and its write.
+  const store = createD1DataStore(db);
+  const realGet = store.getSubmissionRow;
+  const svc = createDataService({
+    store: {
+      ...store,
+      async getSubmissionRow(id) {
+        const row = await realGet(id);
+        await db.prepare("UPDATE checklist_submissions SET status = 'submitted', locked = 1 WHERE id = ?1").bind(id).run();
+        return row;
+      },
+    },
+    forms,
+    now: () => Date.parse('2026-10-09T18:00:00.000Z'),
+  });
+  assert.equal(await status(svc['checklists.persist'](users.insp, { record: { ...saved, header: { late: true } } })), 409);
+});

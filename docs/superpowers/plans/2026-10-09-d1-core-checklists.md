@@ -37,6 +37,12 @@ Templates come from the bundled registry. The Worker checks `template_id` agains
 | — | `instances.rules` (read) | Spec §4 mentions it; it's listed here explicitly |
 | — | Incident/work-order **reads** return empty lists in d1 mode; writes throw `Available in 3b` | The checklist page calls `incidents.list()` on load. Throwing there would break every checklist |
 | — | Avatar upload in d1 mode answers `Profile photos are not available yet on the new login` | Avatars live in Supabase Storage. Moving them is 3c |
+| `persist`: a new record must be `draft` | A new record may arrive already `submitted`, by its owner | An offline draft can be submitted before its first save ever reaches the server |
+| Photo controls hidden on incident screens (§4) | Deferred to 3b | Incident reads are empty and writes refuse in 3a, so there is nothing to hide yet |
+| — | List reads carry `has_signature` instead of signature images. A save built from a listed record keeps the stored image | From the independent review: payload size, and other people's signatures stay with `get` only |
+| — | Sign-off `signed_at` is always the server's time for a new or changed block | From the review: the browser could backdate it |
+| — | Header and free form fields refuse `data:` strings and non-null `photo_url`/`photo_local_id`, and are capped at 200,000 characters | From the review: they could otherwise carry images past the drawing cap and photo ban |
+| `corrections`: owner | Enforced in the Worker (owner + same form). The button shows only for the owner in d1 mode | From the review: the Worker only checked that the original existed |
 
 ## File map
 
@@ -148,5 +154,17 @@ Templates come from the bundled registry. The Worker checks `template_id` agains
 - Gate: `npm run data:smoke` passes against local `npm run dev`.
 - Commit: `feat(d1): trigger check, data smoke and config import scripts`
 
-### Task 8: Full regression
+### Task 8: Independent review fixes (2026-10-12)
+- Files: `worker/data/{rules,service,store}.js`, `src/pages/ChecklistDetailPage.jsx`, `tests/dataService.test.js`.
+- Fixes:
+  - corrections are owner-only and keep the same form
+  - amend checks the item code is really on the checklist (`Object.hasOwn`)
+  - no signature images in list reads
+  - text validation for acknowledge and decide `name`, `position` and `notes`
+  - server-set sign-off times
+  - free form fields cannot carry images or photos, and are size-capped
+  - a save that loses a race with a submit is 409, and a duplicate pending approval is 409
+- Each fix has a failing test first.
+
+### Task 9: Full regression
 - `npm test`, every `verify:*` check, 6-case PDF parity at 100% (before vs after), `npm run auth:smoke` locally, and `npm run build` with `VITE_DATA_SOURCE=supabase`.

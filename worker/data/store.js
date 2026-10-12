@@ -48,9 +48,16 @@ function mapSignoff(row) {
     name: row.name,
     position: row.position ?? null,
     signature_data_uri: row.signature_data_uri ?? null,
+    has_signature: Boolean(row.signature_data_uri),
     signed_at: row.signed_at,
     signed_by: row.signed_by,
   };
+}
+
+/** Lists never carry signature images (size, and privacy): the flag only. */
+function mapListedSignoff(row) {
+  const { signature_data_uri: _omit, ...rest } = mapSignoff(row);
+  return rest;
 }
 
 function groupDrawings(rows) {
@@ -132,14 +139,20 @@ export function createD1DataStore(db) {
   async function signoffsBySubmission(ids) {
     const rows = ids
       ? await all(
-          `SELECT * FROM checklist_signoffs WHERE submission_id IN (SELECT value FROM json_each(?1))`,
+          `SELECT submission_id, role, name, position, signed_at, signed_by,
+             CASE WHEN signature_data_uri IS NULL THEN NULL ELSE 'x' END AS signature_data_uri
+           FROM checklist_signoffs WHERE submission_id IN (SELECT value FROM json_each(?1))`,
           JSON.stringify(ids),
         )
-      : await all('SELECT * FROM checklist_signoffs');
+      : await all(
+          `SELECT submission_id, role, name, position, signed_at, signed_by,
+             CASE WHEN signature_data_uri IS NULL THEN NULL ELSE 'x' END AS signature_data_uri
+           FROM checklist_signoffs`,
+        );
     const out = new Map();
     for (const row of rows) {
       const list = out.get(row.submission_id) ?? [];
-      list.push(mapSignoff(row));
+      list.push(mapListedSignoff(row));
       out.set(row.submission_id, list);
     }
     return out;

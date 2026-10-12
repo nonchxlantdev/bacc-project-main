@@ -24,6 +24,7 @@ import {
   canSeeOthersSignatures,
   foldAmendments,
   isSupervisor,
+  optionalText,
   validId,
   validateProfilePatch,
   validateRecordPayload,
@@ -80,11 +81,13 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
     if (row.status === 'acknowledged') throw new HttpError(409, 'This checklist is already acknowledged');
     const signature = validateSignature(signature_data_uri);
     const at = iso();
-    const signerName = String(name || actor.full_name || 'Signed').slice(0, 200);
+    const signerName = optionalText(name, 'Name', 200) ?? actor.full_name ?? 'Signed';
+    const signerPosition = optionalText(position, 'Position', 200) ?? actor.position ?? null;
+    const cleanNotes = optionalText(notes, 'Notes', 2000);
     const stmts = [
       store.upsertOmSignoffStmt(row.id, {
         name: signerName,
-        position: (position ?? actor.position ?? null) || null,
+        position: signerPosition || null,
         signature_data_uri: signature,
         signed_at: at,
         signed_by: actor.id,
@@ -98,7 +101,7 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
           status: 'approved',
           decided_by: actor.id,
           decided_at: at,
-          notes: notes ?? null,
+          notes: cleanNotes,
           signed: Boolean(signature),
         }),
       );
@@ -191,6 +194,12 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
           const original = await store.getSubmissionRow(v.supersedes_id);
           if (!original) throw new HttpError(400, 'The checklist being corrected does not exist');
           if (!original.locked) throw new HttpError(400, 'Only a filed checklist can be corrected');
+          if (original.inspector_id !== actor.id) {
+            throw new HttpError(403, 'Only the inspector who filed a checklist can start a correction of it');
+          }
+          if (v.template_id !== original.template_id) {
+            throw new HttpError(400, 'A correction must use the same form as the checklist it corrects');
+          }
         }
       }
       const submitting = v.status === 'submitted';
@@ -204,16 +213,21 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       // anything new or changed is attributed to the session user.
       const previous = existing ? await store.signoffRows(v.id) : [];
       const byRole = new Map(previous.map((p) => [p.role, p]));
-      const blocks = v.signoffs.map((b) => {
+      // Times are the server's: a new or changed block is signed "now".
+      const blocks = v.signoffs.map(({ has_signature, ...b }) => {
         const old = byRole.get(b.role);
+        // A record read from a list carries `has_signature` instead of the
+        // image; keep the stored image rather than wiping it.
+        const signature = b.signature_data_uri ?? (has_signature ? old?.signature_data_uri ?? null : null);
         const same =
           old &&
           old.name === b.name &&
           (old.position ?? null) === (b.position ?? null) &&
-          (old.signature_data_uri ?? null) === (b.signature_data_uri ?? null);
+          (old.signature_data_uri ?? null) === (signature ?? null);
         return {
           ...b,
-          signed_at: same ? old.signed_at : b.signed_at || at,
+          signature_data_uri: signature,
+          signed_at: same ? old.signed_at : at,
           signed_by: same ? old.signed_by : actor.id,
         };
       });
@@ -273,16 +287,21 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
         }
       }
 
+      let results;
       try {
-        await store.batch(stmts);
+        results = await store.batch(stmts);
       } catch (err) {
         const msg = String(err?.message ?? err);
-        if (/UNIQUE constraint failed: checklist_submissions/.test(msg)) {
+        if (/UNIQUE constraint failed: (checklist_submissions|approvals)/.test(msg)) {
           throw new HttpError(409, 'This checklist was saved somewhere else at the same moment. Reload and try again.');
         }
         if (/cannot be overwritten|cannot change/.test(msg)) throw new HttpError(409, LOCKED_MESSAGE);
         throw err;
       }
+      // The draft UPDATE only matches an unlocked draft. Zero rows means a
+      // submit got there first: say so rather than reporting a save that
+      // did not happen.
+      if (existing && Number(results?.[0]?.meta?.changes ?? 1) === 0) throw new HttpError(409, LOCKED_MESSAGE);
       return getChecklist(actor, { id: v.id });
     },
 
@@ -306,7 +325,9 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       if (!row) throw notFound('Checklist');
       if (!row.locked) throw new HttpError(409, 'Only a filed checklist can be corrected this way. Edit the draft instead.');
       const items = JSON.parse(row.items_json || '{}');
-      if (!items[code]) throw new HttpError(400, `Item ${code} is not on this checklist`);
+      if (typeof code !== 'string' || !Object.hasOwn(items, code)) {
+        throw new HttpError(400, `Item ${String(code)} is not on this checklist`);
+      }
       items[code] = { ...items[code], result: validateResult(result) };
       let reopenedAt = iso();
       if (reopenedAt === row.reopened_at) reopenedAt = new Date(now() + 1).toISOString();
@@ -349,7 +370,7 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       const row = await store.getApproval(validId(id));
       if (!row) throw notFound('Approval');
       assertCanDecide(actor, row, decision);
-      const cleanNotes = notes == null ? null : String(notes).slice(0, 2000);
+      const cleanNotes = optionalText(notes, 'Notes', 2000);
       if (decision === 'rejected') {
         await store.batch([
           store.decideApprovalStmt(row.id, {
