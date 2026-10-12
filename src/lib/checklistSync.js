@@ -23,10 +23,13 @@ import { hasSatVerification } from './incidentLifecycle.js';
  * one reason: withdrawing a verification has to put the inspector's original
  * response back, and something has to remember what it was.
  */
-export const SYNC_SAT_ON_VERIFICATION = true;
+// The flag and reason tag live in incidentLifecycle.js (no browser imports)
+// so the D1 Worker applies the same rule on the server; re-exported here.
+export { SYNC_SAT_ON_VERIFICATION } from './incidentLifecycle.js';
+import { SAT_SYNC_REASON, SYNC_SAT_ON_VERIFICATION } from './incidentLifecycle.js';
 
 /** Tag on the stored prior answer, so this rule only ever undoes its own writes. */
-const REASON = 'incident_verified_sat';
+const REASON = SAT_SYNC_REASON;
 
 /**
  * Bring the source checklist in line with the incident's current state.

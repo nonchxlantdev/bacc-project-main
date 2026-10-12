@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createD1Adapter, drawingsFingerprint, IN_3B } from '../src/data/repositories/d1/adapter.js';
+import { createD1Adapter, drawingsFingerprint } from '../src/data/repositories/d1/adapter.js';
 import { callData } from '../src/data/repositories/d1/client.js';
 
 const entry = {
@@ -97,13 +97,35 @@ test('templates come from the registry with D1 schedule rules attached', async (
   assert.equal(await repos.templates.get('nope'), null);
 });
 
-test('incidents and work orders: empty reads, writes say 3b', async () => {
-  const repos = createD1Adapter({ call: fakeCall().call, registry });
-  assert.deepEqual(await repos.incidents.list(), []);
-  assert.equal(await repos.incidents.get('x'), null);
-  assert.deepEqual(await repos.workOrders.listByIncident('x'), []);
-  await assert.rejects(repos.incidents.persist({}), { message: IN_3B });
-  await assert.rejects(repos.workOrders.persist({}), { message: IN_3B });
+test('incidents go through the API with the owning team added; server-owned fields stay home', async () => {
+  const { call, calls } = fakeCall({
+    'incidents.list': [{ id: 'i1', source_template_code: 'PGIA-PMM-F04' }],
+    'incidents.persist': (a) => ({ ...a.record }),
+    'incidents.addUpdate': (a) => ({ id: 'u1', body: a.body }),
+  });
+  const repos = createD1Adapter({ call, registry });
+  const [inc] = await repos.incidents.list();
+  assert.equal(inc.source_group, 'Duty Manager');
+  await repos.incidents.persist({ ...inc, updates: [{ id: 'x' }], pending_sync: true });
+  const sent = calls.at(-1).args.record;
+  assert.equal(sent.updates, undefined);
+  assert.equal(sent.source_group, undefined);
+  assert.equal(sent.pending_sync, undefined);
+  await repos.incidents.addUpdate(inc, { body: 'hi', author_id: 'someone-else', status_to: 'assigned' });
+  assert.deepEqual(calls.at(-1), { op: 'incidents.addUpdate', args: { incidentId: 'i1', body: 'hi', status_from: null, status_to: 'assigned' } });
+});
+
+test('work-order approvals stay out of the inbox while the screens are off, and keep their own title', async () => {
+  const { call } = fakeCall({
+    'approvals.listInbox': [
+      { id: 'a1', entity_type: 'checklist_submission', entity: { template_id: entry.key } },
+      { id: 'a2', entity_type: 'work_order', entity: { title: 'WO-2026-0001' } },
+    ],
+    'approvals.get': { id: 'a2', entity_type: 'work_order', entity: { title: 'WO-2026-0001' } },
+  });
+  const repos = createD1Adapter({ call, registry });
+  assert.deepEqual((await repos.approvals.listInbox()).map((r) => r.id), ['a1']);
+  assert.equal((await repos.approvals.get('a2')).entity.title, 'WO-2026-0001');
 });
 
 test('settings audit is empty, not an error, for non-managers', async () => {
@@ -124,11 +146,13 @@ test('reports run over the adapter lists', async () => {
     'checklists.listAll': [],
     'users.list': [],
     'instances.rules': [],
+    'incidents.list': [{ id: 'i1', status: 'open' }, { id: 'i2', status: 'closed' }],
+    'workOrders.listVisible': [],
   });
   const kpis = await createD1Adapter({ call, registry }).reports.kpis();
   assert.equal(kpis.checklistsDue, 1);
   assert.equal(kpis.approvalsPending, 1);
-  assert.equal(kpis.incidentsOpen, 0);
+  assert.equal(kpis.incidentsOpen, 1);
 });
 
 test('callData: GET with ?a= for reads, JSON POST for writes, errors carry status', async () => {

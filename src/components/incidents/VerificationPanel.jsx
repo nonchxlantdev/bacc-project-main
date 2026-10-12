@@ -128,6 +128,8 @@ export default function VerificationPanel({
             className="mt-2 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            {/* No evidence photo when photos are off (d1 mode passes no handler). */}
+            {onAttachPhoto && (
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2 xl:min-h-9">
               <ImagePlus size={14} aria-hidden /> Attach evidence
               <input
@@ -142,6 +144,7 @@ export default function VerificationPanel({
                 }}
               />
             </label>
+            )}
             {verifyDraft.photo && (
               <img src={verifyDraft.photo} alt="Evidence preview" className="h-9 w-14 rounded object-cover" />
             )}

@@ -11,6 +11,7 @@
  * deactivates them at the end. Exits 1 if any check fails.
  */
 import { execFileSync } from 'node:child_process';
+import { READ_OPS } from '../worker/data/ops.js';
 
 const args = process.argv.slice(2);
 const urlArg = args.includes('--url') ? args[args.indexOf('--url') + 1] : 'http://localhost:5173';
@@ -51,11 +52,7 @@ async function http(path, { method = 'POST', body, cookie, origin = ORIGIN } = {
   return { status: res.status, data, setCookies };
 }
 
-const READS = new Set([
-  'users.list', 'users.listLogins', 'users.getById', 'users.getByEmail', 'checklists.listMine', 'checklists.listAll',
-  'checklists.get', 'approvals.list', 'approvals.listInbox', 'approvals.get', 'instances.rules', 'instances.list',
-  'instances.getClock', 'notifications.listForUser', 'notifications.unreadCount', 'settings.get', 'settings.audit',
-]);
+const READS = new Set(READ_OPS);
 
 /** One data op as a signed-in user → { status, data } (data unwrapped). */
 async function op(who, name, a = {}) {
@@ -212,6 +209,54 @@ check((await op(insp, 'notifications.unreadCount')).data === inspUnread, "markin
 check((await op(insp, 'users.update', { id: insp.id, patch: { position: 'Smoke tester', stored_signature_data_uri: SIG } })).data?.stored_signature_data_uri === SIG, 'inspector saves their own signature');
 check((await op(insp, 'users.update', { id: om.id, patch: { position: 'x' } })).status === 403, "inspector cannot edit someone else's profile (403)");
 check((await op(insp, 'users.getById', { id: om.id })).data?.stored_signature_data_uri === undefined, "other people's signatures stay hidden from inspectors");
+
+// 13. Incidents (3b).
+const nosat = await op(insp, 'checklists.persist', { record: draft() });
+const incRecord = (over = {}) => ({
+  id: crypto.randomUUID(),
+  incident_ref: 'INC-TEMP',
+  submission_id: nosat.data?.id,
+  source_template_code: 'PGIA-PMM-F04',
+  source_item_code: 'D-1.2',
+  title: 'Smoke incident',
+  description: 'Raised by data:smoke',
+  deficiency_level: 2,
+  location_label: 'Smoke outfall',
+  status: 'open',
+  attachments: [],
+  ...over,
+});
+const inc1 = await op(insp, 'incidents.persist', { record: incRecord() });
+const inc2 = await op(insp, 'incidents.persist', { record: incRecord() });
+const n1 = Number(inc1.data?.seq);
+check(inc1.status === 200 && /^INC-\d{4}-\d{4}$/.test(inc1.data?.incident_ref ?? '') && inc2.data?.seq === n1 + 1, 'incidents get server numbers in sequence', [inc1.data?.incident_ref, inc2.data?.incident_ref]);
+check(inc1.data?.reported_by === insp.id, 'the reporter is the session user');
+check((await op(insp, 'incidents.persist', { record: incRecord({ attachments: [{ photo_url: 'x' }] }) })).status === 400, 'incident photos are rejected (400)');
+check((await op(coo, 'incidents.get', { id: inc1.data?.id })).data?.id === inc1.data?.id, 'the COO can see the incident');
+check((await op(insp, 'incidents.persist', { record: { ...inc1.data, status: 'assigned' } })).status === 409, 'leaving Open without a unit and target date is refused (409)');
+const assigned = await op(insp, 'incidents.persist', { record: { ...inc1.data, status: 'assigned', assigned_unit: 'grounds', target_date: '2030-01-01' } });
+check(assigned.data?.status === 'assigned', 'incident assigned to a unit');
+const upd = await op(insp, 'incidents.addUpdate', { incidentId: inc1.data?.id, body: 'Smoke update', status_from: 'open', status_to: 'assigned' });
+check(upd.data?.author_id === insp.id, 'updates are written as the session user');
+check((await op(insp, 'incidents.persist', { record: { ...assigned.data, status: 'closed' } })).status === 409, 'closing without SAT verification is refused (409)');
+const verified = await op(om, 'incidents.persist', { record: { ...assigned.data, verification: { result: 'sat', note: 'Smoke cleared' } } });
+check(verified.data?.verification?.verified_by === om.id, 'verification is attributed to whoever recorded it');
+const closed = await op(om, 'incidents.persist', { record: { ...verified.data, status: 'closed' } });
+check(closed.data?.status === 'closed' && closed.data?.closed_at, 'incident closed');
+check((await op(om, 'incidents.persist', { record: { ...closed.data, title: 'changed' } })).status === 409, 'a closed incident cannot be changed (409)');
+
+// 14. Work orders on the second incident.
+const woRec = { id: crypto.randomUUID(), incident_id: inc2.data?.id, assigned_to_name: 'Grounds', deficiency_level: 2, description_of_work: 'Smoke work', status: 'issued' };
+const wo = await op(insp, 'workOrders.persist', { record: woRec });
+check(wo.status === 200 && /^WO-\d{4}-\d{4}$/.test(wo.data?.work_order_number ?? ''), 'work order gets a server number', wo.data?.work_order_number);
+check((await op(insp, 'workOrders.persist', { record: { ...wo.data, status: 'verified' } })).status === 409, 'a work order cannot be verified by saving it (409)');
+await op(insp, 'workOrders.persist', { record: { ...wo.data, status: 'completed', area_cleared_for_operations: true } });
+const woApproval = (await op(om, 'approvals.listInbox')).data?.find((a) => a.entity_id === wo.data?.id);
+check(Boolean(woApproval), 'completing a work order creates its verification approval');
+check((await op(insp, 'approvals.decide', { id: woApproval?.id, decision: 'approved' })).status === 403, 'an inspector cannot verify a work order (403)');
+check((await op(coo, 'approvals.decide', { id: woApproval?.id, decision: 'approved', signature_data_uri: SIG })).status === 200, 'the COO verifies the work order');
+const lockedWo = await op(insp, 'workOrders.get', { id: wo.data?.id });
+check(lockedWo.data?.status === 'verified' && lockedWo.data?.locked === true, 'the verified work order is locked');
 
 // Cleanup: deactivate the smoke accounts.
 for (const who of [om, coo, insp]) {

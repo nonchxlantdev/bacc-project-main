@@ -21,6 +21,11 @@ export const READ_OPS = [
   'notifications.unreadCount',
   'settings.get',
   'settings.audit',
+  'incidents.list',
+  'incidents.get',
+  'workOrders.listByIncident',
+  'workOrders.get',
+  'workOrders.listVisible',
 ];
 
 export const WRITE_OPS = [
@@ -35,4 +40,7 @@ export const WRITE_OPS = [
   'notifications.markAllRead',
   'settings.save',
   'settings.resetSection',
+  'incidents.persist',
+  'incidents.addUpdate',
+  'workOrders.persist',
 ];

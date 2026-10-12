@@ -79,8 +79,15 @@ clock), `routes.js` + `authenticate.js` (HTTP wiring).
   adapter (`src/data/repositories/d1/`) adds schema/field map from the
   registry. The Worker checks keys against `forms.templateKeys`.
 - Light run: photo data → 400; drawings ≤ 6 per checklist, compressed,
-  ≤ ~600 KB each. Incidents/work orders return empty reads and refuse writes
-  until 3b.
+  ≤ ~600 KB each. Incident photos/attachments are off too (tab hidden on D1).
+- Incidents and work orders (3b): `incidentRules.js` (who may see/edit —
+  reporter, assignee, OM, COO, admin), `incidentStore.js` (SQL, merged into
+  the store), `incidentService.js` (ops, composed into `service.js`). Numbers
+  (`INC-YYYY-NNNN`, NOC `NNNN`, `WO-YYYY-NNNN`) are allocated INSIDE the
+  INSERT statement, never by the browser. Status changes run the shared
+  `incidentTransitionBlockers` on the server. A closed incident and a verified
+  work order are frozen by triggers (0003); updates are append-only. A work
+  order is verified only via its approval.
 - Tests run the real migrations on Node's built-in SQLite
   (`tests/helpers/sqliteD1.js`) — add a test there, not a mock.
 - Local end to end: `npm run data:smoke` (local only — it files records that
