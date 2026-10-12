@@ -1,5 +1,6 @@
 /**
- * Portal data operations (sub-project 3a). One method per API op, each
+ * Portal data operations (sub-projects 3a and 3b — incidents and work orders
+ * live in incidentService.js and are composed in here). One method per API op, each
  * `(actor, args) => result`, where `actor` is the D1 session user.
  *
  * No SQL here (store.js) and no permission tables (rules.js). Multi-table
@@ -33,6 +34,7 @@ import {
   validateSettingsValue,
   validateSignature,
 } from './rules.js';
+import { createIncidentOps } from './incidentService.js';
 
 export const BACKFILL_DAYS = 120;
 const CHECKLIST = 'checklist_submission';
@@ -41,6 +43,7 @@ const notFound = (what) => new HttpError(404, `${what} not found`);
 
 export function createDataService({ store, forms = null, now = () => Date.now(), newId = () => crypto.randomUUID() }) {
   const iso = () => new Date(now()).toISOString();
+  const incidentOps = createIncidentOps({ store, now, newId });
 
   function templateTitle(templateId) {
     try {
@@ -309,7 +312,16 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       const row = await store.getSubmissionRow(validId(id));
       if (!row) throw notFound('Checklist');
       assertCanDeleteDraft(actor, row);
-      await store.batch(store.deleteSubmissionStmts(row.id));
+      // Incidents raised from the draft (and their work orders) go with it,
+      // as Supabase's delete_draft_submission did.
+      try {
+        await store.batch([...incidentOps.deleteIncidentsForSubmissionStmts(row.id), ...store.deleteSubmissionStmts(row.id)]);
+      } catch (err) {
+        if (/closed incident|Locked work orders/.test(String(err?.message))) {
+          throw new HttpError(409, 'This draft has a closed incident or verified work order on file, so it cannot be deleted.');
+        }
+        throw err;
+      }
       return { deleted: row.id };
     },
 
@@ -352,23 +364,36 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       return getChecklist(actor, { id: row.id });
     },
 
-    // ── approvals (checklist entity only in 3a) ────────────────────────
+    // ── approvals (checklists from 3a, work orders from 3b) ────────────
     'approvals.list': async () =>
       (await store.listApprovals()).map((a) => ({ ...a, signed: Boolean(a.signed) })),
     'approvals.listInbox': async (actor) => {
-      const rows = await store.listApprovals({ status: 'pending', entityType: CHECKLIST });
-      const mine = rows.filter((r) => isSupervisor(actor) || (r.assigned_to && r.assigned_to === actor.id));
-      return Promise.all(mine.map(hydrateApproval));
+      const rows = await store.listApprovals({ status: 'pending' });
+      const mine = rows.filter((r) =>
+        r.entity_type === CHECKLIST
+          ? isSupervisor(actor) || (r.assigned_to && r.assigned_to === actor.id)
+          : incidentOps.canSeeWorkOrderApproval(actor, r),
+      );
+      return Promise.all(
+        mine.map((r) => (r.entity_type === CHECKLIST ? hydrateApproval(r) : incidentOps.hydrateWorkOrderApproval(r))),
+      );
     },
     'approvals.get': async (actor, { id }) => {
       const row = await store.getApproval(validId(id));
       if (!row) return null;
+      if (row.entity_type !== CHECKLIST) {
+        if (!incidentOps.canSeeWorkOrderApproval(actor, row)) throw new HttpError(403, 'This approval is not assigned to you');
+        return incidentOps.hydrateWorkOrderApproval(row);
+      }
       assertCanSeeApproval(actor, row);
       return hydrateApproval(row);
     },
     'approvals.decide': async (actor, { id, decision, notes, signature_data_uri, name, position }) => {
       const row = await store.getApproval(validId(id));
       if (!row) throw notFound('Approval');
+      if (row.entity_type !== CHECKLIST) {
+        return incidentOps.decideWorkOrder(actor, row, { decision, notes, signature_data_uri, name });
+      }
       assertCanDecide(actor, row, decision);
       const cleanNotes = optionalText(notes, 'Notes', 2000);
       if (decision === 'rejected') {
@@ -392,6 +417,8 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       }
       return hydrateApproval(await store.getApproval(row.id));
     },
+
+    ...incidentOps.ops,
 
     // ── schedule ───────────────────────────────────────────────────────
     'instances.rules': async () => store.listRules(),

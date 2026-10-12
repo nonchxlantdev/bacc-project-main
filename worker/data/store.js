@@ -8,6 +8,8 @@
  * (tests/helpers/sqliteD1.js).
  */
 
+import { createIncidentStore } from './incidentStore.js';
+
 const parseJson = (text, fallback) => {
   if (text == null || text === '') return fallback;
   try {
@@ -110,6 +112,10 @@ export function toRecord(row, { signoffs = [], drawings, amendments = [], inspec
 }
 
 export function createD1DataStore(db) {
+  return { ...createCoreStore(db), ...createIncidentStore(db) };
+}
+
+function createCoreStore(db) {
   const all = async (sql, ...params) => (await db.prepare(sql).bind(...params).all()).results ?? [];
   const first = (sql, ...params) => db.prepare(sql).bind(...params).first();
   const stmt = (sql, ...params) => db.prepare(sql).bind(...params);
