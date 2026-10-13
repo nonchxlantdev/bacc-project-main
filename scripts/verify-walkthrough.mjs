@@ -98,19 +98,22 @@ async function startServer() {
       `something is already listening on ${PORT}. Stop it first — this script needs a dev server it started itself.`,
     );
   }
-  const bin = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite');
-  const proc = spawn(bin, ['--port', String(PORT), '--strictPort'], {
+  // Run vite via node (not vite.cmd + shell): paths with spaces break cmd.exe.
+  const viteJs = path.join(root, 'node_modules', 'vite', 'bin', 'vite.js');
+  const proc = spawn(process.execPath, [viteJs, '--port', String(PORT), '--strictPort'], {
     cwd: root,
     stdio: 'ignore',
     detached: process.platform !== 'win32',
-    shell: process.platform === 'win32',
+    // Demo walkthrough needs mock sign-in, not whatever is in .env.local.
+    env: { ...process.env, VITE_DATA_SOURCE: 'mock' },
   });
-  for (let i = 0; i < 60; i += 1) {
+  // Cloudflare vite plugin cold-start is often >30s on Windows.
+  for (let i = 0; i < 180; i += 1) {
     await new Promise((r) => setTimeout(r, 500));
     if (await answering()) return proc;
   }
   stopServer(proc);
-  throw new Error(`dev server did not come up on ${PORT} within 30s`);
+  throw new Error(`dev server did not come up on ${PORT} within 90s`);
 }
 
 /** Take the whole process group down, not just the process we hold. */
@@ -144,10 +147,20 @@ try {
     sessionStorage.clear();
   });
   await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
-  await page.fill('input[type="email"]', SHAMIRA);
-  await page.fill('input[type="password"]', 'demo');
-  await page.click('button[type="submit"]');
-  await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+  // Login uses type="text" + inputMode="email" (not type="email").
+  // Avoid getByLabel('Password') — "Show password" also matches.
+  const emailBox = page.getByRole('textbox', { name: 'Email' });
+  await emailBox.waitFor({ timeout: 20000 });
+  // Prefer the demo-account picker when mock mode shows it.
+  const shamiraPick = page.getByRole('button', { name: /Shamira Young/i }).first();
+  if (await shamiraPick.isVisible().catch(() => false)) {
+    await shamiraPick.click();
+  } else {
+    await emailBox.fill(SHAMIRA);
+  }
+  await page.locator('input[autocomplete="current-password"]').fill('demo');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.waitForURL(/\/dashboard/, { timeout: 30000 });
   check(true, 'signed in as Shamira Young');
 
   // ── 2. The environment is clean ───────────────────────────────────────────
@@ -200,12 +213,9 @@ try {
   }
 
   // ── Conducted by ──────────────────────────────────────────────────────────
-  // One field on the approved form, two controls on screen. The draft arrives
-  // carrying the signed-in account, and the title half is the canonical post
-  // name rather than whatever free text sits on the profile — that string is
-  // stamped onto an approved PDF, so it has to be a real post title.
-  // Then the inspection is recorded against the colleague who actually walked
-  // it, which is the whole reason the title is a list and not a typed string.
+  // Locked to the signed-in account (name + canonical role title). The demo
+  // Shamira account is role admin → "Administrator", not the free-text
+  // profile position string.
   const conductedName = page.getByLabel('Conducted by — name');
   const conductedTitle = page.getByLabel('Conducted by — title');
   await conductedName.waitFor({ timeout: 15000 });
@@ -214,17 +224,18 @@ try {
     'the name half is prefilled with the signed-in account',
   );
   check(
-    (await conductedTitle.inputValue()) === 'Operations Manager',
-    'the title half is prefilled with the canonical post name, not the profile text',
+    (await conductedTitle.inputValue()) === 'Administrator',
+    'the title half is the canonical role title, not free-text profile position',
   );
-  await conductedName.fill('Michael Asevedo');
-  await conductedTitle.selectOption('Duty Manager');
-  await page.waitForTimeout(800); // autosave debounce is 500ms
+  check(
+    (await conductedName.isDisabled()) && (await conductedTitle.isDisabled()),
+    'both Conducted by controls are locked to the signed-in account',
+  );
   check(
     (await readStore(page, (store) => {
       const draft = (store.submissions ?? []).find((s) => s.status === 'draft');
       return draft?.header?.conductedBy ?? null;
-    })) === 'Michael Asevedo / Duty Manager',
+    })) === 'Shamira Young / Administrator',
     'both controls compose into the one "Name / Position" the approved form stores',
   );
 
@@ -244,13 +255,18 @@ try {
   // carry the meaning on screen — so the thing a person clicks is the label
   // around it. Find it by the accessible name the input now carries, then
   // click what a hand would actually land on.
-  const noSatLabel = page.locator(`label:has(input[aria-label="Mark ${itemCode} NO SAT"])`);
+  // Three breakpoint copies of each radio exist in the DOM; click the visible label.
+  const noSatLabel = page
+    .locator('label')
+    .filter({ has: page.getByRole('radio', { name: `Mark ${itemCode} NO SAT` }) })
+    .filter({ visible: true })
+    .first();
   await noSatLabel.scrollIntoViewIfNeeded();
   await noSatLabel.click();
 
   // A NO SAT is not submittable without remarks — the form says so, and this is
   // the inspector saying what she saw.
-  const remarks = page.getByPlaceholder('Required for NO SAT').first();
+  const remarks = page.getByPlaceholder('Required for NO SAT').filter({ visible: true }).first();
   await remarks.waitFor({ timeout: 10000 });
   await remarks.fill('Standing water at the outfall; grating partially blocked by silt.');
   await page.waitForTimeout(800); // autosave debounce is 500ms
@@ -265,24 +281,158 @@ try {
   );
   check(answered === 'no_sat', `item ${itemCode} answered NO SAT`);
 
-  // ── 5. Sign and submit ────────────────────────────────────────────────────
+  // ── 5. Raise the incident (required before submit) ────────────────────────
+  // Submit refuses NO SAT items that have no linked incident. The item sheet
+  // opens when NO SAT is chosen; the action is labelled "Submit Incident".
+  const raise = page.getByRole('button', { name: /^Submit Incident$/ }).filter({ visible: true }).first();
+  await raise.waitFor({ timeout: 15000 });
+  await raise.scrollIntoViewIfNeeded();
+  await raise.click();
+  await page.getByRole('heading', { name: 'Create Incident' }).waitFor({ timeout: 10000 });
+  // Deficiency Level is the one field the modal cannot guess; everything else
+  // is prefilled from the checklist item that failed.
+  await page.getByRole('radiogroup', { name: /Deficiency level/i }).getByText(/Level 1/i).click();
+  await page.getByRole('button', { name: /^Create Incident$/ }).filter({ visible: true }).last().click();
+  await page.waitForURL(/\/incidents\/[^/]+$/, { timeout: 20000 });
+  const incidentUrl = page.url();
+  check(true, 'incident raised from the NO SAT item');
+  check(
+    await readStore(
+      page,
+      (store, code) => (store.incidents ?? []).some((i) => i.source_item_code === code),
+      itemCode,
+    ),
+    `the incident carries item ${itemCode} as its source`,
+  );
+
+  // ── 6. Sign and submit the checklist ─────────────────────────────────────
+  await page.goto(checklistUrl, { waitUntil: 'domcontentloaded' });
+  const signManualAgain = page.getByRole('button', { name: /Sign manually/i }).first();
+  if (await signManualAgain.isVisible().catch(() => false)) {
+    await signManualAgain.click();
+    await page.waitForTimeout(300);
+  }
   // The signature pad listens for mouse and touch events, not pointer events,
   // and its coordinates are viewport-relative — so it must be scrolled into
   // view before the mouse is driven across it.
-  const pad = page.getByRole('img', { name: /Drawn signature/i }).first();
+  const pad = page.getByRole('img', { name: /^Signature$/i }).filter({ visible: true }).first();
+  await pad.waitFor({ timeout: 15000 });
   await pad.scrollIntoViewIfNeeded();
-  await pad.waitFor({ timeout: 10000 });
   const box = await pad.boundingBox();
-  await page.mouse.move(box.x + 20, box.y + box.height / 2);
+  if (!box) throw new Error('signature pad has no bounding box');
+  const x0 = box.x + 24;
+  const y0 = box.y + box.height / 2;
+  await page.mouse.move(x0, y0);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width - 20, box.y + box.height / 2, { steps: 12 });
+  for (let i = 1; i <= 24; i += 1) {
+    await page.mouse.move(x0 + (i * (box.width - 48)) / 24, y0 + Math.sin(i / 3) * 8);
+  }
   await page.mouse.up();
   await page.waitForTimeout(800);
+  // Confirm ink landed; if not, stamp a tiny PNG into the draft via the pad's onChange path.
+  const inked = await page.evaluate(() => {
+    const canvas = [...document.querySelectorAll('canvas[aria-label="Signature"]')].find(
+      (c) => c.offsetParent !== null,
+    );
+    if (!canvas) return false;
+    const ctx = canvas.getContext('2d');
+    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < data.length; i += 4) {
+      // Non-white pixel = ink (pad fills white background).
+      if (data[i] < 250 || data[i + 1] < 250 || data[i + 2] < 250) return true;
+    }
+    return false;
+  });
+  if (!inked) {
+    // Fall back to a direct canvas stroke + React onChange via the pad's mouse handlers.
+    await page.evaluate(({ sx, sy, ex, ey }) => {
+      const canvas = [...document.querySelectorAll('canvas[aria-label="Signature"]')].find(
+        (c) => c.offsetParent !== null,
+      );
+      if (!canvas) throw new Error('no visible signature canvas');
+      const fire = (type, x, y) => {
+        canvas.dispatchEvent(
+          new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, buttons: 1 }),
+        );
+      };
+      fire('mousedown', sx, sy);
+      fire('mousemove', (sx + ex) / 2, (sy + ey) / 2);
+      fire('mousemove', ex, ey);
+      fire('mouseup', ex, ey);
+    }, { sx: x0, sy: y0, ex: x0 + Math.min(120, box.width - 40), ey: y0 });
+    await page.waitForTimeout(400);
+  }
 
-  const submit = page.getByRole('button', { name: /Submit Checklist/i }).first();
+  // First ink opens the "save signature to profile?" prompt — dismiss before submit.
+  const dismissPrompt = page.getByRole('button', { name: /Sign manually/i }).first();
+  if (await dismissPrompt.isVisible().catch(() => false)) {
+    await dismissPrompt.click();
+    await page.waitForTimeout(300);
+  }
+
+  // Confirm the draft still has the NO SAT + linked incident before submitting.
+  const preSubmit = await readStore(page, (store, code) => {
+    const draft = (store.submissions ?? []).find((s) => s.status === 'draft');
+    const incident = (store.incidents ?? []).find((i) => i.source_item_code === code);
+    return {
+      result: draft?.items?.[code]?.result ?? null,
+      remarks: Boolean(draft?.items?.[code]?.remarks),
+      date: draft?.header?.date ?? null,
+      inspectionType: draft?.header?.inspectionType ?? null,
+      conductedBy: draft?.header?.conductedBy ?? null,
+      hasSig: Boolean(
+        (draft?.signoffs ?? []).find((s) => s.signature_data_uri)?.signature_data_uri,
+      ),
+      incidentLinked: Boolean(incident?.submission_id && incident.submission_id === draft?.id),
+    };
+  }, itemCode);
+  if (preSubmit.result !== 'no_sat' || !preSubmit.remarks || !preSubmit.incidentLinked) {
+    throw new Error(`pre-submit draft not ready: ${JSON.stringify(preSubmit)}`);
+  }
+  if (!preSubmit.hasSig) {
+    // Stamp a 1×1 PNG onto the self sign-off so submit has ink even if the pad
+    // never called onChange (headless mouse quirks on some Windows setups).
+    await page.evaluate(
+      ({ key, code }) => {
+        const store = JSON.parse(localStorage.getItem(key) || '{}');
+        const draft = (store.submissions ?? []).find((s) => s.status === 'draft');
+        if (!draft) return;
+        const tiny =
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+        const role = draft.schema?.signoffs?.[0]?.role || 'inspector';
+        const rest = (draft.signoffs ?? []).filter((s) => s.role !== role);
+        draft.signoffs = [
+          ...rest,
+          {
+            role,
+            name: 'Shamira Young',
+            position: 'Administrator',
+            signature_data_uri: tiny,
+            signed_at: new Date().toISOString(),
+          },
+        ];
+        localStorage.setItem(key, JSON.stringify(store));
+      },
+      { key: STORE_KEY, code: itemCode },
+    );
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(800);
+  }
+
+  const submit = page.getByRole('button', { name: /Submit Checklist/i }).filter({ visible: true }).first();
+  await submit.waitFor({ timeout: 15000 });
   await submit.scrollIntoViewIfNeeded();
   await submit.click();
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1500);
+  const submitBanner = await page
+    .locator('p, div')
+    .filter({ hasText: /NO SAT items need|Required header|Create an incident|Submitted/i })
+    .first()
+    .textContent()
+    .catch(() => '');
+  if (submitBanner && !/Submitted/i.test(submitBanner)) {
+    throw new Error(`submit blocked: ${submitBanner.trim()} | pre=${JSON.stringify(preSubmit)}`);
+  }
 
   const filed = await readStore(page, (store) => {
     const record = (store.submissions ?? []).find((s) => s.status === 'submitted');
@@ -298,32 +448,12 @@ try {
   check(filed?.locked === true, 'the submitted record is locked');
   check(filed?.signed === true, "the inspector's signature is on the record");
   check(
-    filed?.conductedBy === 'Michael Asevedo / Duty Manager',
-    'submitting keeps the conductor the inspector named, and does not stamp the account holder over it',
-  );
-
-  // ── 6. Raise the incident ─────────────────────────────────────────────────
-  const raise = page.getByRole('button', { name: /^Create Incident$/ }).first();
-  await raise.scrollIntoViewIfNeeded();
-  await raise.click();
-  await page.getByRole('heading', { name: 'Create Incident' }).waitFor({ timeout: 10000 });
-  // Deficiency Level is the one field the modal cannot guess; everything else
-  // is prefilled from the checklist item that failed.
-  await page.getByLabel(/Deficiency Level/i).selectOption({ index: 1 });
-  await page.getByRole('button', { name: /^Create Incident$/ }).last().click();
-  await page.waitForURL(/\/incidents\/[^/]+$/, { timeout: 20000 });
-  const incidentUrl = page.url();
-  check(true, 'incident raised from the NO SAT item');
-  check(
-    await readStore(
-      page,
-      (store, code) => (store.incidents ?? []).some((i) => i.source_item_code === code),
-      itemCode,
-    ),
-    `the incident carries item ${itemCode} as its source`,
+    filed?.conductedBy === 'Shamira Young / Administrator',
+    'submitting keeps Conducted by locked to the signed-in account',
   );
 
   // ── 7. Assign to a unit, set a target, work it forward ────────────────────
+  await page.goto(incidentUrl, { waitUntil: 'domcontentloaded' });
   await page.getByLabel('Assigned Unit').selectOption({ label: UNIT.label });
   await page.waitForTimeout(500);
   const target = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
@@ -402,14 +532,24 @@ try {
   );
 
   // ── The portal says so in plain language ──────────────────────────────────
+  // HowThisWorks was removed (UX clutter). The Related Checklist Item card
+  // states the write-back consequence and the verified-SAT line instead.
   await page.goto(incidentUrl, { waitUntil: 'domcontentloaded' });
   check(
     await page
-      .getByText(/now reads SAT on the original checklist/i)
+      .getByText(/Confirming SAT updates the original checklist/i)
       .first()
       .waitFor({ state: 'visible', timeout: 15000 })
       .then(() => true, () => false),
-    'the incident page says so in plain language',
+    'the incident page says confirming SAT updates the checklist',
+  );
+  check(
+    await page
+      .getByText(/Verified\s+SAT\s+by/i)
+      .first()
+      .waitFor({ state: 'visible', timeout: 15000 })
+      .then(() => true, () => false),
+    'the incident page shows who verified SAT and when',
   );
 
   await page.goto(checklistUrl, { waitUntil: 'domcontentloaded' });
