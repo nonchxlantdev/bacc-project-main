@@ -177,11 +177,17 @@ check(six.status === 200 && six.data?.attachments?.site?.length === 6, 'six draw
 
 // 9. Schedule generation is idempotent (uses a throwaway local rule).
 const ruleId = `smoke-rule-${stamp}`;
-const d1 = (sql) =>
-  execFileSync('npx', ['wrangler', 'd1', 'execute', 'bacc-portal-db', '--local', '--command', sql], {
+// On Windows, `shell: true` + npx.cmd splits an unquoted --command value on
+// spaces, so quote it for cmd.exe (same fix as scripts/d1-trigger-check.mjs).
+const d1 = (sql) => {
+  const flat = sql.replace(/\s+/g, ' ').trim();
+  const command = process.platform === 'win32' ? `"${flat.replace(/"/g, '""')}"` : flat;
+  return execFileSync('npx', ['wrangler', 'd1', 'execute', 'bacc-portal-db', '--local', '--command', command], {
     stdio: 'pipe',
     shell: process.platform === 'win32',
+    env: { ...process.env, CI: '1' },
   });
+};
 d1(`INSERT INTO assignment_rules (id, template_id, frequency, role, department, active, created_at, updated_at) VALUES ('${ruleId}', 'annex-d-drainage', 'weekly', 'inspector', 'Maintenance', 1, datetime('now'), datetime('now'))`);
 const g1 = await op(om, 'instances.generate');
 const g2 = await op(om, 'instances.generate');
