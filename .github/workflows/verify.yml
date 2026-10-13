@@ -45,7 +45,7 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          VITE_DATA_SOURCE: supabase
+          VITE_DATA_SOURCE: d1
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: npx wrangler deploy
