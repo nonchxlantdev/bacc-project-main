@@ -17,6 +17,7 @@ import {
 } from '../lib/checklistCatalogue.js';
 import { startInspection } from '../lib/startInspection.js';
 import { canDeleteDraft, deleteDraft, listAllSubmissions } from '../lib/submissions.js';
+import { teamOpenDrafts } from '../lib/openDrafts.js';
 import { listTemplates } from '../lib/templates.js';
 import Select from '../components/ui/Select.jsx';
 
@@ -47,9 +48,7 @@ export default function ChecklistCataloguePage() {
 
   const openDrafts = useMemo(
     () =>
-      canManageDrafts
-        ? submissions.filter((row) => canDeleteDraft(row, profile))
-        : [],
+      canManageDrafts ? teamOpenDrafts(submissions, profile, canDeleteDraft) : [],
     [submissions, profile, canManageDrafts],
   );
 
@@ -292,13 +291,13 @@ export default function ChecklistCataloguePage() {
   );
 }
 
-/** Org-wide open drafts — OM/admin can delete any inspector's draft here. */
+/** Other people's open drafts — OM/admin can delete them here. Own drafts live in My Checklists. */
 function OpenDraftsSection({ drafts, deletingId, onDelete }) {
   return (
     <section className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
       <header className="border-b border-line/10 bg-stripe px-4 py-2.5">
         <h2 className="text-sm font-bold text-ink">Open drafts</h2>
-        <p className="text-xs text-muted">Unsubmitted checklists anyone on the team has in progress.</p>
+        <p className="text-xs text-muted">Unsubmitted checklists other people on the team have in progress. Your own drafts are in My Checklists.</p>
       </header>
       <div className="overflow-x-auto">
         <table className="table-stack w-full text-left text-sm">
