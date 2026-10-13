@@ -12,13 +12,26 @@
  */
 import { execFileSync } from 'node:child_process';
 
-function d1(sql) {
-  try {
-    execFileSync('npx', ['wrangler', 'd1', 'execute', 'bacc-portal-db', '--local', '--json', '--command', sql], {
+/** On Windows, `shell: true` + npx.cmd splits an unquoted --command value on spaces. */
+function runWrangler(sql) {
+  // Collapse newlines so cmd.exe quoting stays a single argument; wrangler
+  // accepts multiple statements separated by semicolons in one --command.
+  const flat = sql.replace(/\s+/g, ' ').trim();
+  const command = process.platform === 'win32' ? `"${flat.replace(/"/g, '""')}"` : flat;
+  return execFileSync(
+    'npx',
+    ['wrangler', 'd1', 'execute', 'bacc-portal-db', '--local', '--json', '--command', command],
+    {
       stdio: 'pipe',
       shell: process.platform === 'win32',
       env: { ...process.env, CI: '1' },
-    });
+    },
+  );
+}
+
+function d1(sql) {
+  try {
+    runWrangler(sql);
     return { ok: true, output: '' };
   } catch (err) {
     return { ok: false, output: `${err.stdout ?? ''}${err.stderr ?? ''}` };
@@ -26,11 +39,7 @@ function d1(sql) {
 }
 
 function query(sql) {
-  const out = execFileSync('npx', ['wrangler', 'd1', 'execute', 'bacc-portal-db', '--local', '--json', '--command', sql], {
-    stdio: 'pipe',
-    shell: process.platform === 'win32',
-    env: { ...process.env, CI: '1' },
-  });
+  const out = runWrangler(sql);
   return JSON.parse(String(out))[0]?.results ?? [];
 }
 
