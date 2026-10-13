@@ -58,13 +58,19 @@ clock), `routes.js` + `authenticate.js` (HTTP wiring).
   `npx wrangler d1 migrations apply bacc-portal-db --local|--remote`
   (the CI token has no D1 permission, by design).
 
-## Data: D1 data API (sub-project 3a) — built, production still on Supabase
+## Data: D1 data API — built; production flips to D1 in 3c
 
 `/api/data/<group>.<op>` (one route per repository method) →
 `worker/data/routes.js` → `service.js` (one method per op, `(actor, args)`) →
 `rules.js` (ALL permissions + payload validation, pure, unit-tested) →
 `store.js` (ALL data SQL; writes are statement builders run as one
 `db.batch`). Op names live in `worker/data/ops.js`, shared with the browser.
+
+Cutover (3c): deploy builds with `VITE_DATA_SOURCE=d1`. Walkthrough:
+`docs/D1_CUTOVER_WALKTHROUGH.md`. Config import only (schedules + settings) —
+operational history is **not** copied; the pilot starts fresh. Avatars stay
+**off** (initials only; later add-on). Rollback = deploy env back to
+`supabase`; clean only until staff file on D1.
 
 - Reads are GET with args as JSON in `?a=`; writes are POST `{ args }` with
   `csrf: true`. Every data route is auth mode `session`.
