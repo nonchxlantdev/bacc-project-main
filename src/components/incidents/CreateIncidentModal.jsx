@@ -10,6 +10,7 @@ import {
 } from '../../lib/incidents.js';
 import LocationPicker, { captureGps, PGIA_CENTER } from './LocationPicker.jsx';
 import DeficiencyLevelPicker from './DeficiencyLevelPicker.jsx';
+import { ATTACHMENTS_UNAVAILABLE } from '../../lib/unavailable.js';
 
 const BANNER =
   'You are creating an incident from a NO SAT item. The item details and remarks will be included in the incident.';
@@ -262,7 +263,7 @@ export default function CreateIncidentModal({
               ) : (
                 <p className="text-sm text-muted">
                   {isD1Data()
-                    ? 'Photos are switched off for the pilot.'
+                    ? `${ATTACHMENTS_UNAVAILABLE}.`
                     : 'No photo on the checklist item. You can add photos after creating the incident.'}
                 </p>
               )}

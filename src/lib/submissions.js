@@ -151,7 +151,7 @@ export async function syncQueuedPhoto(payload) {
 
 /** Photos are off on D1: a leftover queued upload is dropped, not retried forever. */
 async function dropQueuedPhoto(payload) {
-  console.warn('Photo uploads are disabled; dropping a queued photo for', payload?.submissionId, payload?.itemCode);
+  console.warn('Attachments unavailable; dropping a queued photo for', payload?.submissionId, payload?.itemCode);
 }
 
 export const queueHandlers = {

@@ -55,14 +55,15 @@ import {
   listQualifyingReinspections,
   persistIncident,
 } from '../lib/incidents.js';
+import UnavailableNote from '../components/ui/UnavailableNote.jsx';
 
-// Light run on D1: photos and attachments are off, so their tab is not shown.
+// On D1 photos and attachments are not offered: the tab stays and says so.
 const PHOTOS_ENABLED = !isD1Data();
 
 const TABS = [
   { id: 'details', label: 'Incident Details', icon: AlertTriangle },
   { id: 'location', label: 'Location', icon: MapPin },
-  ...(PHOTOS_ENABLED ? [{ id: 'photos', label: 'Photos & Attachments', icon: Paperclip }] : []),
+  { id: 'photos', label: 'Photos & Attachments', icon: Paperclip },
   { id: 'updates', label: 'Actions & Updates', icon: Clock },
   { id: 'history', label: 'History', icon: HistoryIcon },
 ];
@@ -719,6 +720,12 @@ export default function IncidentDetailPage() {
               </div>
               {geoBlock}
             </section>
+          )}
+
+          {!PHOTOS_ENABLED && tab === 'photos' && (
+            <Card title="Photos & Attachments">
+              <UnavailableNote />
+            </Card>
           )}
 
           {PHOTOS_ENABLED && tab === 'photos' && (

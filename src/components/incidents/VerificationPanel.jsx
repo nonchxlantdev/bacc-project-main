@@ -4,6 +4,7 @@ import { SYNC_SAT_ON_VERIFICATION } from '../../lib/checklistSync.js';
 import { VERIFICATION_HINT } from '../../content/incidentGuide.js';
 import { fmtDate, fmtDateTime } from '../../lib/airportFormat.js';
 import { Card, RadioButton } from './detailUi.jsx';
+import UnavailableNote from '../ui/UnavailableNote.jsx';
 
 /**
  * The deficiency that opened this incident, and the control that clears it.
@@ -128,7 +129,8 @@ export default function VerificationPanel({
             className="mt-2 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {/* No evidence photo when photos are off (d1 mode passes no handler). */}
+            {/* d1 mode passes no handler: evidence photos are marked unavailable. */}
+            {!onAttachPhoto && <UnavailableNote compact />}
             {onAttachPhoto && (
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line/20 bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-2 xl:min-h-9">
               <ImagePlus size={14} aria-hidden /> Attach evidence

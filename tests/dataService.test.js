@@ -182,7 +182,7 @@ test('unknown form and photo data are rejected', async () => {
   assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ template_id: 'nope' }) })), 400);
   const withPhoto = draftRecord();
   withPhoto.items.A1.photo_local_id = 'local-1';
-  await assert.rejects(call('checklists.persist', users.insp, { record: withPhoto }), /Photo uploads are disabled/);
+  await assert.rejects(call('checklists.persist', users.insp, { record: withPhoto }), /Attachments unavailable at this time/);
 });
 
 test('inspector cannot delete drafts (403); the OM can; filed records stay', async () => {

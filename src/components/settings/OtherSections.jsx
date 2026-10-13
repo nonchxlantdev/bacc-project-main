@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { isD1Auth } from '../../lib/authMode.js';
 import { compressImage } from '../../lib/imageCompress.js';
 import { removeAvatar, uploadAvatar, useAvatarUrl } from '../../lib/avatar.js';
+import { PROFILE_PHOTOS_UNAVAILABLE } from '../../lib/unavailable.js';
 
 /**
  * Event names in BACC's own words, with a line saying when each one fires.
@@ -77,7 +78,7 @@ export function ProfileSection({ draft, onChange, email, role, department }) {
     >
       <Row label="Photo" effect="JPG or PNG. Cropped to a square and compressed automatically.">
         {isD1Auth() ? (
-          <p className="min-h-11 text-sm text-muted desk:min-h-10">Profile photos are not available on the new login yet.</p>
+          <p className="min-h-11 text-sm text-muted desk:min-h-10">{PROFILE_PHOTOS_UNAVAILABLE}.</p>
         ) : (
           <AvatarUploader />
         )}

@@ -33,11 +33,12 @@ import DrawingAttach from './DrawingAttach.jsx';
 import { DRAWING_LIMIT, isD1Data } from '../../lib/dataMode.js';
 import { countDrawings } from '../../lib/drawings.js';
 
-// Light run on D1: no photo evidence, drawings capped per checklist.
+// On D1: no photo evidence (shown as unavailable), drawings capped per checklist.
 const PHOTOS_ENABLED = !isD1Data();
 const DRAWING_CAP = isD1Data() ? DRAWING_LIMIT : null;
 import ReferenceList from './ReferenceList.jsx';
 import SignoffBlock from './SignoffBlock.jsx';
+import UnavailableNote from '../ui/UnavailableNote.jsx';
 
 export default function ChecklistForm({
   schema,
@@ -441,7 +442,7 @@ export default function ChecklistForm({
                 </div>
               )}
 
-              {PHOTOS_ENABLED && (
+              {PHOTOS_ENABLED ? (
               <PhotoUpload
                 itemCode={selectedItem.code}
                 previewUrl={photoPreviewByCode[selectedItem.code] || selectedRow?.photo_url}
@@ -449,6 +450,8 @@ export default function ChecklistForm({
                 onSelect={(file) => onPhotoSelect(selectedItem.code, file)}
                 onClear={() => onPhotoClear(selectedItem.code)}
               />
+              ) : (
+                <UnavailableNote />
               )}
 
               <div>

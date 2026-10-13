@@ -6,6 +6,7 @@
  * spec's tables (docs/superpowers/specs/2026-10-09-d1-core-checklists-design.md §3).
  */
 import { HttpError } from '../../api/_shared.js';
+import { ATTACHMENTS_UNAVAILABLE, PROFILE_PHOTOS_UNAVAILABLE } from '../../src/lib/unavailable.js';
 
 export const MANAGERS = Object.freeze(['om', 'admin']);
 export const SUPERVISORS = Object.freeze(['om', 'coo', 'admin']);
@@ -23,7 +24,7 @@ export const LIMITS = Object.freeze({
 });
 
 export const LOCKED_MESSAGE = 'Locked checklist submissions cannot be overwritten; create a correction instead';
-export const PHOTO_MESSAGE = 'Photo uploads are disabled';
+export const PHOTO_MESSAGE = ATTACHMENTS_UNAVAILABLE;
 export const IN_3B_MESSAGE = 'Available in 3b';
 
 const RESULTS = new Set(['sat', 'no_sat', 'na']);
@@ -300,7 +301,7 @@ export function validateProfilePatch(patch) {
   for (const key of Object.keys(p)) {
     if (PROFILE_FORBIDDEN.has(key)) throw forbid('Ask an administrator to change that');
   }
-  if (p.avatar_url !== undefined) throw bad('Profile photos are not available yet on the new login');
+  if (p.avatar_url !== undefined) throw bad(PROFILE_PHOTOS_UNAVAILABLE);
   const profile = {};
   const signature = {};
   if (p.full_name !== undefined) {

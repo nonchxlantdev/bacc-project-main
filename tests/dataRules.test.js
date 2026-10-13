@@ -131,7 +131,7 @@ test('payload: items keep result/remarks only; registry keys never reach form_js
 test('payload: photo data is rejected with 400', () => {
   const r = baseRecord();
   r.items.A1.photo_local_id = 'abc';
-  assert.throws(() => validateRecordPayload(r), (e) => e.status === 400 && /Photo uploads are disabled/.test(e.message));
+  assert.throws(() => validateRecordPayload(r), (e) => e.status === 400 && /Attachments unavailable at this time/.test(e.message));
   const r2 = baseRecord();
   r2.items.A1.photo_url = 'u/x.jpg';
   assert.throws(() => validateRecordPayload(r2), (e) => e.status === 400);
@@ -182,7 +182,7 @@ test('profile patch: self fields only', () => {
   });
   assert.throws(() => validateProfilePatch({ role: 'admin' }), (e) => e.status === 403);
   assert.throws(() => validateProfilePatch({ is_approver: true }), (e) => e.status === 403);
-  assert.throws(() => validateProfilePatch({ avatar_url: 'x' }), (e) => e.status === 400);
+  assert.throws(() => validateProfilePatch({ avatar_url: 'x' }), (e) => e.status === 400 && /Profile photos unavailable at this time/.test(e.message));
   assert.throws(() => validateProfilePatch({ stored_signature_data_uri: 'not-an-image' }), (e) => e.status === 400);
 });
 

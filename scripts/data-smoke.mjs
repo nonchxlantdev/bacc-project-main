@@ -169,7 +169,7 @@ check(JSON.stringify(after) === JSON.stringify(before), 'original is unchanged b
 const photo = draft();
 photo.items['D-1.1'].photo_local_id = 'local-photo';
 const photoRes = await op(insp, 'checklists.persist', { record: photo });
-check(photoRes.status === 400 && /Photo uploads are disabled/.test(photoRes.error ?? ''), 'photo data is rejected (400)');
+check(photoRes.status === 400 && /Attachments unavailable at this time/.test(photoRes.error ?? ''), 'photo data is rejected (400)');
 const seven = Array.from({ length: 7 }, (_, i) => ({ id: `smoke-${i}`, label: `D${i}`, contentType: 'image/jpeg', dataUri: IMG }));
 check((await op(insp, 'checklists.persist', { record: draft({ attachments: { site: seven } }) })).status === 400, 'a 7th drawing is rejected (400)');
 const six = await op(insp, 'checklists.persist', { record: draft({ attachments: { site: seven.slice(0, 6) } }) });
