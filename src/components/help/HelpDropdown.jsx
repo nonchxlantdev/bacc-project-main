@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { CircleHelp, Search } from 'lucide-react';
+import { CircleHelp, Compass, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Dropdown from '../ui/Dropdown.jsx';
 import { FAQ_GROUPS } from '../../content/faq.js';
+import { useTour } from '../tour/TourProvider.jsx';
 
 /**
  * Quick-access Help menu. Lists FAQ group names (never individual answers) and
@@ -11,6 +12,7 @@ import { FAQ_GROUPS } from '../../content/faq.js';
 export default function HelpDropdown() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const { pageTour, replayPage, activeId } = useTour();
   const term = query.trim().toLowerCase();
 
   const groups = useMemo(() => {
@@ -55,6 +57,22 @@ export default function HelpDropdown() {
             />
           </label>
         </div>
+
+        {pageTour && !term && (
+          <div className="border-b border-line/15 py-1">
+            <Dropdown.Item
+              icon={Compass}
+              className="font-medium"
+              disabled={Boolean(activeId)}
+              onClick={() => {
+                setOpen(false);
+                replayPage();
+              }}
+            >
+              Show me around this page
+            </Dropdown.Item>
+          </div>
+        )}
 
         <ul className="max-h-[min(20rem,50vh)] overflow-y-auto overscroll-contain py-1">
           {groups.length === 0 && (

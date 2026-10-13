@@ -88,6 +88,7 @@ export default function MyChecklistsPage() {
         </div>
         <button
           type="button"
+          data-tour="mine-new"
           onClick={() => setPickerOpen(true)}
           disabled={templates.length === 0}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50 sm:w-auto"
@@ -101,7 +102,7 @@ export default function MyChecklistsPage() {
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-line/12 bg-surface shadow-card">
+      <div data-tour="mine-table" className="overflow-x-auto rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
           <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>

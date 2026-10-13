@@ -85,7 +85,7 @@ export default function LocationsPage() {
           ? ' No incident pins yet — raise an incident with a map pin to see it here.'
           : ` Showing ${plotted.length} incident pin${plotted.length === 1 ? '' : 's'}.`}
       </p>
-      <div className="isolate overflow-hidden rounded-lg border border-line/15">
+      <div data-tour="loc-map" className="isolate overflow-hidden rounded-lg border border-line/15">
         <div id="pgia-map" className="h-80 w-full" />
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink">
@@ -94,7 +94,11 @@ export default function LocationsPage() {
           Philip S.W. Goldson International Airport · PGIA / BZE
         </span>
         {statusKeysPresent.length > 0 && (
-          <span className="flex flex-wrap items-center gap-3 text-xs text-muted" aria-label="Incident status legend">
+          <span
+            data-tour="loc-legend"
+            className="flex flex-wrap items-center gap-3 text-xs text-muted"
+            aria-label="Incident status legend"
+          >
             {statusKeysPresent.map((key) => (
               <span key={key} className="inline-flex items-center gap-1.5">
                 <span

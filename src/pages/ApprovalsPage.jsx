@@ -144,7 +144,7 @@ export default function ApprovalsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div data-tour="appr-filters" className="flex flex-wrap items-center gap-2">
         <div className="relative w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
           <Search
             size={15}
@@ -189,6 +189,7 @@ export default function ApprovalsPage() {
         )}
       </div>
 
+      <div data-tour="appr-queue" className="space-y-5">
       {loading && <p className="text-muted">Loading…</p>}
 
       {!loading && rows.length === 0 && (
@@ -265,6 +266,7 @@ export default function ApprovalsPage() {
         </section>
         );
       })}
+      </div>
 
       {active && (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-navy/50 sm:items-start sm:p-4 sm:pt-10">

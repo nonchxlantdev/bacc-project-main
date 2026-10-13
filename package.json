@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "driver.js": "1.8.0",
     "idb": "^8.0.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",

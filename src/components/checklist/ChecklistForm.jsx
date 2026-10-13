@@ -215,14 +215,16 @@ export default function ChecklistForm({
           </div>
         )}
 
-        <HeaderFields
-          schema={schema}
-          header={header}
-          disabled={readOnly}
-          onChange={onHeaderChange}
-          signerName={signerName}
-          signerTitle={signerTitle}
-        />
+        <div data-tour="cl-header">
+          <HeaderFields
+            schema={schema}
+            header={header}
+            disabled={readOnly}
+            onChange={onHeaderChange}
+            signerName={signerName}
+            signerTitle={signerTitle}
+          />
+        </div>
 
         {sections.map((section, sectionIndex) => {
           const isOpen = open.has(sectionIndex);
@@ -239,15 +241,19 @@ export default function ChecklistForm({
               key={section.title}
               className="scroll-mt-3 overflow-hidden rounded-md border border-line/15 bg-surface shadow-card"
             >
-              <SectionHeader
-                title={section.title}
-                itemCount={section.items.length}
-                open={isOpen}
-                onToggle={() => toggleSection(sectionIndex)}
-              />
+              {/* The guided tour points at the first section's heading and its
+                  SAT / NO SAT column row, not the whole (tall) section. */}
+              <div data-tour={sectionIndex === 0 ? 'cl-section' : undefined}>
+                <SectionHeader
+                  title={section.title}
+                  itemCount={section.items.length}
+                  open={isOpen}
+                  onToggle={() => toggleSection(sectionIndex)}
+                />
+                {isOpen && <ColumnHead />}
+              </div>
               {isOpen && (
                 <>
-                  <ColumnHead />
                   {section.items.map((item, index) => (
                     <ChecklistItemRow
                       key={item.code}
@@ -326,7 +332,7 @@ export default function ChecklistForm({
           </section>
         ))}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div data-tour="cl-signoffs" className="grid gap-4 md:grid-cols-2">
           {(schema.signoffs ?? []).map((def) => {
             const signed = signoffs?.find((s) => s.role === def.role);
             // Only the self block (the form's own signer — first in
@@ -359,7 +365,7 @@ export default function ChecklistForm({
             {schema.footer?.reviewLine}
             {schema.footer?.dateLine ? ` | ${schema.footer.dateLine}` : ''}
           </p>
-          <p className="inline-flex items-center gap-1.5 font-medium text-success">
+          <p data-tour="cl-autosave" className="inline-flex items-center gap-1.5 font-medium text-success">
             <Check className="h-3.5 w-3.5" strokeWidth={3} />
             {lastSavedAt ? `Auto-saved: ${formatTime(lastSavedAt)}` : 'Autosave on every change'}
           </p>
@@ -385,6 +391,7 @@ export default function ChecklistForm({
         />
       )}
       <aside
+        data-tour="cl-evidence"
         className={`border-line/15 bg-surface xl:sticky xl:top-4 xl:h-fit xl:rounded-md xl:border xl:shadow-card max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:max-h-[min(52vh,420px)] max-xl:overflow-y-auto max-xl:overscroll-contain max-xl:rounded-t-xl max-xl:border-t max-xl:pb-[env(safe-area-inset-bottom)] max-xl:shadow-[0_-8px_24px_rgba(11,30,61,0.18)] ${
           hasItems ? '' : 'hidden'
         } ${selectedItem ? '' : 'max-xl:hidden'}`}

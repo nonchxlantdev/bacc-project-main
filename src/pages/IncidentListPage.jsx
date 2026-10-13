@@ -125,7 +125,7 @@ export default function IncidentListPage() {
             the team whose form it came from.
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <div data-tour="inc-actions" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <button
             type="button"
             disabled={!online || exporting}
@@ -146,7 +146,7 @@ export default function IncidentListPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div data-tour="inc-filters" className="flex flex-wrap items-center gap-2">
         <div className="relative w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
           <Search
             size={15}
@@ -206,7 +206,7 @@ export default function IncidentListPage() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-line/10 bg-surface shadow-card">
+      <div data-tour="inc-table" className="overflow-x-auto rounded-lg border border-line/10 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
           <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
             <tr>

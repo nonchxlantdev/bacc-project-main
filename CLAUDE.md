@@ -197,6 +197,21 @@ Two things to preserve when extending it:
 
 Findings from the last full pass are in `QA_REPORT.md`.
 
+## Access map and guided tours
+
+`src/config/access.js` decides which screens and capabilities each role is
+offered (sidebar, Settings admin sections, `/users` guard, tours). It mirrors
+`worker/auth/permissions.js` and `worker/data/rules.js`;
+`tests/access.test.js` fails if they drift. Change a server rule → change the
+map in the same commit.
+
+Guided tours live in `src/components/tour/` (content in `tours.js`). Steps
+point at `data-tour="…"` attributes — keep them when restyling, and
+`tests/tours.test.js` fails if a target disappears. Raise a tour's `version`
+when its screen changes enough to show it again. Tours never auto-start when
+`navigator.webdriver` is true, so QA scripts are not blocked; to see them in
+Playwright, override `navigator.webdriver` in an init script.
+
 ## Verify custom Tailwind variants reach the build
 
 A `@custom-variant` that fails to compile is silent — the utilities just vanish, and every

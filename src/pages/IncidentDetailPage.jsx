@@ -418,7 +418,7 @@ export default function IncidentDetailPage() {
       </div>
 
       {/* Status strip */}
-      <header className="rounded-md border border-line/15 bg-surface px-4 py-3 shadow-card">
+      <header data-tour="incd-status" className="rounded-md border border-line/15 bg-surface px-4 py-3 shadow-card">
         <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:gap-x-6">
           <div className="col-span-2 min-w-0 sm:col-span-3 lg:col-span-1 lg:pr-6">
             <span className="inline-block rounded bg-alert-soft px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-ink">
@@ -466,7 +466,7 @@ export default function IncidentDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-line/15 px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <div data-tour="incd-tabs" className="-mx-4 flex gap-1 overflow-x-auto border-b border-line/15 px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -848,7 +848,7 @@ export default function IncidentDetailPage() {
         </div>
 
         {/* Right rail */}
-        <aside className="h-fit space-y-4 xl:sticky xl:top-4">
+        <aside data-tour="incd-sidebar" className="h-fit space-y-4 xl:sticky xl:top-4">
           <Card title="Status & Workflow">
             <div className="space-y-3">
               {/* This used to also have a second "Workflow Step" dropdown here —

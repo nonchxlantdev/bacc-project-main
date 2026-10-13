@@ -153,7 +153,7 @@ export default function ReportsPage() {
             inspections — the checks each team is supposed to complete.
           </p>
         </div>
-        <div className="flex w-full gap-2 sm:w-auto">
+        <div data-tour="rep-actions" className="flex w-full gap-2 sm:w-auto">
           <SectionPicker
             open={pickerOpen}
             onOpenChange={setPickerOpen}
@@ -188,7 +188,7 @@ export default function ReportsPage() {
 
       {/* 1 — the headline, three numbers and what each one means */}
       {shows('headline') && (
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section data-tour="rep-headline" className="grid gap-3 sm:grid-cols-3">
         <Headline
           tone={totals.behind ? 'alert' : 'good'}
           Icon={totals.behind ? AlertTriangle : Check}

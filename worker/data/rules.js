@@ -315,6 +315,7 @@ export function validateProfilePatch(patch) {
     profile.position = position;
   }
   if (p.has_ever_signed !== undefined) profile.has_ever_signed = Boolean(p.has_ever_signed);
+  if (p.tours_seen !== undefined) profile.tours_seen = JSON.stringify(validateToursSeen(p.tours_seen));
   if (p.stored_signature_data_uri !== undefined) {
     signature.stored_signature_data_uri = validateSignature(p.stored_signature_data_uri);
   }
@@ -323,6 +324,29 @@ export function validateProfilePatch(patch) {
   }
   if (p.hide_signature_prompt !== undefined) signature.hide_signature_prompt = Boolean(p.hide_signature_prompt);
   return { profile, signature };
+}
+
+export const TOURS_SEEN_LIMITS = Object.freeze({ maxTours: 40, maxVersion: 1000 });
+const TOUR_ID_RE = /^[a-z][a-z0-9-]{0,39}$/;
+
+/**
+ * Guided-tour progress: `{ "<tour id>": <version seen> }`. Small and boring on
+ * purpose — ids are short slugs, versions whole numbers — so a profile field
+ * anyone can write for themselves cannot be used to park arbitrary data.
+ */
+export function validateToursSeen(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw bad('tours_seen must be an object');
+  const entries = Object.entries(value);
+  if (entries.length > TOURS_SEEN_LIMITS.maxTours) throw bad('tours_seen has too many entries');
+  const out = {};
+  for (const [id, version] of entries) {
+    if (!TOUR_ID_RE.test(id)) throw bad('tours_seen has an invalid tour id');
+    if (!Number.isInteger(version) || version < 1 || version > TOURS_SEEN_LIMITS.maxVersion) {
+      throw bad('tours_seen versions must be whole numbers from 1 to 1000');
+    }
+    out[id] = version;
+  }
+  return out;
 }
 
 export function validateSettingsSection(section) {

@@ -181,6 +181,16 @@ function createCoreStore(db) {
         await first(`SELECT ${PUBLIC_USER_COLUMNS} FROM users u WHERE u.email = ?1 COLLATE NOCASE`, email),
       );
     },
+    /** The account's own guided-tour progress; never part of the public user row. */
+    async getToursSeen(userId) {
+      const row = await first('SELECT tours_seen FROM users WHERE id = ?1', userId);
+      try {
+        const parsed = JSON.parse(row?.tours_seen || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch {
+        return {};
+      }
+    },
     async getSignature(userId) {
       const row = await first('SELECT * FROM profile_signatures WHERE user_id = ?1', userId);
       return {

@@ -530,7 +530,7 @@ export default function ChecklistDetailPage() {
             {!isReference && record.supersedes_id ? ' · correction' : ''}
           </p>
         </div>
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+        <div data-tour="cl-actions" className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           {!readOnly && (
             <button
               type="button"

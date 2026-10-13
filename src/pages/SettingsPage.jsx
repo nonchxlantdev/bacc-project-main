@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { can } from '../config/access.js';
 import {
   AlertTriangle,
   Bell,
@@ -108,14 +109,15 @@ const SECTIONS = [
   },
 ];
 
-const ADMIN_ROLES = ['om', 'coo', 'admin'];
 
 export default function SettingsPage() {
   const { user, profile, displayName, position, updateProfile, configured } = useAuth();
   const { settings, saveSection, resetSection } = useSettings();
   const { landingPage, timeFormat, setDisplayPrefs } = useDisplayPrefs();
 
-  const isAdmin = ADMIN_ROLES.includes(profile?.role);
+  // Airport-wide sections are offered to whoever the server lets save them
+  // (OM and administrator — config/access.js mirrors assertCanWriteSettings).
+  const isAdmin = can(profile, 'orgSettings');
   const sections = useMemo(
     () => SECTIONS.filter((s) => !s.admin || isAdmin),
     [isAdmin],
@@ -247,7 +249,7 @@ export default function SettingsPage() {
       <div className="gap-5 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
         {/* Phone: a select, because eight sections of vertical tabs would push
             the actual settings below the fold on every visit. */}
-        <div className="mb-4 lg:hidden">
+        <div data-tour="set-sections" className="mb-4 lg:hidden">
           <Select
             label="Settings section"
             value={active?.id}
@@ -256,7 +258,7 @@ export default function SettingsPage() {
           />
         </div>
 
-        <nav aria-label="Settings sections" className="hidden lg:block">
+        <nav data-tour="set-sections" aria-label="Settings sections" className="hidden lg:block">
           <ul className="space-y-0.5">
             {sections.map((section) => {
               const on = section.id === active?.id;
@@ -288,7 +290,7 @@ export default function SettingsPage() {
           </ul>
         </nav>
 
-        <div className="min-w-0 space-y-4">
+        <div data-tour="set-panel" className="min-w-0 space-y-4">
           {banner && (
             <p
               className={`rounded-md border px-4 py-2 text-sm ${

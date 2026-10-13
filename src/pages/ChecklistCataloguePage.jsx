@@ -196,7 +196,7 @@ export default function ChecklistCataloguePage() {
         />
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div data-tour="all-kpis" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Total Checklist Forms" value={kpis.total} />
         <StatTile label="Completed This Month" value={kpis.completedThisMonth} />
         {/* Overdue is recoverable, missed is a compliance gap — the note keeps
@@ -215,7 +215,7 @@ export default function ChecklistCataloguePage() {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div data-tour="all-filters" className="flex flex-wrap items-center gap-2">
         <div className="relative w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
           <Search
             size={15}
@@ -271,7 +271,7 @@ export default function ChecklistCataloguePage() {
           onStart={startNew}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div data-tour="all-teams" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {teams.map((entry) => (
             <TeamCard key={entry.name} team={entry} onOpen={setTeam} />
           ))}

@@ -7,6 +7,7 @@ import { queueHandlers } from '../../lib/queueHandlers.js';
 import { probeReachability } from '../../lib/reachability.js';
 import { flushQueue } from '../../utils/offlineQueue.js';
 import OfflineModal from '../offline/OfflineModal.jsx';
+import { TourProvider } from '../tour/TourProvider.jsx';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 
@@ -215,28 +216,30 @@ function AppShellInner() {
   }
 
   return (
-    <div className="flex min-h-screen md:fixed md:inset-0 md:h-[100dvh] md:min-h-0">
-      {navOpen && (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-30 bg-navy/60 md:hidden"
+    <TourProvider navOpen={navOpen} setNavOpen={setNavOpen}>
+      <div className="flex min-h-screen md:fixed md:inset-0 md:h-[100dvh] md:min-h-0">
+        {navOpen && (
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setNavOpen(false)}
+            className="fixed inset-0 z-30 bg-navy/60 md:hidden"
+          />
+        )}
+        <Sidebar
+          open={navOpen}
+          onClose={() => setNavOpen(false)}
+          collapsed={collapsed}
+          onToggleCollapsed={() => setCollapsedPref((current) => !current)}
         />
-      )}
-      <Sidebar
-        open={navOpen}
-        onClose={() => setNavOpen(false)}
-        collapsed={collapsed}
-        onToggleCollapsed={() => setCollapsedPref((current) => !current)}
-      />
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:min-h-0">
-        <TopBar online={online} onMenuClick={() => setNavOpen(true)} />
-        <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain bg-stripe px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5">
-          <Outlet context={{ online }} />
-        </main>
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col md:min-h-0">
+          <TopBar online={online} onMenuClick={() => setNavOpen(true)} />
+          <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain bg-stripe px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5">
+            <Outlet context={{ online }} />
+          </main>
+        </div>
+        <OfflineModal open={offlineModalOpen} onDismiss={() => setOfflineModalOpen(false)} />
       </div>
-      <OfflineModal open={offlineModalOpen} onDismiss={() => setOfflineModalOpen(false)} />
-    </div>
+    </TourProvider>
   );
 }

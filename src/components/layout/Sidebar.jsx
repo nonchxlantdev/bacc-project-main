@@ -19,35 +19,41 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { can, SCREENS } from '../../config/access.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { pgiaLogoUrl } from '../../lib/brandAssets.js';
 
 // Grouped the way the people who use this actually think about the app: the
 // forms and queues they touch every shift, versus the admin screens they
-// open a handful of times a month.
+// open a handful of times a month. Paths and labels come from the access map
+// (config/access.js), which also decides which items a role is offered — the
+// same map the guided tours read, so a tour never points at a hidden item.
 const NAV_GROUPS = [
   {
     label: 'Operate',
     items: [
-      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/checklists/mine', label: 'My Checklists', icon: ClipboardCheck },
-      { to: '/checklists/all', label: 'All Checklists', icon: List },
-      { to: '/incidents', label: 'Incidents', icon: ShieldAlert },
-      { to: '/approvals', label: 'Approvals', icon: Inbox },
+      { screen: 'dashboard', icon: LayoutDashboard },
+      { screen: 'checklistsMine', icon: ClipboardCheck },
+      { screen: 'checklistsAll', icon: List },
+      { screen: 'incidents', icon: ShieldAlert },
+      { screen: 'approvals', icon: Inbox },
     ],
   },
   {
     label: 'Manage',
     items: [
-      { to: '/reports', label: 'Reports', icon: BarChart3 },
-      { to: '/locations', label: 'Locations', icon: MapPin },
-      { to: '/users', label: 'Users', icon: Users },
-      { to: '/settings', label: 'Settings', icon: Settings },
-      { to: '/help', label: 'Help', icon: CircleHelp },
+      { screen: 'reports', icon: BarChart3 },
+      { screen: 'locations', icon: MapPin },
+      { screen: 'users', icon: Users },
+      { screen: 'settings', icon: Settings },
+      { screen: 'help', icon: CircleHelp },
     ],
   },
-];
+].map((group) => ({
+  ...group,
+  items: group.items.map((item) => ({ ...item, to: SCREENS[item.screen].path, label: SCREENS[item.screen].label })),
+}));
 
 /**
  * `collapsed` only ever arrives `true` at `md` (768px) and up — AppShell
@@ -59,7 +65,7 @@ const NAV_GROUPS = [
  * expanded.
  */
 export default function Sidebar({ open = false, onClose, collapsed = false, onToggleCollapsed }) {
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const panelRef = useRef(null);
@@ -75,7 +81,12 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
   const [indicator, setIndicator] = useState(null);
   const hasPositionedRef = useRef(false);
 
-  const activeTo = NAV_GROUPS.flatMap((group) => group.items).find((item) =>
+  const groups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => can(profile, item.screen)),
+  })).filter((group) => group.items.length > 0);
+
+  const activeTo = groups.flatMap((group) => group.items).find((item) =>
     isNavActive(item.to, location.pathname),
   )?.to;
 
@@ -101,7 +112,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [activeTo, collapsed]);
+  }, [activeTo, collapsed, groups.length]);
 
   // Opening the drawer moves focus into it; closing hands focus back to the page.
   useEffect(() => {
@@ -113,6 +124,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
       ref={panelRef}
       tabIndex={-1}
       aria-label="Main navigation"
+      data-tour="sidebar"
       className={`fixed inset-y-0 left-0 z-40 flex w-[268px] max-w-[85vw] shrink-0 flex-col bg-gradient-to-b from-navy to-navy-deep text-white shadow-2xl outline-none transition-[transform,visibility,width] duration-200 ease-out md:static md:z-auto md:max-w-none md:visible md:translate-x-0 md:shadow-none ${
         collapsed ? 'md:w-[76px]' : 'md:w-[236px]'
       } ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
@@ -193,7 +205,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
             }}
           />
         )}
-        {NAV_GROUPS.map((group, groupIndex) => (
+        {groups.map((group, groupIndex) => (
           <div
             key={group.label}
             className={collapsed && groupIndex > 0 ? 'border-t border-white/10 pt-3' : undefined}
@@ -212,6 +224,7 @@ export default function Sidebar({ open = false, onClose, collapsed = false, onTo
                     else itemRefs.current.delete(item.to);
                   }}
                   to={item.to}
+                  data-tour={`nav-${item.screen}`}
                   title={collapsed ? item.label : undefined}
                   aria-label={collapsed ? item.label : undefined}
                   className={() => {

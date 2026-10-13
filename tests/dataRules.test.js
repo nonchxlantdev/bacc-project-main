@@ -186,6 +186,30 @@ test('profile patch: self fields only', () => {
   assert.throws(() => validateProfilePatch({ stored_signature_data_uri: 'not-an-image' }), (e) => e.status === 400);
 });
 
+test('profile patch: tours_seen is a small map of tour ids to versions', () => {
+  assert.deepEqual(validateProfilePatch({ tours_seen: { intro: 1, 'checklists-mine': 2 } }), {
+    profile: { tours_seen: '{"intro":1,"checklists-mine":2}' },
+    signature: {},
+  });
+  assert.deepEqual(validateProfilePatch({ tours_seen: {} }).profile, { tours_seen: '{}' });
+  const rejects = [
+    null,
+    [],
+    'intro',
+    { intro: 0 },
+    { intro: 1.5 },
+    { intro: '1' },
+    { intro: 1001 },
+    { Intro: 1 },
+    { ['x'.repeat(41)]: 1 },
+    { '<script>': 1 },
+    Object.fromEntries(Array.from({ length: 41 }, (_, i) => [`t${i}`, 1])),
+  ];
+  for (const value of rejects) {
+    assert.throws(() => validateProfilePatch({ tours_seen: value }), (e) => e.status === 400, JSON.stringify(value));
+  }
+});
+
 test('amendments fold: later entries replace, null undoes', () => {
   const a1 = { item_code: 'A1', reason: 'r', to: 'sat' };
   const a2 = { item_code: 'A2', reason: 'r', to: 'sat' };

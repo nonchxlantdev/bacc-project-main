@@ -324,6 +324,20 @@ test('settings: managers save and reset with an audit trail; others read', async
   assert.equal(await status(call('settings.audit', users.insp)), 403);
 });
 
+test('users: tours_seen round-trips for the account itself and is never shown to anyone else', async () => {
+  const { users, call } = await setup();
+  assert.deepEqual((await call('users.getById', users.insp, { id: 'insp' })).tours_seen, {});
+  const updated = await call('users.update', users.insp, { id: 'insp', patch: { tours_seen: { intro: 1, incidents: 1 } } });
+  assert.deepEqual(updated.tours_seen, { intro: 1, incidents: 1 });
+  assert.deepEqual((await call('users.getById', users.insp, { id: 'insp' })).tours_seen, { intro: 1, incidents: 1 });
+  // A supervisor may see a colleague's signature, but not their tour progress.
+  assert.equal((await call('users.getById', users.coo, { id: 'insp' })).tours_seen, undefined);
+  assert.equal((await call('users.getById', users.other, { id: 'insp' })).tours_seen, undefined);
+  assert.ok((await call('users.list', users.admin)).every((u) => u.tours_seen === undefined));
+  assert.equal(await status(call('users.update', users.insp, { id: 'insp', patch: { tours_seen: { intro: -1 } } })), 400);
+  assert.equal(await status(call('users.update', users.insp, { id: 'om', patch: { tours_seen: { intro: 1 } } })), 403);
+});
+
 test('users: public fields, signature visibility, self-only update', async () => {
   const { users, call } = await setup();
   const updated = await call('users.update', users.insp, {

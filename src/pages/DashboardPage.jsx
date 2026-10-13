@@ -84,7 +84,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div data-tour="dash-kpis" className="grid gap-4 sm:grid-cols-3">
         <StatTile
           label="Incidents"
           value={kpis?.incidentsOpen ?? '—'}
@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
       {/* The two questions someone opens this page to answer: what has been
           filed lately, and what is still outstanding. */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div data-tour="dash-panels" className="grid gap-4 lg:grid-cols-2">
         <Panel title="Checklists completed" href="/checklists/all" linkLabel="All checklists">
           {completed.length === 0 ? (
             <Empty icon={CheckCircle2}>No checklists have been submitted yet.</Empty>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div data-tour="dash-activity" className="grid gap-4 lg:grid-cols-2">
         {/* A bar chart of nothing is a zero-height frame under a heading, which
             reads as a broken card rather than an empty one. On a portal with
             nothing filed yet — which is how every new environment starts — say

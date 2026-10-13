@@ -55,10 +55,17 @@ export default function TopBar({ online, onMenuClick }) {
           aria-label={online ? 'Online' : 'Offline'}
           className={`h-2 w-2 shrink-0 rounded-full md:hidden ${online ? 'bg-teal' : 'bg-alert'}`}
         />
-        <HelpDropdown />
-        <NotificationDropdown />
+        <div data-tour="topbar-help">
+          <HelpDropdown />
+        </div>
+        <div data-tour="topbar-notifications">
+          <NotificationDropdown />
+        </div>
         <Dropdown align="right">
-          <Dropdown.Toggle className="flex min-h-11 items-center gap-3 rounded-md px-1 py-1 transition-colors duration-150 ease-out hover:bg-surface-2 sm:px-2">
+          <Dropdown.Toggle
+            data-tour="topbar-profile"
+            className="flex min-h-11 items-center gap-3 rounded-md px-1 py-1 transition-colors duration-150 ease-out hover:bg-surface-2 sm:px-2"
+          >
             <span className="hidden text-right leading-tight md:block">
               <span className="block max-w-[13rem] truncate text-sm font-semibold text-ink">{displayName}</span>
               <span className="block max-w-[13rem] truncate text-[11px] text-muted">{position}</span>

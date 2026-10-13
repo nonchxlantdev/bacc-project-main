@@ -71,8 +71,12 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
 
   async function withSignature(actor, user) {
     if (!user) return null;
-    if (user.id !== actor.id && !canSeeOthersSignatures(actor)) return user;
-    return { ...user, ...(await store.getSignature(user.id)) };
+    const self = user.id === actor.id;
+    if (!self && !canSeeOthersSignatures(actor)) return user;
+    const withSig = { ...user, ...(await store.getSignature(user.id)) };
+    // Tour progress is the account's own business — even supervisors, who may
+    // see a colleague's signature, never get it.
+    return self ? { ...withSig, tours_seen: await store.getToursSeen(user.id) } : withSig;
   }
 
   /** Statements that acknowledge a submitted checklist (shared by acknowledge and approvals.decide). */
