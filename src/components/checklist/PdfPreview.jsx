@@ -1,6 +1,7 @@
 import { FileText, RefreshCw } from 'lucide-react';
+import PdfPageCanvas from './PdfPageCanvas.jsx';
 
-export default function PdfPreview({ url, loading, error, onRefresh }) {
+export default function PdfPreview({ source, loading, error, onRefresh }) {
   return (
     <section
       id="pdf-preview"
@@ -19,7 +20,7 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
         {/* Only meaningful once a preview is actually open — otherwise this sat
             here at all times and re-opened the panel right after "Hide
             preview" closed it, undoing the close the person just asked for. */}
-        {(url || loading) && (
+        {(source || loading) && (
           <button
             type="button"
             onClick={onRefresh}
@@ -35,12 +36,8 @@ export default function PdfPreview({ url, loading, error, onRefresh }) {
       {/* A full US-Letter page is ~1100px tall. On a phone that is a scroll trap
           inside a scroll, so the frame gets a viewport-relative height there and
           the full page height only once the screen can hold it. */}
-      {url ? (
-        <iframe
-          title="Checklist PDF preview"
-          src={url}
-          className="block h-[70dvh] min-h-[380px] w-full bg-stripe lg:h-[1100px]"
-        />
+      {source ? (
+        <PdfPageCanvas source={source} className="max-h-[80dvh] overflow-y-auto bg-stripe lg:max-h-none" />
       ) : (
         <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
           <p className="text-sm text-muted">Stamp current values onto the approved PDF to preview it here.</p>

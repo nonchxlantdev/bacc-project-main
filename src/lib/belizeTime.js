@@ -132,3 +132,24 @@ export function eachMonthStart(fromYmd, toYmd) {
   }
   return out;
 }
+
+/**
+ * The date stored on a checklist record (`inspection_date`).
+ *
+ * Several approved forms print their Date box as free text (the wildlife
+ * reports' "Date: _bn"), so a person may type "October 13, 2026". That value
+ * stays in the header exactly as typed and prints unchanged (BACC §14); the
+ * record's own date column must still be a real calendar date — the Worker
+ * accepts at most 10 characters and reports filter on it. A non-ISO value
+ * falls back to the airport-local date of `nowMs`.
+ */
+export function recordInspectionDate(headerDate, nowMs) {
+  if (typeof headerDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(headerDate)) {
+    const [y, m, d] = headerDate.split('-').map(Number);
+    const probe = new Date(Date.UTC(y, m - 1, d));
+    if (probe.getUTCFullYear() === y && probe.getUTCMonth() === m - 1 && probe.getUTCDate() === d) {
+      return headerDate;
+    }
+  }
+  return airportYmd(nowMs);
+}

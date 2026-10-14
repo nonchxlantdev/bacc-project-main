@@ -13,7 +13,7 @@ export const INCIDENT_STAGES = {
   assigned: 'Choose the unit that will fix it and set a target date.',
   in_progress: 'Record what is being done. Add photos as the work goes on.',
   resolved: 'Record that the unit has finished the work.',
-  closed: 'Someone re-checks it on site. Confirming SAT here changes the original checklist item from NO SAT to SAT.',
+  closed: 'Someone re-checks it on site and ticks Checked and closed. That changes the original checklist item from NO SAT to SAT.',
 };
 
 /** Beside the verification controls, where the choice is actually made. */

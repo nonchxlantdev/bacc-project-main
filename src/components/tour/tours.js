@@ -285,7 +285,7 @@ export const TOURS = [
 
   {
     id: 'incident',
-    version: 1,
+    version: 2,
     title: 'Managing an incident',
     path: '/incidents/:id',
     screen: 'incidents',
@@ -297,13 +297,13 @@ export const TOURS = [
       },
       {
         target: 'incd-tabs',
-        title: 'Details, updates and history',
-        body: 'Switch tabs to read the source item, see the location, add an update or check every change.',
+        title: 'Details, location and history',
+        body: 'Switch tabs to read the source item, see the location on the map, or check every change.',
       },
       {
         target: 'incd-sidebar',
-        title: 'Status and assignment',
-        body: 'Move the incident through its stages. Closing needs the source item verified back to SAT.',
+        title: 'Progress',
+        body: 'Tick each step as the work moves along: send it to a unit with a due date, work started, fixed, then checked and closed.',
         faq: 'incidents',
       },
     ],

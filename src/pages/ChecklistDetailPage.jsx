@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import ChecklistForm, { validateChecklist } from '../components/checklist/ChecklistForm.jsx';
 import PdfPreview from '../components/checklist/PdfPreview.jsx';
+import PdfPageCanvas from '../components/checklist/PdfPageCanvas.jsx';
 import CreateIncidentModal from '../components/incidents/CreateIncidentModal.jsx';
 import SignaturePad from '../components/checklist/SignaturePad.jsx';
 import SignaturePromptModal from '../components/checklist/SignaturePromptModal.jsx';
@@ -23,7 +24,7 @@ import {
 } from '../lib/submissions.js';
 import { listIncidents } from '../lib/incidents.js';
 import { getTemplate } from '../lib/templates.js';
-import { airportYmd } from '../lib/belizeTime.js';
+import { airportYmd, recordInspectionDate } from '../lib/belizeTime.js';
 import { getRepos } from '../data/repositories/index.js';
 import { baseFormUrl } from '../lib/baseForms.js';
 import { ROLE_TITLES } from '../lib/roleStaffing.js';
@@ -49,9 +50,11 @@ export default function ChecklistDetailPage() {
   const [photoPreview, setPhotoPreview] = useState({});
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const autosaveRef = useRef(null);
   const [exporting, setExporting] = useState(false);
   const [previewing, setPreviewing] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewSource, setPreviewSource] = useState(null);
   const [previewError, setPreviewError] = useState(null);
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [loadError, setLoadError] = useState(null);
@@ -59,13 +62,6 @@ export default function ChecklistDetailPage() {
   const [itemIncidents, setItemIncidents] = useState({});
   const [omSignature, setOmSignature] = useState('');
   const [signaturePromptOpen, setSignaturePromptOpen] = useState(false);
-  const previewUrlRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,12 +130,16 @@ export default function ChecklistDetailPage() {
 
   useEffect(() => {
     if (!record || readOnly) return undefined;
-    const handle = setTimeout(() => {
+    autosaveRef.current = setTimeout(() => {
+      autosaveRef.current = null;
       persistSubmission(record)
         .then(() => setLastSavedAt(new Date()))
         .catch(() => {});
     }, 500);
-    return () => clearTimeout(handle);
+    return () => {
+      clearTimeout(autosaveRef.current);
+      autosaveRef.current = null;
+    };
   }, [record, readOnly]);
 
   async function persistHideSignaturePrompt(hide) {
@@ -196,8 +196,8 @@ export default function ChecklistDetailPage() {
     try {
       const merged = {
         ...nextRecord,
-        inspection_type: nextRecord.header.inspectionType,
-        inspection_date: nextRecord.header.date,
+        inspection_type: nextRecord.header.inspectionType ?? nextRecord.inspection_type,
+        inspection_date: recordInspectionDate(nextRecord.header.date, Date.now()),
         rainfall_mm: nextRecord.header.rainfallMm,
       };
       const saved = await persistSubmission(merged);
@@ -210,6 +210,7 @@ export default function ChecklistDetailPage() {
   }
 
   async function handleSubmit() {
+    if (submitting) return;
     const { unresolved, missingHeader } = validateChecklist(schema, record.header, record.items);
     if (unresolved.length || missingHeader.length) {
       setBanner({
@@ -267,13 +268,25 @@ export default function ChecklistDetailPage() {
       ...record,
       status: 'submitted',
       submitted_at: signedAt,
-      inspection_type: record.header.inspectionType,
-      inspection_date: record.header.date,
+      inspection_type: record.header.inspectionType ?? record.inspection_type,
+      inspection_date: recordInspectionDate(record.header.date, Date.parse(signedAt)),
       signoffs: selfSignoff ? [selfSignoff, ...otherSignoffs] : record.signoffs,
       locked: true,
     };
-    await save(next);
-    setBanner({ type: 'ok', text: 'Submitted. You can export the official PDF when online.' });
+    clearTimeout(autosaveRef.current);
+    autosaveRef.current = null;
+    setSubmitting(true);
+    try {
+      await save(next);
+      setBanner({ type: 'ok', text: 'Submitted. You can export the official PDF when online.' });
+    } catch (err) {
+      setBanner({
+        type: 'error',
+        text: `Could not submit: ${err?.message || 'the server did not accept it'}. Your checklist is still a draft and nothing was lost — fix the issue and submit again.`,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function handlePhotoSelect(code, file) {
@@ -388,22 +401,12 @@ export default function ChecklistDetailPage() {
     return res.blob();
   }
 
-  function setPreviewBlobUrl(blob) {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const url = URL.createObjectURL(blob);
-    previewUrlRef.current = url;
-    setPreviewUrl(url);
-  }
-
   function scrollToPreview() {
     document.getElementById('pdf-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function closePreview() {
-    // Only blob URLs we created need revoking; a bundled asset URL must not be.
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    previewUrlRef.current = null;
-    setPreviewUrl(null);
+    setPreviewSource(null);
   }
 
   async function handleShowPreview() {
@@ -416,7 +419,7 @@ export default function ChecklistDetailPage() {
         return;
       }
       setPreviewError(null);
-      setPreviewUrl(url);
+      setPreviewSource(url);
       return;
     }
     scrollToPreview();
@@ -428,8 +431,7 @@ export default function ChecklistDetailPage() {
     setPreviewError(null);
     try {
       const current = (await save(record)) || record;
-      const blob = await buildOverlayBlob(current);
-      setPreviewBlobUrl(blob);
+      setPreviewSource(await buildOverlayBlob(current));
       requestAnimationFrame(scrollToPreview);
     } catch (err) {
       setPreviewError(err.message);
@@ -550,14 +552,14 @@ export default function ChecklistDetailPage() {
             // bottom of the page indefinitely, reading as stray blank space
             // once the person scrolled past it. Closing now mirrors the
             // reference-sheet case: any open preview toggles closed.
-            onClick={previewUrl ? closePreview : handleShowPreview}
+            onClick={previewSource ? closePreview : handleShowPreview}
             disabled={previewing}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md desk:min-h-10 sm:justify-start border border-line/20 bg-surface px-3 py-2 text-sm font-medium text-ink"
           >
             <Eye className="h-4 w-4" />
             {previewing
               ? 'Rendering…'
-              : previewUrl
+              : previewSource
                 ? 'Hide preview'
                 : !isReference
                   ? 'Show preview'
@@ -567,9 +569,10 @@ export default function ChecklistDetailPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex min-h-11 items-center justify-center rounded-md desk:min-h-10 sm:justify-start bg-navy px-4 py-2 text-sm font-semibold text-white"
+              disabled={submitting}
+              className="inline-flex min-h-11 items-center justify-center rounded-md desk:min-h-10 sm:justify-start bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
-              Submit Checklist
+              {submitting ? 'Submitting…' : 'Submit Checklist'}
             </button>
           )}
           {!isReference && (
@@ -653,12 +656,8 @@ export default function ChecklistDetailPage() {
         </section>
       )}
 
-      {isReference && previewUrl ? (
-        <iframe
-          title={`${schema.title} — approved PDF`}
-          src={previewUrl}
-          className="block h-[calc(100dvh-13rem)] min-h-[420px] w-full rounded-lg border border-line/15 bg-stripe"
-        />
+      {isReference && previewSource ? (
+        <PdfPageCanvas source={previewSource} className="rounded-lg border border-line/15 bg-stripe" />
       ) : (
       <ChecklistForm
         schema={schema}
@@ -756,9 +755,10 @@ export default function ChecklistDetailPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white sm:w-auto desk:min-h-10"
+            disabled={submitting}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto desk:min-h-10"
           >
-            Submit Checklist
+            {submitting ? 'Submitting…' : 'Submit Checklist'}
           </button>
         </div>
       )}
@@ -781,7 +781,7 @@ export default function ChecklistDetailPage() {
       {/* A reference sheet has no overlay to re-render, so it gets no refresh
           block — View PDF simply swaps the page for the approved document. */}
       {!isReference && (
-        <PdfPreview url={previewUrl} loading={previewing} error={previewError} onRefresh={handleShowPreview} />
+        <PdfPreview source={previewSource} loading={previewing} error={previewError} onRefresh={handleShowPreview} />
       )}
       {isReference && previewError && (
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{previewError}</p>
