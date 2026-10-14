@@ -106,7 +106,7 @@ export const FAQ_GROUPS = [
       },
       {
         q: 'How do I assign an incident?',
-        a: 'Open the incident, select the responsible unit under Assigned Unit (Grounds, Electrical, or Plumbing), and set a target date. The incident cannot advance past Reported until both are complete. You assign a unit, not an individual.',
+        a: 'Open the incident and, under Progress, tick the unit doing the work (Grounds, Electrical, or Plumbing) and set a due date. Step 1 ticks itself once both are set. You assign a unit, not an individual.',
       },
       {
         q: 'Why can I not assign it to a named person?',
@@ -124,11 +124,11 @@ export const FAQ_GROUPS = [
       },
       {
         q: 'When does the original NO SAT become SAT?',
-        a: 'When you confirm the item as SAT on the incident. The original checklist item then changes from NO SAT to SAT, with a record of when it changed and which incident caused the change. If verification is withdrawn, the item returns to NO SAT.',
+        a: 'When you tick "Checked and closed" on the incident and confirm the item is OK. The original checklist item then changes from NO SAT to SAT, with a record of when it changed and which incident caused the change.',
       },
       {
         q: 'It is still not fixed. What do I do?',
-        a: 'Mark the item NO SAT on the incident rather than SAT. Keep the incident open and retain its history. Do not close it and raise a new one.',
+        a: 'Leave "Checked and closed" unticked (answer "Not yet") and keep the incident open. If it was marked Fixed too early, untick Fixed. Do not close it and raise a new one.',
       },
       ...(WORK_ORDERS_ENABLED
         ? [

@@ -3,24 +3,21 @@ import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 
 import {
   AlertTriangle,
   ArrowLeft,
-  Calendar,
   Check,
-  ChevronDown,
   Clock,
   History as HistoryIcon,
   ImagePlus,
   LocateFixed,
-  Lock,
   MapPin,
   MessageSquarePlus,
   Paperclip,
   Pencil,
-  RefreshCw,
   X,
 } from 'lucide-react';
 import LocationPicker, { captureGps } from '../components/incidents/LocationPicker.jsx';
 import DeficiencyLevelPicker from '../components/incidents/DeficiencyLevelPicker.jsx';
-import VerificationPanel from '../components/incidents/VerificationPanel.jsx';
+import ProgressChecklist from '../components/incidents/ProgressChecklist.jsx';
+import { PROGRESS_STEPS, applyUnitChoice, statusAfterUntick, withAutoAssign } from '../lib/incidentProgress.js';
 import { isD1Data } from '../lib/dataMode.js';
 import { TeamChip } from './IncidentListPage.jsx';
 import {
@@ -28,12 +25,10 @@ import {
   Field,
   Metric,
   Row,
-  SelectField,
   StripField,
   labelOf,
 } from '../components/incidents/detailUi.jsx';
 import { fmtCoord, fmtDate, fmtDateTime } from '../lib/airportFormat.js';
-import Dropdown from '../components/ui/Dropdown.jsx';
 import { getDeficiencyLevel, slaState } from '../config/deficiencyLevels.js';
 import { ASSIGNED_UNITS, INCIDENT_CATEGORIES, INCIDENT_TYPES } from '../config/incidentLookups.js';
 import { INSPECTION_TYPES } from '../lib/checklistSchema.js';
@@ -42,10 +37,8 @@ import { syncSourceChecklist } from '../lib/checklistSync.js';
 import { getRepos } from '../data/repositories/index.js';
 import { compressImage } from '../lib/imageCompress.js';
 import {
-  INCIDENT_STATUSES,
   hasSatVerification,
   incidentStatusLabel,
-  incidentStepIndex,
   incidentTransitionBlockers,
 } from '../lib/incidentLifecycle.js';
 import {
@@ -60,15 +53,18 @@ import UnavailableNote from '../components/ui/UnavailableNote.jsx';
 // On D1 photos and attachments are not offered: the tab stays and says so.
 const PHOTOS_ENABLED = !isD1Data();
 
+// Hidden for now (the team asked for a simpler page). The tab code below stays
+// in place — flip a flag to bring a tab back.
+const SHOW_PHOTOS_TAB = false;
+const SHOW_UPDATES_TAB = false;
+
 const TABS = [
   { id: 'details', label: 'Incident Details', icon: AlertTriangle },
   { id: 'location', label: 'Location', icon: MapPin },
-  { id: 'photos', label: 'Photos & Attachments', icon: Paperclip },
-  { id: 'updates', label: 'Actions & Updates', icon: Clock },
+  SHOW_PHOTOS_TAB && { id: 'photos', label: 'Photos & Attachments', icon: Paperclip },
+  SHOW_UPDATES_TAB && { id: 'updates', label: 'Actions & Updates', icon: Clock },
   { id: 'history', label: 'History', icon: HistoryIcon },
-];
-
-const STEP_LABELS = ['Reported', 'Assigned', 'In\u00a0Progress', 'Resolved', 'Closed'];
+].filter(Boolean);
 
 export default function IncidentDetailPage() {
   const { id } = useParams();
@@ -82,7 +78,6 @@ export default function IncidentDetailPage() {
   const [updateBody, setUpdateBody] = useState('');
   const [reinspections, setReinspections] = useState([]);
   const [locationView, setLocationView] = useState('map');
-  const [statusOpen, setStatusOpen] = useState(false);
   const [clockMs, setClockMs] = useState(() => Date.now());
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
@@ -123,15 +118,12 @@ export default function IncidentDetailPage() {
 
   const level = incident ? getDeficiencyLevel(incident.deficiency_level) : null;
   const sla = incident ? slaState(incident.target_date, clockMs) : { kind: 'none' };
-  const step = incident ? incidentStepIndex(incident.status) : 0;
   const verified = incident ? hasSatVerification(incident) : false;
 
+  // Tick boxes, one unit at a time — no "Unassigned" entry: unticking clears.
   const assignedUnitOptions = useMemo(() => {
-    const unassigned = { value: '', label: 'Unassigned' };
-    if (profile?.role === 'apron_supervisor') {
-      return [unassigned, { value: 'om', label: 'Operations Manager' }];
-    }
-    return [unassigned, ...ASSIGNED_UNITS.filter((u) => u.value !== 'om')];
+    if (profile?.role === 'apron_supervisor') return [{ value: 'om', label: 'Operations Manager' }];
+    return ASSIGNED_UNITS.filter((u) => u.value !== 'om');
   }, [profile?.role]);
 
   async function saveIncident(next) {
@@ -152,7 +144,6 @@ export default function IncidentDetailPage() {
   }
 
   async function changeStatus(toStatus) {
-    setStatusOpen(false);
     const blockers = incidentTransitionBlockers(incident, toStatus, {
       reinspection: incident.reinspection_submission_id,
     });
@@ -217,53 +208,108 @@ export default function IncidentDetailPage() {
     }
   }
 
-  // ---- Item verification (does NOT modify the submitted checklist) ---------
+  // ---- Progress tick boxes ------------------------------------------------
 
-  async function confirmVerification() {
-    setBusy(true);
-    try {
-      const next = {
-        ...incident,
-        verification: {
-          result: 'sat',
-          verified_at: new Date().toISOString(),
-          verified_by: user?.id ?? 'local',
-          verified_by_name: displayName || profile?.full_name || 'User',
-          note: verifyDraft.note?.trim() || '',
-          photo_url: verifyDraft.photo || null,
-        },
-      };
-      await saveIncident(next);
+  /** Save, and when the status moved, log it so History shows the change. */
+  async function saveAndLog(next, body) {
+    const saved = await saveIncident(next);
+    if (next.status !== incident.status) {
       await addIncidentUpdate(next, {
-        body: `${incident.source_item_code} verified back to SAT${
-          verifyDraft.note?.trim() ? ` — ${verifyDraft.note.trim()}` : ''
-        }`,
+        body: body ?? `Status changed to ${incidentStatusLabel(next.status)}.`,
+        status_from: incident.status,
+        status_to: next.status,
         authorId: user?.id,
         authorName: displayName,
       });
-      setVerifyDraft(null);
-      setBanner({ type: 'ok', text: `${incident.source_item_code} verified SAT. The incident can now be closed.` });
-      await reload();
-    } finally {
-      setBusy(false);
+    }
+    await reload();
+    return saved;
+  }
+
+  async function onUnitChange(unit) {
+    setBanner(null);
+    try {
+      await saveAndLog(applyUnitChoice(incident, unit, new Date().toISOString()));
+    } catch (err) {
+      setBanner({ type: 'error', text: err.message });
     }
   }
 
-  async function clearVerification() {
-    const next = { ...incident, verification: null };
-    await saveIncident(next);
-    await addIncidentUpdate(next, {
-      body: `${incident.source_item_code} verification withdrawn — item is NO SAT again.`,
-      authorId: user?.id,
-      authorName: displayName,
-    });
-    setBanner({ type: 'ok', text: 'Verification withdrawn.' });
-    await reload();
+  async function onDueDateChange(ymd) {
+    setBanner(null);
+    try {
+      await saveAndLog(withAutoAssign({ ...incident, target_date: ymd || null }));
+    } catch (err) {
+      setBanner({ type: 'error', text: err.message });
+    }
   }
 
-  async function attachVerificationPhoto(file) {
-    const { dataUrl } = await compressImage(file);
-    setVerifyDraft((d) => ({ ...d, photo: dataUrl }));
+  function onTick(stepKey) {
+    setBanner(null);
+    if (stepKey === 'closed') {
+      setVerifyDraft({ note: '' });
+      return;
+    }
+    const target = PROGRESS_STEPS.find((row) => row.key === stepKey);
+    if (target) changeStatus(target.status);
+  }
+
+  function onUntick(stepKey) {
+    setBanner(null);
+    if (stepKey === 'sent') {
+      onUnitChange(null);
+      return;
+    }
+    const to = statusAfterUntick(stepKey);
+    if (to) changeStatus(to);
+  }
+
+  /**
+   * Step 4: record SAT (unless already verified) and close, in one save. The
+   * SAT verification writes back to the source checklist through
+   * saveIncident → syncSourceChecklist, exactly as the old verify panel did.
+   */
+  async function closeIncident() {
+    setBusy(true);
+    try {
+      const now = new Date().toISOString();
+      const alreadyVerified = hasSatVerification(incident);
+      const note = verifyDraft?.note?.trim() || '';
+      const next = {
+        ...incident,
+        verification: alreadyVerified
+          ? incident.verification
+          : {
+              result: 'sat',
+              verified_at: now,
+              verified_by: user?.id ?? 'local',
+              verified_by_name: displayName || profile?.full_name || 'User',
+              note,
+              photo_url: null,
+            },
+        status: 'closed',
+        closed_at: now,
+      };
+      const blockers = incidentTransitionBlockers(next, 'closed', {
+        reinspection: next.reinspection_submission_id,
+      });
+      if (blockers.length) {
+        setBanner({ type: 'error', text: blockers.join(' ') });
+        return;
+      }
+      await saveAndLog(
+        next,
+        alreadyVerified
+          ? 'Status changed to Verified/Closed.'
+          : `${incident.source_item_code} checked OK (SAT)${note ? ` — ${note}` : ''}. Status changed to Verified/Closed.`,
+      );
+      setVerifyDraft(null);
+      setBanner({ type: 'ok', text: 'Incident closed.' });
+    } catch (err) {
+      setBanner({ type: 'error', text: err.message });
+    } finally {
+      setBusy(false);
+    }
   }
 
   // ---- Attachments ---------------------------------------------------------
@@ -404,16 +450,6 @@ export default function IncidentDetailPage() {
             </button>
           )}
 
-          <Dropdown align="right">
-            <Dropdown.Toggle className="inline-flex min-h-10 items-center gap-2 rounded-md bg-navy px-3.5 text-sm font-semibold text-white hover:bg-navy-mid">
-              More Actions <ChevronDown size={16} aria-hidden />
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="w-56 border-line/15 py-1">
-              <Dropdown.Item onClick={() => setTab('updates')}>Add an update</Dropdown.Item>
-              {PHOTOS_ENABLED && <Dropdown.Item onClick={() => setTab('photos')}>Attach a photo</Dropdown.Item>}
-              <Dropdown.Item onClick={() => setTab('history')}>View history</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
         </div>
       </div>
 
@@ -679,17 +715,26 @@ export default function IncidentDetailPage() {
                 </section>
               </div>
 
-              <VerificationPanel
-                incident={incident}
-                verified={verified}
-                verifyDraft={verifyDraft}
-                busy={busy}
-                onStartVerify={() => setVerifyDraft({ note: '', photo: null })}
-                onClearVerification={clearVerification}
-                onDraftChange={setVerifyDraft}
-                onAttachPhoto={PHOTOS_ENABLED ? attachVerificationPhoto : null}
-                onConfirm={confirmVerification}
-              />
+              <section className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-line/15 bg-surface px-4 py-3 text-sm shadow-card">
+                <span className="font-semibold text-ink">Item {incident.source_item_code}</span>
+                <span aria-hidden className="text-muted">·</span>
+                {verified ? (
+                  <span className="font-semibold text-success">Verified SAT</span>
+                ) : (
+                  <span className="font-semibold text-alert">NO SAT</span>
+                )}
+                {incident.submission_id && (
+                  <>
+                    <span aria-hidden className="text-muted">·</span>
+                    <Link
+                      to={`/checklists/${incident.submission_id}`}
+                      className="inline-flex min-h-11 items-center text-primary hover:underline desk:min-h-0"
+                    >
+                      View checklist
+                    </Link>
+                  </>
+                )}
+              </section>
             </>
           )}
 
@@ -849,213 +894,22 @@ export default function IncidentDetailPage() {
 
         {/* Right rail */}
         <aside data-tour="incd-sidebar" className="h-fit space-y-4 xl:sticky xl:top-4">
-          <Card title="Status & Workflow">
-            <div className="space-y-3">
-              {/* This used to also have a second "Workflow Step" dropdown here —
-                  bound to the exact same incident.status value and the exact
-                  same changeStatus handler as this one, just with slightly
-                  different option labels (Reported/Closed vs Open/Verified-
-                  Closed). It wasn't a second, independent field; it was this
-                  field rendered twice. The stepper below already shows
-                  workflow progress without inviting someone to "set" it a
-                  second time. */}
-              <SelectField
-                label="Current Status"
-                value={incident.status}
-                onChange={(v) => changeStatus(v)}
-                options={INCIDENT_STATUSES}
-              />
-              <div>
-                <span className="mb-1 block text-xs text-muted">Deficiency Level</span>
-                <div className="flex min-h-10 items-center gap-2 rounded border border-line/20 px-3 text-sm">
-                  <span className="h-2 w-2 rounded-full" style={{ background: level?.color }} aria-hidden />
-                  {level?.label ?? '—'}
-                </div>
-              </div>
-            </div>
-
-            <ol className="mt-4 flex items-start justify-between gap-1">
-              {INCIDENT_STATUSES.map((s, i) => {
-                const done = i < step;
-                const current = i === step;
-                return (
-                  <li key={s.value} className="relative flex min-w-0 flex-1 flex-col items-center text-center">
-                    {i > 0 && (
-                      <span
-                        className={`absolute right-1/2 top-2.5 h-0.5 w-full ${i <= step ? 'bg-primary' : 'bg-line/15'}`}
-                        aria-hidden
-                      />
-                    )}
-                    <span
-                      className={`relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                        done
-                          ? 'border-success bg-success text-white'
-                          : current
-                            ? 'border-primary bg-primary text-white'
-                            : 'border-line/20 bg-surface'
-                      }`}
-                    >
-                      {done && <Check size={12} aria-hidden />}
-                    </span>
-                    <span
-                      className={`mt-1.5 whitespace-nowrap text-[10px] leading-tight ${current ? 'font-semibold text-ink' : 'text-muted'}`}
-                    >
-                      {STEP_LABELS[i]}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
-          </Card>
-
-          <Card title="Assignment">
-            <div className="space-y-3">
-              {/* An incident goes to a unit, not to a person. Grounds,
-                  Electrical and Plumbing have no portal accounts, so there is
-                  no name to pick — the manager who owns the incident is the one
-                  recording progress against it. */}
-              <SelectField
-                label="Assigned Unit"
-                value={incident.assigned_unit || ''}
-                onChange={(v) => {
-                  // Stamped the moment a unit is first named, not when the
-                  // status is later moved to Assigned. Handing the work over is
-                  // the event "Assigned Date" reports, and a manager who picks
-                  // the unit on Monday and updates the status on Wednesday
-                  // should not see Wednesday. Reassigning to a different unit
-                  // does not reset it — the clock the target date runs against
-                  // started when the deficiency left the manager's desk.
-                  const next = {
-                    ...incident,
-                    assigned_unit: v || null,
-                    assigned_at: v ? incident.assigned_at ?? new Date().toISOString() : null,
-                  };
-                  setIncident(next);
-                  saveIncident(next);
-                }}
-                options={assignedUnitOptions}
-              />
-              <div>
-                <span className="mb-1 block text-xs text-muted">Assigned Date</span>
-                <p className="text-sm">{incident.assigned_at ? fmtDateTime(incident.assigned_at) : '—'}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Target Resolution">
-            <div className="space-y-3">
-              <div>
-                <span className="mb-1 block text-xs text-muted">Due Date</span>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={incident.target_date || ''}
-                    onChange={(e) => {
-                      const next = { ...incident, target_date: e.target.value };
-                      setIncident(next);
-                      saveIncident(next);
-                    }}
-                    className="min-h-10 w-full rounded border border-line/20 bg-surface px-3 pr-9 text-sm text-ink"
-                  />
-                  <Calendar
-                    size={15}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
-                    aria-hidden
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted">SLA</span>
-                <span
-                  className={`rounded px-2.5 py-1 text-xs font-semibold ${
-                    sla.kind === 'overdue'
-                      ? 'bg-alert-soft text-alert'
-                      : sla.kind === 'warning'
-                        ? 'bg-[#FDF3E2] text-[#9A6414]'
-                        : sla.kind === 'ok'
-                          ? 'bg-success-soft text-success'
-                          : 'bg-stripe text-muted'
-                  }`}
-                >
-                  {sla.kind === 'none' && 'No target date'}
-                  {(sla.kind === 'ok' || sla.kind === 'warning') && `${sla.remainingDays} days remaining`}
-                  {sla.kind === 'overdue' && `${Math.abs(sla.remainingDays)} days overdue`}
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Quick Actions">
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setTab('updates')}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover"
-              >
-                <MessageSquarePlus size={16} aria-hidden /> Add Update
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusOpen((v) => !v)}
-                aria-expanded={statusOpen}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-line/25 px-3.5 text-sm font-semibold text-ink hover:bg-surface-2"
-              >
-                <RefreshCw size={16} aria-hidden /> Change Status
-              </button>
-              {statusOpen && (
-                <select
-                  autoFocus
-                  className="min-h-10 rounded border border-line/20 bg-surface px-2 text-sm text-ink"
-                  value=""
-                  onChange={(e) => e.target.value && changeStatus(e.target.value)}
-                >
-                  <option value="">Select a status…</option>
-                  {INCIDENT_STATUSES.filter((s) => s.value !== incident.status).map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              <div>
-                <span className="mb-1 block text-xs text-muted">Link re-inspection</span>
-                <select
-                  value={incident.reinspection_submission_id || ''}
-                  onChange={(e) => {
-                    const next = { ...incident, reinspection_submission_id: e.target.value || null };
-                    setIncident(next);
-                    saveIncident(next);
-                  }}
-                  className="min-h-10 w-full rounded border border-line/20 bg-surface px-2 text-sm text-ink"
-                >
-                  <option value="">Select a SAT re-inspection…</option>
-                  {reinspections.map((row) => (
-                    <option key={row.id} value={row.id}>
-                      {row.inspection_date || row.header?.date} · {row.template_code || 'checklist'}
-                    </option>
-                  ))}
-                </select>
-                {reinspections.length === 0 && !verified && (
-                  <p className="mt-1 text-xs text-muted">
-                    No qualifying re-inspection yet. You can also mark {incident.source_item_code} SAT on the Related
-                    Checklist Item row.
-                  </p>
-                )}
-              </div>
-
-              {incident.status !== 'closed' && (
-                <button
-                  type="button"
-                  onClick={() => changeStatus('closed')}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-alert px-3.5 text-sm font-semibold text-alert hover:bg-alert-soft"
-                >
-                  <Lock size={16} aria-hidden /> Close Incident
-                </button>
-              )}
-            </div>
-          </Card>
+          <ProgressChecklist
+            incident={incident}
+            unitOptions={assignedUnitOptions}
+            sla={sla}
+            alreadyVerified={verified}
+            confirming={Boolean(verifyDraft)}
+            note={verifyDraft?.note ?? ''}
+            busy={busy}
+            onUnitChange={onUnitChange}
+            onDueDateChange={onDueDateChange}
+            onTick={onTick}
+            onUntick={onUntick}
+            onNoteChange={(text) => setVerifyDraft((d) => ({ ...(d ?? {}), note: text }))}
+            onConfirmClose={closeIncident}
+            onCancelClose={() => setVerifyDraft(null)}
+          />
         </aside>
       </div>
     </div>
