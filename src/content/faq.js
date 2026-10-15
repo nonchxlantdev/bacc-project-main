@@ -154,7 +154,7 @@ export const FAQ_GROUPS = [
       },
       {
         q: 'Can I reject something?',
-        a: 'Not at present. How rejection should work in your process, whether by return for correction or by requiring a new inspection, is pending BACC confirmation. The feature will be implemented once that is agreed.',
+        a: 'Yes. Return for changes sends a submitted checklist back to the inspector as a draft with your note. They fix it and submit again, and it comes back to you. Once you approve and sign, the checklist is complete and can no longer be returned.',
       },
     ],
   },

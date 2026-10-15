@@ -21,6 +21,8 @@ export default function ProgressChecklist({
   onNoteChange,
   onConfirmClose,
   onCancelClose,
+  // Shown inside the card: the page banner sits above the fold on a phone.
+  error = null,
 }) {
   const steps = progressSteps(incident);
   const closed = incident.status === 'closed';
@@ -159,6 +161,11 @@ export default function ProgressChecklist({
           );
         })}
       </ol>
+      {error && (
+        <p role="alert" className="mt-3 rounded-md border border-alert bg-alert-soft px-3 py-2 text-sm text-alert">
+          {error}
+        </p>
+      )}
     </Card>
   );
 }

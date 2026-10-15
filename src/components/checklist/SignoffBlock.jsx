@@ -16,6 +16,8 @@ export default function SignoffBlock({
   // this block as someone else — while the signature pad and "use my saved
   // signature" stay governed by `readOnly` alone, same as always.
   nameLocked = false,
+  // A short line under the label (e.g. "Signed by the OM when they approve").
+  hint = null,
   onChange,
   onApplyStored,
 }) {
@@ -37,7 +39,8 @@ export default function SignoffBlock({
 
   return (
     <div className="rounded-lg border border-line/20 bg-surface p-4">
-      <p className="mb-3 text-[15px] font-bold text-ink">{label}</p>
+      <p className={`text-[15px] font-bold text-ink ${hint ? 'mb-1' : 'mb-3'}`}>{label}</p>
+      {hint && <p className="mb-3 text-xs text-muted">{hint}</p>}
       {/* Approved order: the shortcut comes first, so the field pair below is
           only for the person who isn't reusing a saved signature. */}
       {canUseStored && (

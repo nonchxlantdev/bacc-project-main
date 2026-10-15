@@ -37,6 +37,8 @@ import { isD1Data } from '../lib/dataMode.js';
 // Who sees the acknowledge block. On D1 the Worker allows only OM/admin to
 // sign the OM acknowledgment (spec 3a §3), so the button follows that rule.
 const ACK_ROLES = isD1Data() ? ['om', 'admin'] : ['om', 'coo'];
+// Only the OM (or an administrator) starts a correction of a signed-off record.
+const CORRECTION_ROLES = ['om', 'admin'];
 
 export default function ChecklistDetailPage() {
   const { id } = useParams();
@@ -61,6 +63,7 @@ export default function ChecklistDetailPage() {
   const [incidentModal, setIncidentModal] = useState(null);
   const [itemIncidents, setItemIncidents] = useState({});
   const [omSignature, setOmSignature] = useState('');
+  const [returnNote, setReturnNote] = useState('');
   const [signaturePromptOpen, setSignaturePromptOpen] = useState(false);
 
   useEffect(() => {
@@ -278,7 +281,7 @@ export default function ChecklistDetailPage() {
     setSubmitting(true);
     try {
       await save(next);
-      setBanner({ type: 'ok', text: 'Submitted. You can export the official PDF when online.' });
+      setBanner({ type: 'ok', text: 'Submitted. The Operations Manager will review and sign it off.' });
     } catch (err) {
       setBanner({
         type: 'error',
@@ -522,7 +525,7 @@ export default function ChecklistDetailPage() {
                 inProgress ? 'bg-success-soft text-success' : 'bg-navy text-white'
               }`}
             >
-              {inProgress ? 'In Progress' : record.status === 'acknowledged' ? 'Acknowledged' : 'Submitted'}
+              {inProgress ? 'In Progress' : record.status === 'acknowledged' ? 'Signed off' : 'Awaiting OM approval'}
             </span>
             )}
           </div>
@@ -575,7 +578,8 @@ export default function ChecklistDetailPage() {
               {submitting ? 'Submitting…' : 'Submit Checklist'}
             </button>
           )}
-          {!isReference && (
+          {/* The approved-form PDF is the finished record: only once the OM has signed it off. */}
+          {!isReference && record.status === 'acknowledged' && (
           <button
             type="button"
             onClick={handleExport}
@@ -586,8 +590,8 @@ export default function ChecklistDetailPage() {
             {exporting ? 'Exporting…' : 'Export PDF'}
           </button>
           )}
-          {/* On D1 only the inspector who filed it may correct it (the Worker's rule). */}
-          {readOnly && !isReference && (!isD1Data() || record.inspector_id === user?.id) && (
+          {/* After sign-off only the OM corrects (the Worker enforces the same). */}
+          {!isReference && record.status === 'acknowledged' && CORRECTION_ROLES.includes(profile?.role) && (
             <button
               type="button"
               onClick={async () => {
@@ -602,6 +606,17 @@ export default function ChecklistDetailPage() {
           )}
         </div>
       </div>
+
+      {record.status === 'draft' && record.returned && (
+        <div className="flex gap-2 rounded-md border border-[#E3B261] bg-[#FDF3E2] px-4 py-3 text-sm text-[#7A4E0C]">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            <strong className="font-semibold">Returned for changes</strong>
+            {record.returned.by_name ? ` by ${record.returned.by_name}` : ''}: {record.returned.note || 'see the OM'}.
+            Fix it and submit again.
+          </span>
+        </div>
+      )}
 
       {banner && (
         <div
@@ -625,9 +640,9 @@ export default function ChecklistDetailPage() {
 
       {record.status === 'submitted' && ACK_ROLES.includes(profile?.role) && (
         <section className="rounded-md border border-line/15 bg-surface p-4">
-          <h2 className="text-sm font-semibold text-ink">OM acknowledgment</h2>
+          <h2 className="text-sm font-semibold text-ink">OM approval</h2>
           <p className="mt-1 text-sm text-muted">
-            The submitted answers stay frozen. Acknowledgment appends your signature and regenerates the overlay PDF.
+            Sign to approve, and the checklist is complete. Or return it to the inspector with a note to fix and resubmit.
           </p>
           <div className="mt-3 max-w-md">
             <SignaturePad value={omSignature} onChange={setOmSignature} />
@@ -645,14 +660,47 @@ export default function ChecklistDetailPage() {
                   actorId: user?.id,
                 });
                 setRecord(next);
-                setBanner({ type: 'ok', text: 'Acknowledged. Export PDF to stamp the OM block on the approved form.' });
+                setBanner({ type: 'ok', text: 'Signed off. The checklist is complete and Export PDF is now available.' });
               } catch (err) {
                 setBanner({ type: 'error', text: err.message });
               }
             }}
           >
-            Acknowledge
+            Approve &amp; sign
           </button>
+          <div className="mt-4 border-t border-line/10 pt-3">
+            <label className="block text-sm font-medium text-ink" htmlFor="return-note">
+              Return for changes
+            </label>
+            <textarea
+              id="return-note"
+              rows={2}
+              value={returnNote}
+              onChange={(e) => setReturnNote(e.target.value)}
+              placeholder="What needs fixing?"
+              className="mt-1 w-full max-w-md rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink"
+            />
+            <button
+              type="button"
+              disabled={!returnNote.trim()}
+              className="mt-2 block min-h-11 w-full rounded-md border border-alert px-4 py-2 text-sm font-semibold text-alert hover:bg-alert-soft disabled:opacity-50 sm:w-auto"
+              onClick={async () => {
+                try {
+                  const inbox = await getRepos().approvals.listInbox(user);
+                  const approval = inbox.find((a) => a.entity?.id === record.id && a.status === 'pending');
+                  if (!approval) throw new Error('This checklist is not waiting for approval.');
+                  await getRepos().approvals.decide({ id: approval.id, decision: 'rejected', notes: returnNote.trim() });
+                  setReturnNote('');
+                  setRecord(await getSubmission(record.id));
+                  setBanner({ type: 'ok', text: 'Returned to the inspector with your note.' });
+                } catch (err) {
+                  setBanner({ type: 'error', text: err.message });
+                }
+              }}
+            >
+              Return for changes
+            </button>
+          </div>
         </section>
       )}
 

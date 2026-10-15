@@ -12,6 +12,8 @@
  * slots filled without a code change, provided its field map declares them.
  */
 
+import { OM_SIGNOFF_ROLE, approverRole } from '../config/approverRoles.js';
+
 /**
  * Annex D shipped first and named its OM slot `om_*` while calling the role
  * `om_acknowledgment`. Its submitted records are locked under §11, so the field
@@ -19,21 +21,40 @@
  */
 const FIELD_PREFIX = { om_acknowledgment: 'om' };
 
-export function signoffFieldPrefix(role) {
+/**
+ * The OM's approval is always stored as `om_acknowledgment`, but each form names
+ * the OM's box differently (see config/approverRoles.js) — `om` on Annexes A–I,
+ * `supervisor` on the lighting forms, `received_by` on the Wildlife Findings
+ * Report. Given the form, the approval is stamped in that form's OM box.
+ */
+export function signoffFieldPrefix(role, schemaOrCode = null) {
+  if (role === OM_SIGNOFF_ROLE) {
+    const box = approverRole(schemaOrCode);
+    if (box && box !== OM_SIGNOFF_ROLE) return FIELD_PREFIX[box] ?? box;
+  }
   return FIELD_PREFIX[role] ?? role;
 }
 
-export function signatureFieldKey(role) {
-  return `${signoffFieldPrefix(role)}_signature`;
+export function signatureFieldKey(role, schemaOrCode = null) {
+  return `${signoffFieldPrefix(role, schemaOrCode)}_signature`;
 }
 
-export function signoffFieldKeys(role) {
-  const prefix = signoffFieldPrefix(role);
+export function signoffFieldKeys(role, schemaOrCode = null) {
+  const prefix = signoffFieldPrefix(role, schemaOrCode);
   return {
     signature: `${prefix}_signature`,
     name: `${prefix}_name`,
     date: `${prefix}_date`,
   };
+}
+
+/**
+ * Sign-offs with the OM's approval last, so it wins its slot over anything an
+ * older draft may have put in the same box.
+ */
+export function signoffsOmLast(signoffs) {
+  const list = Array.isArray(signoffs) ? signoffs : [];
+  return [...list.filter((s) => s?.role !== OM_SIGNOFF_ROLE), ...list.filter((s) => s?.role === OM_SIGNOFF_ROLE)];
 }
 
 /**
@@ -45,10 +66,11 @@ export function signoffFieldKeys(role) {
  */
 export function signatureImages(record, fieldMap) {
   const fields = fieldMap?.fields ?? {};
+  const schema = record?.schema ?? record?.content_schema ?? null;
   const images = {};
-  for (const signoff of record?.signoffs ?? []) {
+  for (const signoff of signoffsOmLast(record?.signoffs)) {
     if (!signoff?.role || !signoff.signature_data_uri) continue;
-    const key = signatureFieldKey(signoff.role);
+    const key = signatureFieldKey(signoff.role, schema);
     if (fields[key]?.type === 'image') images[key] = signoff.signature_data_uri;
   }
   return { ...images, ...tableSignatureImages(record, fieldMap) };

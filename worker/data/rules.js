@@ -34,7 +34,7 @@ const ID_RE = /^[A-Za-z0-9-]{1,64}$/;
 export const NON_FORM_KEYS = new Set([
   'id', 'template_id', 'template_version', 'inspector_id', 'status', 'locked', 'schema',
   'content_schema', 'field_map', 'print_template_key', 'template_code', 'inspector_name',
-  'amendments', 'pending_sync', 'updatedAt', 'updated_at', 'created_at', 'submitted_at',
+  'amendments', 'returned', 'pending_sync', 'updatedAt', 'updated_at', 'created_at', 'submitted_at',
   'reopened_at', 'reopened_by', 'supersedes_id', 'exported_pdf_path', 'header', 'items',
   'signoffs', 'attachments', 'drawings_changed', 'inspection_type', 'inspection_date',
   'deficiencies_summary', 'location_id', 'content_hash',
@@ -77,6 +77,25 @@ export function assertCanAmend(actor) {
   if (!isSupervisor(actor)) throw forbid('Only an OM, the COO or an administrator can correct a filed item');
 }
 
+/** A correction of a signed-off record is started by the OM (or an administrator). */
+export function assertCanCorrect(actor) {
+  if (!isManager(actor)) throw forbid('Only the Operations Manager can start a correction of a filed checklist');
+}
+
+/** A draft is private to the person who started it, and to the OM / administrators. */
+export function canSeeChecklist(actor, row) {
+  if (!row) return false;
+  if (row.status !== 'draft') return true;
+  return row.inspector_id === actor?.id || isManager(actor);
+}
+
+/** Returning a checklist for changes needs a reason the inspector can act on. */
+export function validateReturnNote(notes) {
+  if (typeof notes !== 'string' || !notes.trim()) throw bad('Say what needs changing before returning the checklist');
+  if (notes.length > 2000) throw bad('That note is too long');
+  return notes.trim();
+}
+
 export function assertCanAcknowledge(actor) {
   if (!isManager(actor)) throw forbid('Only an OM or an administrator can acknowledge a checklist');
 }
@@ -94,7 +113,8 @@ export function assertCanDecide(actor, approval, decision) {
     return;
   }
   if (decision === 'rejected') {
-    assertCanSeeApproval(actor, approval);
+    // "Return for changes" — the OM's call, same as approving.
+    assertCanAcknowledge(actor);
     return;
   }
   throw bad('decision must be "approved" or "rejected"');

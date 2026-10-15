@@ -71,17 +71,18 @@ test('amend: supervisors; acknowledge: managers', () => {
   assert.equal(status(() => assertCanAcknowledge(inspector)), 403);
 });
 
-test('COO can amend and reject, but cannot acknowledge by either route', () => {
+test('COO can amend, but cannot acknowledge or return for changes', () => {
   const approval = { entity_type: 'checklist_submission', status: 'pending', assigned_to: 'om' };
   assert.equal(status(() => assertCanAmend(coo)), 200);
-  assert.equal(status(() => assertCanDecide(coo, approval, 'rejected')), 200);
+  assert.equal(status(() => assertCanDecide(coo, approval, 'rejected')), 403);
   assert.equal(status(() => assertCanDecide(coo, approval, 'approved')), 403);
   assert.equal(status(() => assertCanAcknowledge(coo)), 403);
 });
 
-test('decide: approved needs a manager, rejected needs assignee or supervisor', () => {
+test('decide: approve and return for changes both need a manager (OM/admin)', () => {
   const assignedToInspector = { entity_type: 'checklist_submission', status: 'pending', assigned_to: 'insp' };
-  assert.equal(status(() => assertCanDecide(inspector, assignedToInspector, 'rejected')), 200);
+  assert.equal(status(() => assertCanDecide(inspector, assignedToInspector, 'rejected')), 403);
+  assert.equal(status(() => assertCanDecide(om, assignedToInspector, 'rejected')), 200);
   assert.equal(status(() => assertCanDecide(inspector, assignedToInspector, 'approved')), 403);
   assert.equal(status(() => assertCanDecide(other, assignedToInspector, 'rejected')), 403);
   assert.equal(status(() => assertCanDecide(om, assignedToInspector, 'approved')), 200);

@@ -143,8 +143,7 @@ test('inspector cannot sign om_acknowledgment by any route', async () => {
   assert.equal(await status(call('checklists.acknowledge', users.coo, { id: saved.id })), 403);
   const [approval] = await call('approvals.listInbox', users.coo);
   assert.equal(await status(call('approvals.decide', users.coo, { id: approval.id, decision: 'approved' })), 403);
-  const rejected = await call('approvals.decide', users.coo, { id: approval.id, decision: 'rejected', notes: 'no' });
-  assert.equal(rejected.status, 'rejected');
+  assert.equal(await status(call('approvals.decide', users.coo, { id: approval.id, decision: 'rejected', notes: 'no' })), 403);
   assert.equal((await call('checklists.get', users.insp, { id: saved.id })).status, 'submitted');
 });
 
@@ -212,7 +211,8 @@ test('a correction is a new record; the original is untouched', async () => {
     supersedes_id: original.id,
   };
   correction.items.A2.result = 'sat';
-  const saved = await call('checklists.persist', users.insp, { record: correction });
+  assert.equal(await status(call('checklists.persist', users.insp, { record: correction })), 403);
+  const saved = await call('checklists.persist', users.om, { record: correction });
   assert.equal(saved.supersedes_id, original.id);
   assert.equal(saved.signoffs.some((s) => s.role === 'om_acknowledgment'), false);
   const after = await call('checklists.get', users.insp, { id: original.id });
@@ -362,22 +362,25 @@ test('users: public fields, signature visibility, self-only update', async () =>
 
 // ── Review fixes (2026-10-12) ──────────────────────────────────────────────
 
-test('only the original inspector can correct a checklist, and only on the same form', async () => {
+test('only the OM corrects, only a signed-off checklist, and only on the same form', async () => {
   const { users, call } = await setup();
   const original = await call('checklists.persist', users.insp, {
     record: draftRecord({ status: 'submitted', signoffs: [{ role: 'inspector', name: 'Ivy', signature_data_uri: SIG }] }),
   });
   const copy = (id) => ({ ...structuredClone(original), id, status: 'draft', locked: false, submitted_at: null, supersedes_id: original.id });
+  // Not signed off yet: return it for changes instead.
+  assert.equal(await status(call('checklists.persist', users.om, { record: copy('66666666-6666-4666-8666-666666666665') })), 409);
+  await call('checklists.acknowledge', users.om, { id: original.id });
   assert.equal(await status(call('checklists.persist', users.other, { record: copy('66666666-6666-4666-8666-666666666666') })), 403);
-  assert.equal(await status(call('checklists.persist', users.om, { record: copy('66666666-6666-4666-8666-666666666667') })), 403);
+  assert.equal(await status(call('checklists.persist', users.insp, { record: copy('66666666-6666-4666-8666-666666666667') })), 403);
   forms.templateKeys.add('annex-x');
   try {
     const otherForm = { ...copy('66666666-6666-4666-8666-666666666668'), template_id: 'annex-x' };
-    assert.equal(await status(call('checklists.persist', users.insp, { record: otherForm })), 400);
+    assert.equal(await status(call('checklists.persist', users.om, { record: otherForm })), 400);
   } finally {
     forms.templateKeys.delete('annex-x');
   }
-  assert.equal(await status(call('checklists.persist', users.insp, { record: copy('66666666-6666-4666-8666-666666666669') })), 200);
+  assert.equal(await status(call('checklists.persist', users.om, { record: copy('66666666-6666-4666-8666-666666666669') })), 200);
 });
 
 test('amend refuses item codes that are not on the checklist, including built-in names', async () => {
@@ -396,7 +399,7 @@ test('lists carry no signature images; saving a listed record keeps them', async
   const saved = await call('checklists.persist', users.insp, {
     record: draftRecord({ signoffs: [{ role: 'inspector', name: 'Ivy', signature_data_uri: SIG }] }),
   });
-  const [listed] = await call('checklists.listAll', users.other);
+  const [listed] = await call('checklists.listAll', users.om);
   assert.equal(listed.signoffs[0].signature_data_uri, undefined);
   assert.equal(listed.signoffs[0].has_signature, true);
   // A save built from a list record must not wipe the stored signature.
@@ -412,7 +415,8 @@ test('non-text name/position/notes on acknowledge and decide are 400, not 500', 
   assert.equal(await status(call('checklists.acknowledge', users.om, { id: filed.id, name: ['x'] })), 400);
   const [approval] = await call('approvals.listInbox', users.om);
   assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'approved', notes: { x: 1 } })), 400);
-  assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'rejected', notes: 42 })), 200);
+  assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'rejected', notes: 42 })), 400);
+  assert.equal(await status(call('approvals.decide', users.om, { id: approval.id, decision: 'rejected', notes: '  ' })), 400);
 });
 
 test('sign-off times are set by the server, never backdated by the browser', async () => {

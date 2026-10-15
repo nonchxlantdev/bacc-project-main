@@ -222,7 +222,7 @@ export const TOURS = [
       {
         target: 'cl-actions',
         title: 'Form actions',
-        body: 'Save a draft, preview the approved form, submit and export the PDF. Submitting locks the record.',
+        body: 'Save a draft, preview the approved form and submit. The Operations Manager signs it off; then the PDF can be exported.',
       },
       {
         target: 'cl-header',

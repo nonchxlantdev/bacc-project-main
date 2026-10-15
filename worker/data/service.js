@@ -14,6 +14,7 @@ import {
   LOCKED_MESSAGE,
   assertCanAcknowledge,
   assertCanAmend,
+  assertCanCorrect,
   assertCanDecide,
   assertCanDeleteDraft,
   assertCanEditDraft,
@@ -33,7 +34,10 @@ import {
   validateSettingsSection,
   validateSettingsValue,
   validateSignature,
+  canSeeChecklist,
+  validateReturnNote,
 } from './rules.js';
+import { OM_SIGNOFF_ROLE, isApproverSignoffRole } from '../../src/config/approverRoles.js';
 import { createIncidentOps } from './incidentService.js';
 
 export const BACKFILL_DAYS = 120;
@@ -64,9 +68,28 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
     return { ...record, amendments: foldAmendments(amendmentRows.filter(Boolean)) };
   }
 
-  async function getChecklist(_actor, { id }) {
+  async function getChecklist(actor, { id }) {
     const hit = await store.getSubmission(validId(id));
-    return hit ? finish(hit) : null;
+    if (!hit || !canSeeChecklist(actor, hit.row)) return null;
+    const out = finish(hit);
+    // A returned draft carries the OM's reason so the inspector knows what to fix.
+    if (hit.row.status === 'draft') {
+      const back = await store.latestDecision(CHECKLIST, hit.row.id, OM_SIGNOFF_ROLE);
+      if (back?.status === 'rejected') {
+        const by = back.decided_by ? await store.getUser(back.decided_by) : null;
+        out.returned = { note: back.notes ?? '', at: back.decided_at, by_name: by?.full_name ?? null };
+      }
+    }
+    return out;
+  }
+
+  /** The form code for a registry key, when the form store knows it. */
+  function codeFor(templateId) {
+    try {
+      return forms?.loadSchema?.(templateId)?.code ?? null;
+    } catch {
+      return null;
+    }
   }
 
   async function withSignature(actor, user) {
@@ -180,7 +203,8 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
 
     // ── checklists ─────────────────────────────────────────────────────
     'checklists.listMine': async (actor) => (await store.listSubmissions({ inspectorId: actor.id })).map(finish),
-    'checklists.listAll': async () => (await store.listSubmissions()).map(finish),
+    'checklists.listAll': async (actor) =>
+      (await store.listSubmissions()).filter((hit) => canSeeChecklist(actor, hit.row)).map(finish),
     'checklists.get': getChecklist,
 
     'checklists.persist': async (actor, { record }) => {
@@ -201,8 +225,9 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
           const original = await store.getSubmissionRow(v.supersedes_id);
           if (!original) throw new HttpError(400, 'The checklist being corrected does not exist');
           if (!original.locked) throw new HttpError(400, 'Only a filed checklist can be corrected');
-          if (original.inspector_id !== actor.id) {
-            throw new HttpError(403, 'Only the inspector who filed a checklist can start a correction of it');
+          assertCanCorrect(actor);
+          if (original.status !== 'acknowledged') {
+            throw new HttpError(409, 'Only a checklist the OM has signed off can be corrected. Return it for changes instead.');
           }
           if (v.template_id !== original.template_id) {
             throw new HttpError(400, 'A correction must use the same form as the checklist it corrects');
@@ -221,7 +246,9 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       const previous = existing ? await store.signoffRows(v.id) : [];
       const byRole = new Map(previous.map((p) => [p.role, p]));
       // Times are the server's: a new or changed block is signed "now".
-      const blocks = v.signoffs.map(({ has_signature, ...b }) => {
+      // The OM's box is filled only by the approval, never from a draft or a submit.
+      const code = codeFor(templateId);
+      const blocks = v.signoffs.filter((b) => !isApproverSignoffRole(code, b.role)).map(({ has_signature, ...b }) => {
         const old = byRole.get(b.role);
         // A record read from a list carries `has_signature` instead of the
         // image; keep the stored image rather than wiping it.
@@ -403,17 +430,38 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
         return incidentOps.decideWorkOrder(actor, row, { decision, notes, signature_data_uri, name });
       }
       assertCanDecide(actor, row, decision);
-      const cleanNotes = optionalText(notes, 'Notes', 2000);
       if (decision === 'rejected') {
-        await store.batch([
-          store.decideApprovalStmt(row.id, {
-            status: 'rejected',
-            decided_by: actor.id,
-            decided_at: iso(),
-            notes: cleanNotes ?? '',
-          }),
-        ]);
+        // Return for changes: the checklist goes back to its inspector as a
+        // draft. Allowed only before sign-off (migration 0005); a signed-off
+        // record stays frozen.
+        const note = validateReturnNote(notes);
+        const sub = await store.getSubmissionRow(row.entity_id);
+        if (!sub) throw notFound('Checklist');
+        if (sub.status !== 'submitted') throw new HttpError(409, 'Only a submitted checklist can be returned for changes');
+        const at = iso();
+        const stmts = [
+          store.decideApprovalStmt(row.id, { status: 'rejected', decided_by: actor.id, decided_at: at, notes: note }),
+          store.returnForChangesStmt(sub.id, at),
+          store.unlinkInstancesStmt(sub.id),
+        ];
+        if (sub.inspector_id !== actor.id) {
+          stmts.push(
+            store.insertNotificationStmt({
+              id: newId(),
+              recipient_id: sub.inspector_id,
+              event_type: 'checklist_returned',
+              title: 'Returned for changes',
+              body: `${templateTitle(sub.template_id)} (${sub.inspection_date ?? 'undated'}): ${note}`,
+              href: `/checklists/${sub.id}`,
+              entity_type: CHECKLIST,
+              entity_id: sub.id,
+              created_at: at,
+            }),
+          );
+        }
+        await store.batch(stmts);
       } else {
+        const cleanNotes = optionalText(notes, 'Notes', 2000);
         const { stmts } = await acknowledgeStatements(actor, {
           id: row.entity_id,
           name,

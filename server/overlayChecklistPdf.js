@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { signoffFieldKeys } from '../src/lib/signoffFields.js';
+import { signoffFieldKeys, signoffsOmLast } from '../src/lib/signoffFields.js';
 
 const CONTINUATION_MARKER = '— see continuation p.';
 
@@ -370,9 +370,9 @@ export function submissionToOverlayValues(record) {
   // Sign-offs. The role -> field-key rule is shared with the browser so the
   // names, dates and signature image of one slot cannot disagree about which
   // slot they belong to. See src/lib/signoffFields.js.
-  for (const s of record.signoffs ?? []) {
+  for (const s of signoffsOmLast(record.signoffs)) {
     if (!s?.role) continue;
-    const keys = signoffFieldKeys(s.role);
+    const keys = signoffFieldKeys(s.role, schema);
     values[keys.name] = [s.name, s.position].filter(Boolean).join(' / ');
     values[keys.date] = s.signed_at ? String(s.signed_at).slice(0, 10) : '';
   }

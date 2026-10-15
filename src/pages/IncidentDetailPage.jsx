@@ -306,7 +306,8 @@ export default function IncidentDetailPage() {
       setVerifyDraft(null);
       setBanner({ type: 'ok', text: 'Incident closed.' });
     } catch (err) {
-      setBanner({ type: 'error', text: err.message });
+      console.error('Closing incident failed', err);
+      setBanner({ type: 'error', text: err?.message || 'Could not close this incident.' });
     } finally {
       setBusy(false);
     }
@@ -909,6 +910,7 @@ export default function IncidentDetailPage() {
             onNoteChange={(text) => setVerifyDraft((d) => ({ ...(d ?? {}), note: text }))}
             onConfirmClose={closeIncident}
             onCancelClose={() => setVerifyDraft(null)}
+            error={banner?.type === 'error' ? banner.text : null}
           />
         </aside>
       </div>

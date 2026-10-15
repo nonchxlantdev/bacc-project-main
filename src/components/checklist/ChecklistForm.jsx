@@ -24,6 +24,7 @@ import {
 } from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
 import { selfSignoffRole } from '../../lib/storedSignature.js';
+import { OM_SIGNOFF_ROLE, approverRole } from '../../config/approverRoles.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
@@ -334,7 +335,13 @@ export default function ChecklistForm({
 
         <div data-tour="cl-signoffs" className="grid gap-4 md:grid-cols-2">
           {(schema.signoffs ?? []).map((def) => {
-            const signed = signoffs?.find((s) => s.role === def.role);
+            // The OM's box is filled only by the OM's approval (stored as
+            // om_acknowledgment whatever this form calls the box) and is
+            // locked to everyone while the checklist is being filled in.
+            const isApproverBox = def.role === OM_SIGNOFF_ROLE || def.role === approverRole(schema);
+            const signed = isApproverBox
+              ? signoffs?.find((s) => s.role === OM_SIGNOFF_ROLE)
+              : signoffs?.find((s) => s.role === def.role);
             // Only the self block (the form's own signer — first in
             // schema.signoffs, whatever that annex calls the role) offers
             // "use my saved signature"; a colleague's or approver's block
@@ -352,9 +359,10 @@ export default function ChecklistForm({
                 signedAt={signed?.signed_at}
                 signatureDataUri={signed?.signature_data_uri}
                 storedSignatureUri={storedSignatureUri}
-                readOnly={readOnly}
-                onChange={(patch) => onSignoffChange?.(def.role, patch)}
-                onApplyStored={isSelf ? onApplySelfStoredSignature : undefined}
+                readOnly={readOnly || isApproverBox}
+                hint={isApproverBox && !signed ? 'Signed by the Operations Manager when they approve this checklist.' : null}
+                onChange={isApproverBox ? undefined : (patch) => onSignoffChange?.(def.role, patch)}
+                onApplyStored={isSelf && !isApproverBox ? onApplySelfStoredSignature : undefined}
               />
             );
           })}

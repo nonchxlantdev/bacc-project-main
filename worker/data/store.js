@@ -326,6 +326,14 @@ function createCoreStore(db) {
         id, nowIso,
       );
     },
+    /** OM "Return for changes": a submitted (never a signed-off) record back to its inspector's draft. */
+    returnForChangesStmt(id, nowIso) {
+      return stmt(
+        `UPDATE checklist_submissions SET status = 'draft', locked = 0, submitted_at = NULL, updated_at = ?2
+         WHERE id = ?1 AND status = 'submitted' AND locked = 1`,
+        id, nowIso,
+      );
+    },
     acknowledgeStmt(id, nowIso) {
       return stmt(
         `UPDATE checklist_submissions SET status = 'acknowledged', updated_at = ?2 WHERE id = ?1 AND status = 'submitted'`,
@@ -361,6 +369,14 @@ function createCoreStore(db) {
     pendingApproval(entityType, entityId, role) {
       return first(
         `SELECT * FROM approvals WHERE entity_type = ?1 AND entity_id = ?2 AND approval_role = ?3 AND status = 'pending'`,
+        entityType, entityId, role,
+      );
+    },
+    /** The most recent decided approval of this kind (for a returned draft's note). */
+    latestDecision(entityType, entityId, role) {
+      return first(
+        `SELECT * FROM approvals WHERE entity_type = ?1 AND entity_id = ?2 AND approval_role = ?3 AND status <> 'pending'
+         ORDER BY decided_at DESC LIMIT 1`,
         entityType, entityId, role,
       );
     },
@@ -411,6 +427,14 @@ function createCoreStore(db) {
         i.id, i.template_id, i.template_version || 'ed01', i.assignment_rule_id, n(i.assigned_role),
         n(i.assigned_department), n(i.assigned_user), n(i.location_id), i.period_start, i.period_end, i.due_at,
         i.status || 'pending', i.created_at,
+      );
+    },
+    /** A returned checklist no longer completes its schedule slot. */
+    unlinkInstancesStmt(submissionId) {
+      return stmt(
+        `UPDATE checklist_instances SET submission_id = NULL, status = 'pending', completed_at = NULL
+         WHERE submission_id = ?1`,
+        submissionId,
       );
     },
     linkInstanceStmt(id, submissionId, completedAt) {

@@ -1,8 +1,7 @@
-import { ChevronLeft, ClipboardCheck, Search, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ClipboardCheck, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NewInspectionPicker from '../components/checklist/NewInspectionPicker.jsx';
-import StatusPill from '../components/checklist/StatusPill.jsx';
 import TeamCard, { NewInspectionCard } from '../components/checklist/TeamCard.jsx';
 import { StatTile } from '../components/reports/StatTile.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -16,8 +15,7 @@ import {
   teamStyle,
 } from '../lib/checklistCatalogue.js';
 import { startInspection } from '../lib/startInspection.js';
-import { canDeleteDraft, deleteDraft, listAllSubmissions } from '../lib/submissions.js';
-import { teamOpenDrafts } from '../lib/openDrafts.js';
+import { listAllSubmissions } from '../lib/submissions.js';
 import { listTemplates } from '../lib/templates.js';
 import Select from '../components/ui/Select.jsx';
 
@@ -42,15 +40,6 @@ export default function ChecklistCataloguePage() {
   const [error, setError] = useState(null);
   const [startingId, setStartingId] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-
-  const canManageDrafts = profile?.role === 'om' || profile?.role === 'admin';
-
-  const openDrafts = useMemo(
-    () =>
-      canManageDrafts ? teamOpenDrafts(submissions, profile, canDeleteDraft) : [],
-    [submissions, profile, canManageDrafts],
-  );
 
   const [query, setQuery] = useState('');
   const [family, setFamily] = useState('');
@@ -82,23 +71,6 @@ export default function ChecklistCataloguePage() {
       cancelled = true;
     };
   }, [profile]);
-
-  async function handleDeleteDraft(row) {
-    if (!canDeleteDraft(row, profile)) return;
-    const title = row.schema?.title || row.template_code || 'this draft';
-    const confirmed = window.confirm(`Delete draft “${title}”? This cannot be undone.`);
-    if (!confirmed) return;
-    setDeletingId(row.id);
-    setError(null);
-    try {
-      await deleteDraft(row);
-      setSubmissions((prev) => prev.filter((item) => item.id !== row.id));
-    } catch (err) {
-      setError(err.message || 'Could not delete draft.');
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   async function startNew(templateId) {
     setStartingId(templateId);
@@ -186,14 +158,6 @@ export default function ChecklistCataloguePage() {
 
       {error && (
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>
-      )}
-
-      {canManageDrafts && openDrafts.length > 0 && (
-        <OpenDraftsSection
-          drafts={openDrafts}
-          deletingId={deletingId}
-          onDelete={handleDeleteDraft}
-        />
       )}
 
       <div data-tour="all-kpis" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -288,59 +252,6 @@ export default function ChecklistCataloguePage() {
         />
       )}
     </div>
-  );
-}
-
-/** Other people's open drafts — OM/admin can delete them here. Own drafts live in My Checklists. */
-function OpenDraftsSection({ drafts, deletingId, onDelete }) {
-  return (
-    <section className="overflow-hidden rounded-lg border border-line/12 bg-surface shadow-card">
-      <header className="border-b border-line/10 bg-stripe px-4 py-2.5">
-        <h2 className="text-sm font-bold text-ink">Open drafts</h2>
-        <p className="text-xs text-muted">Unsubmitted checklists other people on the team have in progress. Your own drafts are in My Checklists.</p>
-      </header>
-      <div className="overflow-x-auto">
-        <table className="table-stack w-full text-left text-sm">
-          <thead className="bg-gradient-to-r from-navy to-navy-mid text-white">
-            <tr>
-              <th className="px-4 py-2 font-semibold">Form</th>
-              <th className="px-4 py-2 font-semibold">Date</th>
-              <th className="px-4 py-2 font-semibold">Status</th>
-              <th className="px-4 py-2 text-right font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {drafts.map((row, i) => (
-              <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
-                <td data-label="Form" className="px-4 py-2">
-                  <Link to={`/checklists/${row.id}`} className="font-medium text-primary hover:underline">
-                    {row.schema?.annexLabel || row.schema?.annex_label || row.template_code} —{' '}
-                    {row.schema?.title || row.template_code}
-                  </Link>
-                </td>
-                <td data-label="Date" className="px-4 py-2">
-                  {row.inspection_date || row.header?.date || '—'}
-                </td>
-                <td data-label="Status" className="px-4 py-2">
-                  <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
-                </td>
-                <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
-                  <button
-                    type="button"
-                    onClick={() => onDelete(row)}
-                    disabled={deletingId === row.id}
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 desk:min-h-0 desk:w-auto desk:border-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {deletingId === row.id ? 'Deleting…' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
 

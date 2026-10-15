@@ -302,11 +302,11 @@ export default function ApprovalsPage() {
             )}
 
             <p className="mt-3 text-xs text-muted">
-              Rejection of a submitted regulatory record is pending BACC confirmation. Notes are
-              stored either way.
+              Approve &amp; sign completes the checklist. Return for changes sends it back to the
+              inspector as a draft with your note.
             </p>
             <label className="mt-3 block text-sm">
-              Notes
+              Note (required to return it)
               <textarea
                 className="mt-1 w-full rounded border border-line/20 bg-surface px-3 py-2 text-ink"
                 rows={2}
@@ -327,17 +327,19 @@ export default function ApprovalsPage() {
               </button>
               <button
                 type="button"
-                className="min-h-11 rounded-md border border-alert px-3 py-2 text-sm text-alert sm:order-2"
+                className="min-h-11 rounded-md border border-alert px-3 py-2 text-sm text-alert disabled:opacity-50 sm:order-2"
+                disabled={!notes.trim()}
+                title={notes.trim() ? undefined : 'Add a note saying what needs fixing'}
                 onClick={() => onDecide('rejected')}
               >
-                Reject
+                Return for changes
               </button>
               <button
                 type="button"
                 className="min-h-11 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white sm:order-3"
                 onClick={() => onDecide('approved')}
               >
-                Approve
+                Approve &amp; sign
               </button>
             </div>
           </div>
