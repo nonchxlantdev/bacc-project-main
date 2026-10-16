@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Vite
+.vite/
+
+# Accidental nested git / Pages backup (never re-commit)
+dist-git-backup/
+
 # Env
 .env
 .env.local

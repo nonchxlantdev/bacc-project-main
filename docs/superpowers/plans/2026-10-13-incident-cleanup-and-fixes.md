@@ -1184,4 +1184,4 @@ git commit -m "fix: draw PDF preview with pdf.js so it works under our CSP and o
 - [ ] **Step 2:** `npm run build` — succeeds.
 - [ ] **Step 3:** Re-run Task 1's two reproductions on the deployed build: the wildlife report with `October 13, 2026` submits and shows **Submitted** in My Checklists; previews render on desktop and a phone.
 - [ ] **Step 4:** Walk Task 7 Step 11 once more on production with a real incident.
-- [ ] **Step 5:** Report results; update `docs/BACC_Portal_Fix_It_Plan.md` with a short "2026-10-13 incident cleanup + submit/preview fixes" entry listing the commits.
+- [ ] **Step 5:** Report results with the commit list for "2026-10-13 incident cleanup + submit/preview fixes".

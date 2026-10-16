@@ -8,7 +8,8 @@ This is your step-by-step guide for **sub-project 1** of the Cloudflare migratio
 Related files in the repo:
 - Spec: `docs/superpowers/specs/2026-10-08-cloudflare-workers-hosting-design.md`
 - Plan: `docs/superpowers/plans/2026-10-08-cloudflare-workers-hosting.md`
-- Cursor prompt: `docs/CURSOR_PROMPT_CLOUDFLARE_WORKERS_HOSTING.md`
+
+> **Handover note:** Agent prompt files used during the original build were removed in the pre-handover cleanup. Hosting is already on `main`; use this walkthrough for operations context and the spec/plan for design history.
 
 ---
 
@@ -80,19 +81,19 @@ git status
 ```
 `git status` should say "working tree clean". If it doesn't, commit or stash your changes first.
 
-Then commit the three new docs (spec, plan, Cursor prompt) and this walkthrough to `main`:
+Then commit the new docs (spec, plan) and this walkthrough to `main`:
 ```powershell
-git add docs/superpowers/specs/2026-10-08-cloudflare-workers-hosting-design.md docs/superpowers/plans/2026-10-08-cloudflare-workers-hosting.md docs/CURSOR_PROMPT_CLOUDFLARE_WORKERS_HOSTING.md docs/CLOUDFLARE_GO_LIVE_WALKTHROUGH.md
-git commit -m "docs: Cloudflare Workers hosting spec, plan, Cursor prompt and walkthrough"
+git add docs/superpowers/specs/2026-10-08-cloudflare-workers-hosting-design.md docs/superpowers/plans/2026-10-08-cloudflare-workers-hosting.md docs/CLOUDFLARE_GO_LIVE_WALKTHROUGH.md
+git commit -m "docs: Cloudflare Workers hosting spec, plan and walkthrough"
 git push
 ```
-> This push to `main` only changes docs. Vercel will redeploy, which is harmless because no app code changed.
+> This push to `main` only changes docs. A docs-only deploy is harmless because no app code changed.
 
-### B2. Run the Cursor prompt
+### B2. Run the implementation plan
 1. Open `bacc-project-main` in Cursor.
-2. Open `docs/CURSOR_PROMPT_CLOUDFLARE_WORKERS_HOSTING.md`, copy everything **below the `---` line**, and paste it into Cursor's **Agent** chat.
-3. Let it work through Tasks 0–8. It creates the branch `feat/cloudflare-workers-hosting` and commits as it goes.
-4. **Watch for "stop and report" moments.** The prompt tells Cursor to stop on parity failures, missing values or install errors. If it stops, paste its message into a chat with Claude.
+2. Ask Agent to implement Workers hosting per `docs/superpowers/plans/2026-10-08-cloudflare-workers-hosting.md`.
+3. Let it work through the plan tasks. It creates the branch `feat/cloudflare-workers-hosting` and commits as it goes.
+4. **Watch for "stop and report" moments** (parity failures, missing values, or install errors). If it stops, paste its message into a follow-up chat.
 
 ### B3. Check Cursor's hand-back
 When Cursor finishes Task 8, it summarises its work. Confirm:

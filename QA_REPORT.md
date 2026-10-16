@@ -299,8 +299,8 @@ loading indicators surfaced.
 
 No security issues surfaced in this pass. It was a UI/responsive QA, not a security
 review — and with a `localStorage` mock store and no live backend there is no auth or
-transport surface here to assess. A separate security assessment already exists at
-`docs/security-audit-2026-09-03.md`.
+transport surface here to assess. Security follow-up for handover lives in the
+pre-handover audit canvas (not in-repo markdown).
 
 One performance finding, from the build rather than the runtime: the app ships as a
 **single 1.3 MB JavaScript chunk**, and the PWA precaches 1.74 MB across 11 entries.

@@ -9,10 +9,6 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 // `vite dev`, so dev and production share one code path.
 export default defineConfig({
   base: '/',
-  define: {
-    // Showcase sample data is retired — never auto-load fake submissions/incidents.
-    'import.meta.env.VITE_SHOWCASE': JSON.stringify(''),
-  },
   plugins: [
     react(),
     tailwindcss(),

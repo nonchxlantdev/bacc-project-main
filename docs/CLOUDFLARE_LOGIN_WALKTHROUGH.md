@@ -8,7 +8,8 @@ This builds the new Cloudflare login and puts it on the live server, **switched 
 Related files:
 - Spec: `docs/superpowers/specs/2026-10-08-cloudflare-auth-design.md`
 - Plan: `docs/superpowers/plans/2026-10-08-cloudflare-auth.md`
-- Cursor prompt: `docs/CURSOR_PROMPT_CLOUDFLARE_AUTH.md`
+
+> **Handover note:** Agent prompt files used during the original build were removed in the pre-handover cleanup. Login is already on `main`; use this walkthrough for operations context and the spec/plan for design history.
 
 ---
 
@@ -19,8 +20,8 @@ Related files:
 cd "D:\Entrepreneur\Vision Forge Ltd\Airport Authorit Project\bacc-project-main"
 git checkout main
 git pull
-git add docs/superpowers/specs/2026-10-08-cloudflare-auth-design.md docs/superpowers/plans/2026-10-08-cloudflare-auth.md docs/CURSOR_PROMPT_CLOUDFLARE_AUTH.md docs/CLOUDFLARE_LOGIN_WALKTHROUGH.md
-git commit -m "docs: Cloudflare login spec, plan, Cursor prompt and walkthrough"
+git add docs/superpowers/specs/2026-10-08-cloudflare-auth-design.md docs/superpowers/plans/2026-10-08-cloudflare-auth.md docs/CLOUDFLARE_LOGIN_WALKTHROUGH.md
+git commit -m "docs: Cloudflare login spec, plan and walkthrough"
 git push
 ```
 This push only changes docs. GitHub will redeploy the same site, which is harmless.
@@ -41,12 +42,11 @@ Pick the **email** and **name** for the first admin, which is you. You'll set th
 ## Part B: Let Cursor build it
 
 1. Open `bacc-project-main` in Cursor.
-2. Open `docs/CURSOR_PROMPT_CLOUDFLARE_AUTH.md` and copy everything **below the `---`**.
-3. Paste it into Cursor's **Agent** chat, and at the end add:
+2. Ask Agent to implement Cloudflare login per `docs/superpowers/plans/2026-10-08-cloudflare-auth.md`, and include:
    ```
    D1 database_id: <paste the ID from A2>
    ```
-4. Let it run. **Cursor stops twice and asks you to do something:**
+3. Let it run. **Cursor stops twice and asks you to do something:**
    - **Create a local test admin.** In the Cursor terminal, run:
      ```powershell
      npm run auth:create-admin -- --email admin@local.test --name "Local Admin"
@@ -58,7 +58,7 @@ Pick the **email** and **name** for the first admin, which is you. You'll set th
      npm run auth:smoke
      ```
      It should end with **All checks passed**.
-5. Cursor finishes with a summary. Paste it here and I'll check it before you go live.
+4. Cursor finishes with a summary. Paste it here and I'll check it before you go live.
 
 ### What Cursor will also have you look at (Task 9)
 It temporarily switches your local app to the new login so you can see it:

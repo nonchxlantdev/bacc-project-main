@@ -147,7 +147,7 @@ built but never wired into `ReportsPage.jsx`, which today only calls
   row per one of the 31+ registered forms, on-time/late/outstanding.
 
 All three follow the existing rules already written down in
-`docs/CURSOR_PROMPT_PHASE3.md` §5: stat tiles where the number is the point,
+Stat tiles where the number is the point,
 no dual-axis charts, status colors reserved for SLA/overdue state, a table
 view alongside every chart, CSV export via the existing `downloadCsv`
 helper, PDF via the existing `/api/export-report-pdf` pattern (house-style

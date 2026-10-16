@@ -795,11 +795,3 @@ export function getRegistryEntry(key) {
  * already exists here, in the folder the approved form arrived in.
  */
 export { groupForCode } from './templateMeta.js';
-
-/*
- * `templatesForProfile` used to live here — a second, uncalled copy of the
- * role-and-department filter that `templates.list` applied. It is deleted
- * rather than corrected: BACC's rule is that everyone can see every checklist
- * on file, and a dead function asserting the opposite is a trap for whoever
- * wires up the next template list.
- */
