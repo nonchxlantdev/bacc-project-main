@@ -139,3 +139,40 @@ test("the OM's approval is stamped in each form's OM box", () => {
   );
   assert.equal(images.supervisor_signature, 'data:image/png;base64,OM');
 });
+
+test('sign-off dates are the signer\'s choice, kept through submit and approval', async () => {
+  const { users, call } = await setup();
+  const dated = record({
+    header: { date: '2026-10-15' },
+    signoffs: [{ role: 'responsible', name: 'Ivy', signature_data_uri: SIG, sign_date: '2026-10-15' }],
+  });
+  assert.equal(
+    await status(call('checklists.persist', users.insp, {
+      record: { ...dated, signoffs: [{ ...dated.signoffs[0], sign_date: '2026-02-30' }] },
+    })),
+    400,
+  );
+  await call('checklists.persist', users.insp, { record: { ...dated, status: 'submitted' } });
+  await call('checklists.acknowledge', users.om, { id: ID, name: 'Kegan OM', signature_data_uri: SIG, sign_date: '2026-10-16' });
+  const got = await call('checklists.get', users.om, { id: ID });
+  const by = Object.fromEntries(got.signoffs.map((s) => [s.role, s.sign_date]));
+  assert.equal(by.responsible, '2026-10-15');
+  assert.equal(by.om_acknowledgment, '2026-10-16');
+});
+
+test('the inspector can recall their own submission until the OM signs it', async () => {
+  const { users, call } = await setup();
+  await call('checklists.persist', users.insp, { record: record({ status: 'submitted' }) });
+  assert.equal(await status(call('checklists.recall', users.other, { id: ID })), 403);
+  assert.equal(await status(call('checklists.recall', users.om, { id: ID })), 403);
+  const back = await call('checklists.recall', users.insp, { id: ID });
+  assert.equal(back.status, 'draft');
+  assert.equal(back.locked, false);
+  assert.equal(back.returned, undefined, 'a recall is not a return for changes');
+  assert.equal((await call('approvals.listInbox', users.om)).filter((a) => a.status === 'pending').length, 0);
+  // Editable again, and can be resubmitted and signed off.
+  await call('checklists.persist', users.insp, { record: record({ header: { date: '2026-10-13' } }) });
+  await call('checklists.persist', users.insp, { record: record({ status: 'submitted' }) });
+  await call('checklists.acknowledge', users.om, { id: ID, name: 'Kegan OM', signature_data_uri: SIG });
+  assert.equal(await status(call('checklists.recall', users.insp, { id: ID })), 409);
+});

@@ -18,6 +18,7 @@ import {
   assertCanDecide,
   assertCanDeleteDraft,
   assertCanEditDraft,
+  assertCanRecall,
   assertCanGenerate,
   assertCanSeeApproval,
   assertCanSubmit,
@@ -35,6 +36,7 @@ import {
   validateSettingsValue,
   validateSignature,
   canSeeChecklist,
+  validateSignDate,
   validateReturnNote,
 } from './rules.js';
 import { OM_SIGNOFF_ROLE, isApproverSignoffRole } from '../../src/config/approverRoles.js';
@@ -75,7 +77,8 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
     // A returned draft carries the OM's reason so the inspector knows what to fix.
     if (hit.row.status === 'draft') {
       const back = await store.latestDecision(CHECKLIST, hit.row.id, OM_SIGNOFF_ROLE);
-      if (back?.status === 'rejected') {
+      // An inspector recalling their own submission is not a return for changes.
+      if (back?.status === 'rejected' && back.decided_by !== hit.row.inspector_id) {
         const by = back.decided_by ? await store.getUser(back.decided_by) : null;
         out.returned = { note: back.notes ?? '', at: back.decided_at, by_name: by?.full_name ?? null };
       }
@@ -103,13 +106,14 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
   }
 
   /** Statements that acknowledge a submitted checklist (shared by acknowledge and approvals.decide). */
-  async function acknowledgeStatements(actor, { id, name, position, signature_data_uri, notes }) {
+  async function acknowledgeStatements(actor, { id, name, position, signature_data_uri, sign_date, notes }) {
     assertCanAcknowledge(actor);
     const row = await store.getSubmissionRow(validId(id));
     if (!row) throw notFound('Checklist');
     if (row.status === 'draft') throw new HttpError(409, 'Drafts cannot be acknowledged');
     if (row.status === 'acknowledged') throw new HttpError(409, 'This checklist is already acknowledged');
     const signature = validateSignature(signature_data_uri);
+    const signDate = validateSignDate(sign_date);
     const at = iso();
     const signerName = optionalText(name, 'Name', 200) ?? actor.full_name ?? 'Signed';
     const signerPosition = optionalText(position, 'Position', 200) ?? actor.position ?? null;
@@ -119,6 +123,7 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
         name: signerName,
         position: signerPosition || null,
         signature_data_uri: signature,
+        sign_date: signDate,
         signed_at: at,
         signed_by: actor.id,
       }),
@@ -257,7 +262,8 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
           old &&
           old.name === b.name &&
           (old.position ?? null) === (b.position ?? null) &&
-          (old.signature_data_uri ?? null) === (signature ?? null);
+          (old.signature_data_uri ?? null) === (signature ?? null) &&
+          (old.sign_date ?? null) === (b.sign_date ?? null);
         return {
           ...b,
           signature_data_uri: signature,
@@ -337,6 +343,30 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       // did not happen.
       if (existing && Number(results?.[0]?.meta?.changes ?? 1) === 0) throw new HttpError(409, LOCKED_MESSAGE);
       return getChecklist(actor, { id: v.id });
+    },
+
+    // The inspector pulls their own submission back to a draft before the OM
+    // signs it — the same submitted -> draft move as Return for changes
+    // (migration 0005), started by the inspector instead of the OM.
+    'checklists.recall': async (actor, { id }) => {
+      const row = await store.getSubmissionRow(validId(id));
+      if (!row || !canSeeChecklist(actor, row)) throw notFound('Checklist');
+      assertCanRecall(actor, row);
+      const at = iso();
+      const stmts = [store.returnForChangesStmt(row.id, at), store.unlinkInstancesStmt(row.id)];
+      const pending = await store.pendingApproval(CHECKLIST, row.id, OM_SIGNOFF_ROLE);
+      if (pending) {
+        stmts.unshift(
+          store.decideApprovalStmt(pending.id, {
+            status: 'rejected',
+            decided_by: actor.id,
+            decided_at: at,
+            notes: 'Recalled by the inspector to make changes',
+          }),
+        );
+      }
+      await store.batch(stmts);
+      return getChecklist(actor, { id: row.id });
     },
 
     'checklists.deleteDraft': async (actor, { id }) => {
@@ -423,7 +453,7 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
       assertCanSeeApproval(actor, row);
       return hydrateApproval(row);
     },
-    'approvals.decide': async (actor, { id, decision, notes, signature_data_uri, name, position }) => {
+    'approvals.decide': async (actor, { id, decision, notes, signature_data_uri, sign_date, name, position }) => {
       const row = await store.getApproval(validId(id));
       if (!row) throw notFound('Approval');
       if (row.entity_type !== CHECKLIST) {
@@ -467,6 +497,7 @@ export function createDataService({ store, forms = null, now = () => Date.now(),
           name,
           position,
           signature_data_uri,
+          sign_date,
           notes: cleanNotes,
         });
         await store.batch(stmts);

@@ -66,11 +66,27 @@ export function assertCanSubmit(actor, row) {
   if (row.inspector_id !== actor.id) throw forbid('Only the inspector who started this checklist can submit it');
 }
 
+/** The inspector who started a draft can throw it away; so can the OM / an administrator. */
 export function assertCanDeleteDraft(actor, row) {
-  if (!isManager(actor)) throw forbid('Only an OM or an administrator can delete drafts');
+  if (row.inspector_id !== actor?.id && !isManager(actor)) {
+    throw forbid('Only the inspector who started this draft, or an OM, can delete it');
+  }
   if (row.locked || row.status !== 'draft') {
     throw conflict('Only unlocked drafts can be deleted. Submitted records stay on file.');
   }
+}
+
+/**
+ * The inspector takes back their own submission to keep editing it — only
+ * while it waits for the OM. Once signed off it is a filed record (§11) and
+ * changes go through an OM correction.
+ */
+export function assertCanRecall(actor, row) {
+  if (row.inspector_id !== actor?.id) throw forbid('Only the inspector who submitted this checklist can recall it');
+  if (row.status === 'acknowledged') {
+    throw conflict('This checklist is already signed off. Ask the Operations Manager to start a correction.');
+  }
+  if (row.status !== 'submitted') throw conflict('Only a submitted checklist can be recalled');
 }
 
 export function assertCanAmend(actor) {
@@ -171,6 +187,15 @@ function validateItems(raw) {
   return out;
 }
 
+/** A sign-off date the signer chose: YYYY-MM-DD, a real calendar day, or nothing. */
+export function validateSignDate(value, label = 'Sign-off date') {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw bad(`${label} must be a date (YYYY-MM-DD)`);
+  const d = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) throw bad(`${label} is not a real date`);
+  return value;
+}
+
 export function validateSignature(value, label = 'Signature') {
   if (value === undefined || value === null || value === '') return null;
   if (typeof value !== 'string' || !value.startsWith('data:image/')) throw bad(`${label} must be an image`);
@@ -201,6 +226,7 @@ function validateSignoffs(raw) {
       name: name && name.trim() ? name : 'Signed',
       position: optionalText(sg.position, 'Sign-off position', 200),
       signature_data_uri: signature,
+      sign_date: validateSignDate(sg.sign_date, `Date for ${role}`),
       // List reads omit signature images and flag them instead; a save built
       // from such a record keeps the stored image (service.js).
       has_signature: !signature && sg.has_signature === true,

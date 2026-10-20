@@ -58,7 +58,7 @@ export default function MyChecklistsPage() {
   }
 
   async function handleDelete(row) {
-    if (!canDeleteDraft(row, profile)) return;
+    if (!canDeleteDraft(row, profile, user?.id)) return;
     const title = row.schema?.title || row.template_code || 'this draft';
     const date = row.inspection_date || row.header?.date || '';
     const confirmed = window.confirm(
@@ -147,7 +147,7 @@ export default function MyChecklistsPage() {
                   <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
                 </td>
                 <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
-                  {canDeleteDraft(row, profile) ? (
+                  {canDeleteDraft(row, profile, user?.id) ? (
                     <button
                       type="button"
                       onClick={() => handleDelete(row)}

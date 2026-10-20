@@ -51,6 +51,7 @@ function mapSignoff(row) {
     position: row.position ?? null,
     signature_data_uri: row.signature_data_uri ?? null,
     has_signature: Boolean(row.signature_data_uri),
+    sign_date: row.sign_date ?? null,
     signed_at: row.signed_at,
     signed_by: row.signed_by,
   };
@@ -145,13 +146,13 @@ function createCoreStore(db) {
   async function signoffsBySubmission(ids) {
     const rows = ids
       ? await all(
-          `SELECT submission_id, role, name, position, signed_at, signed_by,
+          `SELECT submission_id, role, name, position, sign_date, signed_at, signed_by,
              CASE WHEN signature_data_uri IS NULL THEN NULL ELSE 'x' END AS signature_data_uri
            FROM checklist_signoffs WHERE submission_id IN (SELECT value FROM json_each(?1))`,
           JSON.stringify(ids),
         )
       : await all(
-          `SELECT submission_id, role, name, position, signed_at, signed_by,
+          `SELECT submission_id, role, name, position, sign_date, signed_at, signed_by,
              CASE WHEN signature_data_uri IS NULL THEN NULL ELSE 'x' END AS signature_data_uri
            FROM checklist_signoffs`,
         );
@@ -300,9 +301,9 @@ function createCoreStore(db) {
         stmt(`DELETE FROM checklist_signoffs WHERE submission_id = ?1 AND role <> 'om_acknowledgment'`, submissionId),
         ...blocks.map((b) =>
           stmt(
-            `INSERT INTO checklist_signoffs (submission_id, role, name, position, signature_data_uri, signed_at, signed_by)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
-            submissionId, b.role, b.name, n(b.position), n(b.signature_data_uri), b.signed_at, b.signed_by,
+            `INSERT INTO checklist_signoffs (submission_id, role, name, position, signature_data_uri, signed_at, signed_by, sign_date)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+            submissionId, b.role, b.name, n(b.position), n(b.signature_data_uri), b.signed_at, b.signed_by, n(b.sign_date),
           ),
         ),
       ];
@@ -342,11 +343,12 @@ function createCoreStore(db) {
     },
     upsertOmSignoffStmt(submissionId, b) {
       return stmt(
-        `INSERT INTO checklist_signoffs (submission_id, role, name, position, signature_data_uri, signed_at, signed_by)
-         VALUES (?1, 'om_acknowledgment', ?2, ?3, ?4, ?5, ?6)
+        `INSERT INTO checklist_signoffs (submission_id, role, name, position, signature_data_uri, signed_at, signed_by, sign_date)
+         VALUES (?1, 'om_acknowledgment', ?2, ?3, ?4, ?5, ?6, ?7)
          ON CONFLICT(submission_id, role) DO UPDATE SET name = excluded.name, position = excluded.position,
-           signature_data_uri = excluded.signature_data_uri, signed_at = excluded.signed_at, signed_by = excluded.signed_by`,
-        submissionId, b.name, n(b.position), n(b.signature_data_uri), b.signed_at, b.signed_by,
+           signature_data_uri = excluded.signature_data_uri, signed_at = excluded.signed_at, signed_by = excluded.signed_by,
+           sign_date = excluded.sign_date`,
+        submissionId, b.name, n(b.position), n(b.signature_data_uri), b.signed_at, b.signed_by, n(b.sign_date),
       );
     },
     amendItemsStmt(id, itemsJson, reopenedAt, by) {

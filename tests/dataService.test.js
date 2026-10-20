@@ -184,10 +184,12 @@ test('unknown form and photo data are rejected', async () => {
   await assert.rejects(call('checklists.persist', users.insp, { record: withPhoto }), /Attachments unavailable at this time/);
 });
 
-test('inspector cannot delete drafts (403); the OM can; filed records stay', async () => {
+test('drafts: owner or OM can delete, nobody else; filed records stay', async () => {
   const { users, call } = await setup();
+  const own = await call('checklists.persist', users.insp, { record: draftRecord() });
+  assert.deepEqual(await call('checklists.deleteDraft', users.insp, { id: own.id }), { deleted: own.id });
   const saved = await call('checklists.persist', users.insp, { record: draftRecord() });
-  assert.equal(await status(call('checklists.deleteDraft', users.insp, { id: saved.id })), 403);
+  assert.equal(await status(call('checklists.deleteDraft', users.other, { id: saved.id })), 403);
   assert.deepEqual(await call('checklists.deleteDraft', users.om, { id: saved.id }), { deleted: saved.id });
   assert.equal(await call('checklists.get', users.om, { id: saved.id }), null);
   const filed = await call('checklists.persist', users.insp, { record: draftRecord({ status: 'submitted' }) });

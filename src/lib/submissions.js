@@ -91,15 +91,29 @@ export function isDeletableDraft(record) {
   return record?.status === 'draft' && !record?.locked;
 }
 
-/** Client gate matching migration 014 — OM/admin only, unlocked drafts. */
-export function canDeleteDraft(record, profile) {
+/**
+ * Client gate matching the Worker's assertCanDeleteDraft: an unlocked draft can
+ * be deleted by the inspector who started it, or by the OM / an administrator.
+ */
+export function canDeleteDraft(record, profile, userId) {
   if (!isDeletableDraft(record)) return false;
   const role = profile?.role;
-  return role === 'om' || role === 'admin';
+  if (role === 'om' || role === 'admin') return true;
+  return Boolean(userId) && record.inspector_id === userId;
 }
 
 export async function deleteDraft(record) {
   return getRepos().checklists.deleteDraft(record);
+}
+
+/** Whether this data source can take a submission back to a draft (D1 only). */
+export function canRecallSubmissions() {
+  return typeof getRepos().checklists.recall === 'function';
+}
+
+/** The inspector pulls their submitted checklist back to a draft before the OM signs it. */
+export async function recallSubmission(id) {
+  return getRepos().checklists.recall(id);
 }
 
 export async function acknowledgeSubmission(payload) {

@@ -43,6 +43,9 @@ export default function ApprovalsPage() {
 
   const [active, setActive] = useState(null);
   const [signature, setSignature] = useState('');
+  // The date printed beside the OM's signature. Starts on the checklist's
+  // inspection date; the OM changes it when signing for a different day.
+  const [signDate, setSignDate] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
@@ -121,12 +124,14 @@ export default function ApprovalsPage() {
         decision,
         notes,
         signature_data_uri: signature,
+        sign_date: signDate || active.entity?.date || null,
         actor: { id: user.id, full_name: displayName, position, role: profile?.role },
         name: displayName,
         position,
       });
       setActive(null);
       setSignature('');
+      setSignDate('');
       setNotes('');
       reload();
     } catch (err) {
@@ -254,6 +259,7 @@ export default function ApprovalsPage() {
                     className="min-h-11 flex-1 rounded-md bg-navy px-3 py-1.5 text-sm font-semibold text-white desk:min-h-9 sm:flex-none"
                     onClick={() => {
                       setActive(row);
+                      setSignDate('');
                       setError(null);
                     }}
                   >
@@ -316,6 +322,15 @@ export default function ApprovalsPage() {
             </label>
             <p className="mt-3 text-xs font-semibold uppercase text-muted">Drawn signature</p>
             <SignaturePad value={signature} onChange={setSignature} />
+            <label className="mt-3 block text-sm">
+              Date
+              <input
+                type="date"
+                value={signDate || active.entity?.date || ''}
+                onChange={(e) => setSignDate(e.target.value)}
+                className="mt-1 block min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-ink sm:w-56"
+              />
+            </label>
             {error && <p className="mt-2 text-sm text-alert">{error}</p>}
             <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
               <button

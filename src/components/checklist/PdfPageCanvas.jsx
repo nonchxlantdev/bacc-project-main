@@ -18,7 +18,7 @@ export default function PdfPageCanvas({ source, className = '' }) {
 
   useEffect(() => {
     let cancelled = false;
-    let doc = null;
+    let loadingTask = null;
     const host = hostRef.current;
 
     (async () => {
@@ -34,7 +34,9 @@ export default function PdfPageCanvas({ source, className = '' }) {
           typeof source === 'string'
             ? await (await fetch(source, { credentials: 'same-origin' })).arrayBuffer()
             : await source.arrayBuffer();
-        doc = await pdfjs.getDocument({ data: new Uint8Array(bytes) }).promise;
+        if (cancelled) return;
+        loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes) });
+        const doc = await loadingTask.promise;
         if (cancelled) return;
 
         host.replaceChildren();
@@ -62,9 +64,18 @@ export default function PdfPageCanvas({ source, className = '' }) {
       }
     })();
 
+    // The loading task is what pdf.js tears down (it frees the worker and the
+    // document, and cancels a load still in flight). PDFDocumentProxy has no
+    // destroy() in the bundled pdf.js, so calling it threw during unmount —
+    // pressing Back with a preview open took the whole page down to the error
+    // screen. Cleanup must never throw, so it is guarded as well.
     return () => {
       cancelled = true;
-      doc?.destroy();
+      try {
+        loadingTask?.destroy()?.catch?.(() => {});
+      } catch {
+        /* nothing left to free */
+      }
     };
   }, [source]);
 

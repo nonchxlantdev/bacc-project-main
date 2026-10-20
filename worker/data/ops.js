@@ -32,6 +32,7 @@ export const WRITE_OPS = [
   'users.update',
   'checklists.persist',
   'checklists.deleteDraft',
+  'checklists.recall',
   'checklists.amendItemResult',
   'checklists.acknowledge',
   'approvals.decide',

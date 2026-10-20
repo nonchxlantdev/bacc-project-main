@@ -357,6 +357,8 @@ export default function ChecklistForm({
                 position={isSelf ? signerPosition ?? signed?.position ?? '' : signed?.position ?? ''}
                 nameLocked={isSelf}
                 signedAt={signed?.signed_at}
+                signDate={signed?.sign_date}
+                defaultSignDate={header?.date || ''}
                 signatureDataUri={signed?.signature_data_uri}
                 storedSignatureUri={storedSignatureUri}
                 readOnly={readOnly || isApproverBox}

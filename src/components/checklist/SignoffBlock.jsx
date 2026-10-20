@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { airportYmd } from '../../lib/belizeTime.js';
 import SignaturePad from './SignaturePad.jsx';
 
 export default function SignoffBlock({
@@ -8,7 +9,14 @@ export default function SignoffBlock({
   position,
   dateLabel = 'Date:',
   signedAt,
-  signatureDataUri,
+  // The date the signer chose for this block (YYYY-MM-DD). The approved forms
+  // print it beside the signature, so it is the signer's to pick — usually the
+  // day the work was done, which is not always the day they sign.
+  signDate,
+  // What the picker starts on when nothing has been chosen yet: the
+  // checklist's own date, so the bottom of the form matches the top unless
+  // the signer changes it.
+  defaultSignDate,
   storedSignatureUri,
   readOnly,
   // Set only for the form's own signer (see ChecklistForm's `isSelf`).
@@ -27,6 +35,12 @@ export default function SignoffBlock({
   // form's own signer, whatever that role is named on this annex. This
   // block doesn't need to know the role name at all.
   const canUseStored = !readOnly && storedSignatureUri && typeof onApplyStored === 'function';
+  // While editing, an unchosen date shows the checklist's date (signed_at moves
+  // on every keystroke, so it says nothing about the day being signed for).
+  // A filed block with no chosen date predates the picker: show the
+  // airport-time day it was signed, which is what its PDF prints.
+  const signedDay = signedAt ? airportYmd(Date.parse(signedAt)) : '';
+  const shownDate = signDate || (readOnly ? signedDay : defaultSignDate || signedDay || '');
 
   function handleApplyStored() {
     if (signatureDataUri && signatureDataUri !== storedSignatureUri && !confirmReplace) {
@@ -95,12 +109,28 @@ export default function SignoffBlock({
         disabled={readOnly}
         onChange={(signature_data_uri) => {
           setConfirmReplace(false);
-          onChange?.({ signature_data_uri });
+          // Signing pins the date shown in the picker, so what the person saw
+          // is what prints — even if they never touched the picker.
+          onChange?.(signDate ? { signature_data_uri } : { signature_data_uri, sign_date: shownDate || null });
         }}
       />
-      <p className="mt-2 text-sm text-muted">
-        {dateLabel} {signedAt ? new Date(signedAt).toLocaleString() : '—'}
-      </p>
+      {readOnly ? (
+        <p className="mt-2 text-sm text-muted">
+          {dateLabel} {shownDate || '—'}
+        </p>
+      ) : (
+        <label className="mt-3 block">
+          <span className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
+            {String(dateLabel).replace(/:\s*$/, '')}
+          </span>
+          <input
+            type="date"
+            value={shownDate}
+            onChange={(e) => onChange?.({ sign_date: e.target.value || null })}
+            className="min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink sm:w-56"
+          />
+        </label>
+      )}
     </div>
   );
 }

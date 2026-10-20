@@ -153,8 +153,17 @@ export function createD1Adapter({ call, registry }) {
         await call('checklists.deleteDraft', { id: record?.id });
         drawingsSeen.delete(record?.id);
       },
-      acknowledge: async ({ id, name, position, signature_data_uri }) =>
-        enrich(await call('checklists.acknowledge', { id, name, position, signature_data_uri: signature_data_uri || null })),
+      recall: async (id) => enrich(await call('checklists.recall', { id })),
+      acknowledge: async ({ id, name, position, signature_data_uri, sign_date }) =>
+        enrich(
+          await call('checklists.acknowledge', {
+            id,
+            name,
+            position,
+            signature_data_uri: signature_data_uri || null,
+            sign_date: sign_date || null,
+          }),
+        ),
       amendItemResult: async ({ id, code, result, amendment, reason }) =>
         enrich(await call('checklists.amendItemResult', { id, code, result, amendment: amendment ?? null, reason })),
       async listQualifyingReinspections(incident) {
@@ -188,13 +197,14 @@ export function createD1Adapter({ call, registry }) {
           .filter((row) => WORK_ORDERS_ENABLED || row.entity_type !== 'work_order')
           .map(enrichApproval),
       get: async (id) => enrichApproval(await call('approvals.get', { id })),
-      decide: async ({ id, decision, notes, signature_data_uri, name, position }) =>
+      decide: async ({ id, decision, notes, signature_data_uri, sign_date, name, position }) =>
         enrichApproval(
           await call('approvals.decide', {
             id,
             decision,
             notes: notes ?? null,
             signature_data_uri: signature_data_uri || null,
+            sign_date: sign_date || null,
             name: name ?? null,
             position: position ?? null,
           }),

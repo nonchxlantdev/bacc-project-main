@@ -21,6 +21,8 @@ import {
   refreshDraftTemplate,
   uploadPhoto,
   acknowledgeSubmission,
+  canRecallSubmissions,
+  recallSubmission,
 } from '../lib/submissions.js';
 import { listIncidents } from '../lib/incidents.js';
 import { getTemplate } from '../lib/templates.js';
@@ -63,8 +65,10 @@ export default function ChecklistDetailPage() {
   const [incidentModal, setIncidentModal] = useState(null);
   const [itemIncidents, setItemIncidents] = useState({});
   const [omSignature, setOmSignature] = useState('');
+  const [omSignDate, setOmSignDate] = useState('');
   const [returnNote, setReturnNote] = useState('');
   const [signaturePromptOpen, setSignaturePromptOpen] = useState(false);
+  const [recalling, setRecalling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -263,10 +267,16 @@ export default function ChecklistDetailPage() {
           name: displayName,
           position,
           signature_data_uri: existingSelf?.signature_data_uri,
+          sign_date: existingSelf?.sign_date || record.header?.date || null,
           signed_at: signedAt,
         }
       : null;
-    const otherSignoffs = (record.signoffs ?? []).filter((s) => s.role !== selfRole);
+    // A block whose date picker was never touched showed the checklist's date;
+    // pin that, so the PDF prints what the signer saw rather than the day the
+    // server happened to save it.
+    const otherSignoffs = (record.signoffs ?? [])
+      .filter((s) => s.role !== selfRole)
+      .map((s) => (s.sign_date ? s : { ...s, sign_date: record.header?.date || null }));
     const next = {
       ...record,
       status: 'submitted',
@@ -590,6 +600,34 @@ export default function ChecklistDetailPage() {
             {exporting ? 'Exporting…' : 'Export PDF'}
           </button>
           )}
+          {/* Until the OM signs, the inspector can take their own submission
+              back to keep editing it (the Worker enforces the same). */}
+          {!isReference &&
+            record.status === 'submitted' &&
+            record.inspector_id &&
+            record.inspector_id === user?.id &&
+            canRecallSubmissions() && (
+              <button
+                type="button"
+                disabled={recalling}
+                onClick={async () => {
+                  setRecalling(true);
+                  setBanner(null);
+                  try {
+                    const back = await recallSubmission(record.id);
+                    setRecord(back ?? (await getSubmission(record.id)));
+                    setBanner({ type: 'ok', text: 'Recalled to your drafts. Make your changes and submit again.' });
+                  } catch (err) {
+                    setBanner({ type: 'error', text: err.message || 'Could not recall this checklist.' });
+                  } finally {
+                    setRecalling(false);
+                  }
+                }}
+                className="min-h-11 rounded-md border border-primary/40 bg-surface px-3 py-2 text-sm font-medium text-primary disabled:opacity-60 desk:min-h-10"
+              >
+                {recalling ? 'Recalling…' : 'Recall to edit'}
+              </button>
+            )}
           {/* After sign-off only the OM corrects (the Worker enforces the same). */}
           {!isReference && record.status === 'acknowledged' && CORRECTION_ROLES.includes(profile?.role) && (
             <button
@@ -647,6 +685,16 @@ export default function ChecklistDetailPage() {
           <div className="mt-3 max-w-md">
             <SignaturePad value={omSignature} onChange={setOmSignature} />
           </div>
+          <label className="mt-3 block max-w-md text-sm font-medium text-ink" htmlFor="om-sign-date">
+            Date
+          </label>
+          <input
+            id="om-sign-date"
+            type="date"
+            value={omSignDate || record.header?.date || ''}
+            onChange={(e) => setOmSignDate(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink sm:w-56"
+          />
           <button
             type="button"
             className="mt-3 min-h-11 w-full rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white sm:w-auto"
@@ -657,6 +705,7 @@ export default function ChecklistDetailPage() {
                   name: displayName,
                   position,
                   signature_data_uri: omSignature,
+                  sign_date: omSignDate || record.header?.date || null,
                   actorId: user?.id,
                 });
                 setRecord(next);

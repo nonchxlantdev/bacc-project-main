@@ -53,8 +53,10 @@ test('submit: owner only', () => {
   assert.equal(status(() => assertCanSubmit(inspector, filed)), 409);
 });
 
-test('inspector cannot delete a draft; managers can, never a filed record', () => {
-  assert.equal(status(() => assertCanDeleteDraft(inspector, draft)), 403);
+test('draft delete: owner or managers, never a filed record', () => {
+  assert.equal(status(() => assertCanDeleteDraft(inspector, draft)), 200);
+  assert.equal(status(() => assertCanDeleteDraft(other, draft)), 403);
+  assert.equal(status(() => assertCanDeleteDraft(inspector, filed)), 409);
   assert.equal(status(() => assertCanDeleteDraft(coo, draft)), 403);
   assert.equal(status(() => assertCanDeleteDraft(om, draft)), 200);
   assert.equal(status(() => assertCanDeleteDraft(admin, draft)), 200);

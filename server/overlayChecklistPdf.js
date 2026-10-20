@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { signoffFieldKeys, signoffsOmLast } from '../src/lib/signoffFields.js';
+import { airportYmd } from '../src/lib/belizeTime.js';
 
 const CONTINUATION_MARKER = '— see continuation p.';
 
@@ -24,7 +25,10 @@ function wrapLine(font, text, size, maxWidth) {
 function drawWrapped(page, font, text, field) {
   const size = field.size ?? 9;
   const width = field.width ?? 120;
-  const lineHeight = size + 2;
+  // A ruled multi-line box (e.g. the five lines under "Description of
+  // Wildlife Incursion") sets lineHeight to the printed rule pitch so each
+  // wrapped line lands on its own rule.
+  const lineHeight = field.lineHeight ?? size + 2;
   const maxLines = field.maxLines ?? Math.max(1, Math.floor((field.height ?? lineHeight) / lineHeight));
   const lines = wrapLine(font, text, size, width);
   const overflow = lines.length > maxLines;
@@ -374,7 +378,10 @@ export function submissionToOverlayValues(record) {
     if (!s?.role) continue;
     const keys = signoffFieldKeys(s.role, schema);
     values[keys.name] = [s.name, s.position].filter(Boolean).join(' / ');
-    values[keys.date] = s.signed_at ? String(s.signed_at).slice(0, 10) : '';
+    // The date the signer chose. Older sign-offs have none, so they fall back
+    // to the airport-time day they were signed (never the UTC day, which is
+    // tomorrow for anything signed after 6 pm in Belize).
+    values[keys.date] = s.sign_date || (s.signed_at ? airportYmd(Date.parse(s.signed_at)) : '');
   }
   return values;
 }

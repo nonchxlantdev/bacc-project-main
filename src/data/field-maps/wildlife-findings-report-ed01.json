@@ -65,8 +65,9 @@
       "size": 10,
       "width": 456,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 5,
+      "overflow": "continuation",
+      "lineHeight": 23
     },
     "prepared_by_name": {
       "page": 0,

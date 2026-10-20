@@ -42,8 +42,9 @@
       "size": 10,
       "width": 461,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 5,
+      "overflow": "continuation",
+      "lineHeight": 23
     },
     "description_of_damages_casualties": {
       "page": 0,
@@ -52,8 +53,9 @@
       "size": 10,
       "width": 463,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 5,
+      "overflow": "continuation",
+      "lineHeight": 23
     },
     "measures_taken": {
       "page": 0,
@@ -62,8 +64,9 @@
       "size": 10,
       "width": 463,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 5,
+      "overflow": "continuation",
+      "lineHeight": 23
     },
     "reported_by": {
       "page": 0,
