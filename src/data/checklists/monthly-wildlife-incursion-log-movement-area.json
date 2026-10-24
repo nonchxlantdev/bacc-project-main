@@ -32,7 +32,7 @@
     {
       "key": "date",
       "label": "Date",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date"
     }
@@ -49,7 +49,8 @@
       "columns": [
         {
           "key": "date_and_time",
-          "label": "Date and Time"
+          "label": "Date and Time",
+          "type": "datetime"
         },
         {
           "key": "description",

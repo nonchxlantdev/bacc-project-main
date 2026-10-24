@@ -87,6 +87,19 @@ test('approvals get the form title and team from the registry', async () => {
   assert.equal(row.entity.code, 'PGIA-PMM-F04');
 });
 
+test('templates still list when the schedule rules read fails', async () => {
+  const { call } = fakeCall({
+    'instances.rules': () => {
+      throw new Error('D1_ERROR: internal error; reference = secret');
+    },
+  });
+  const repos = createD1Adapter({ call, registry });
+  const [tpl] = await repos.templates.list();
+  assert.equal(tpl.id, 'annex-d-drainage');
+  assert.deepEqual(tpl.assignment_rules, []);
+  assert.deepEqual((await repos.templates.get(entry.key)).assignment_rules, []);
+});
+
 test('templates come from the registry with D1 schedule rules attached', async () => {
   const { call } = fakeCall({ 'instances.rules': [{ id: 'r', template_id: entry.key, frequency: 'monthly' }] });
   const repos = createD1Adapter({ call, registry });
@@ -170,4 +183,48 @@ test('callData: GET with ?a= for reads, JSON POST for writes, errors carry statu
   await assert.rejects(callData('settings.save', { section: 's', value: 1 }, { fetchImpl }), (e) => e.status === 403 && e.code === 'X');
   assert.equal(seen[2].init.method, 'POST');
   assert.deepEqual(JSON.parse(seen[2].init.body), { args: { section: 's', value: 1 } });
+});
+
+test('callData retries a read twice on a D1 or 5xx failure and never retries a write', async () => {
+  const delays = [];
+  let reads = 0;
+  const fetchImpl = async (url) => {
+    if (url.includes('settings.save')) throw new TypeError('Failed to fetch');
+    reads += 1;
+    if (reads === 1) return new Response(JSON.stringify({ error: 'D1_ERROR: internal error' }), { status: 500 });
+    if (reads === 2) return new Response('nope', { status: 502 });
+    return new Response(JSON.stringify({ data: { ok: true } }), { status: 200 });
+  };
+  const sleepImpl = (ms) => {
+    delays.push(ms);
+    return Promise.resolve();
+  };
+  assert.deepEqual(await callData('checklists.listAll', {}, { fetchImpl, sleepImpl }), { ok: true });
+  assert.deepEqual(delays, [250, 750]);
+  assert.equal(reads, 3);
+
+  let writes = 0;
+  await assert.rejects(
+    callData('settings.save', { section: 's', value: 1 }, {
+      fetchImpl: async () => {
+        writes += 1;
+        throw new TypeError('Failed to fetch');
+      },
+      sleepImpl,
+    }),
+  );
+  assert.equal(writes, 1);
+
+  let clientErrors = 0;
+  await assert.rejects(
+    callData('checklists.get', { id: 'r1' }, {
+      fetchImpl: async () => {
+        clientErrors += 1;
+        return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+      },
+      sleepImpl,
+    }),
+    (err) => err.status === 404,
+  );
+  assert.equal(clientErrors, 1);
 });

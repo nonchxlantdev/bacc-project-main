@@ -453,8 +453,10 @@ try {
   );
 
   // ── 7. Assign to a unit, set a target, work it forward ────────────────────
+  // Progress is four tick boxes, not a status dropdown. Step 1 completes
+  // itself once a unit and a due date are set.
   await page.goto(incidentUrl, { waitUntil: 'domcontentloaded' });
-  await page.getByLabel('Assigned Unit').selectOption({ label: UNIT.label });
+  await page.getByRole('checkbox', { name: UNIT.label, exact: true }).click();
   await page.waitForTimeout(500);
   const target = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
   await page.locator('input[type="date"]').first().fill(target);
@@ -467,10 +469,10 @@ try {
     `assigned to the ${UNIT.label} unit with a target date`,
   );
 
-  for (const status of ['assigned', 'in_progress', 'resolved']) {
-    await page.getByLabel('Current Status').selectOption(status);
-    await page.waitForTimeout(700);
-  }
+  await page.getByText('2. Work started').click();
+  await page.waitForTimeout(400);
+  await page.getByText('3. Fixed').click();
+  await page.waitForTimeout(700);
   check(
     await readStore(page, (store) => store.incidents?.[0]?.status === 'resolved'),
     'worked through Assigned and In Progress to Resolved',
@@ -489,15 +491,15 @@ try {
   );
 
   // ── 8. Verify SAT and close ───────────────────────────────────────────────
-  const verify = page.getByRole('button', { name: new RegExp(`^Mark ${itemCode} verified SAT$`) });
-  await verify.scrollIntoViewIfNeeded();
-  await verify.click();
-  const confirm = page.getByRole('button', { name: /Confirm SAT/i }).first();
-  await confirm.waitFor({ timeout: 10000 });
-  await confirm.click();
-  await page.waitForTimeout(1000);
-
-  await page.getByLabel('Current Status').selectOption('closed');
+  await page.getByText('4. Checked and closed').click();
+  check(
+    await page
+      .getByText(new RegExp(`Closing marks ${itemCode} SAT on the original checklist`, 'i'))
+      .waitFor({ state: 'visible', timeout: 10000 })
+      .then(() => true, () => false),
+    'closing says it will mark the checklist item SAT',
+  );
+  await page.getByRole('button', { name: /Yes, close it/ }).click();
   await page.waitForTimeout(1000);
   check(
     await readStore(page, (store) => store.incidents?.[0]?.status === 'closed'),
@@ -532,24 +534,14 @@ try {
   );
 
   // ── The portal says so in plain language ──────────────────────────────────
-  // HowThisWorks was removed (UX clutter). The Related Checklist Item card
-  // states the write-back consequence and the verified-SAT line instead.
   await page.goto(incidentUrl, { waitUntil: 'domcontentloaded' });
   check(
     await page
-      .getByText(/Confirming SAT updates the original checklist/i)
+      .getByText('Verified SAT')
       .first()
       .waitFor({ state: 'visible', timeout: 15000 })
       .then(() => true, () => false),
-    'the incident page says confirming SAT updates the checklist',
-  );
-  check(
-    await page
-      .getByText(/Verified\s+SAT\s+by/i)
-      .first()
-      .waitFor({ state: 'visible', timeout: 15000 })
-      .then(() => true, () => false),
-    'the incident page shows who verified SAT and when',
+    'the incident page shows the item was verified SAT',
   );
 
   await page.goto(checklistUrl, { waitUntil: 'domcontentloaded' });

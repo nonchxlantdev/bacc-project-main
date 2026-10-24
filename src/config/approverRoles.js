@@ -33,8 +33,18 @@ export function approverRole(schemaOrCode) {
   return (code && APPROVER_ROLE_BY_CODE[code]) || null;
 }
 
+/**
+ * A signature drawn in a log-sheet row, stored as a sign-off rather than in
+ * the row cell. `row:<tableKey>:<n>:<columnKey>`, 1-based n.
+ */
+export const ROW_SIGNOFF_ROLE = /^row:[A-Za-z0-9_]{1,40}:\d{1,3}:[A-Za-z0-9_]{1,40}$/;
+
+export function isRowSignoffRole(role) {
+  return typeof role === 'string' && ROW_SIGNOFF_ROLE.test(role);
+}
+
 /** True for the box only the OM's approval may fill (and the stored OM role itself). */
 export function isApproverSignoffRole(schemaOrCode, role) {
-  if (!role) return false;
+  if (!role || isRowSignoffRole(role)) return false;
   return role === OM_SIGNOFF_ROLE || role === approverRole(schemaOrCode);
 }

@@ -167,7 +167,7 @@ export const TOURS = [
 
   {
     id: 'checklists-mine',
-    version: 1,
+    version: 2,
     title: 'My Checklists',
     path: '/checklists/mine',
     screen: 'checklistsMine',
@@ -179,6 +179,11 @@ export const TOURS = [
         faq: 'checklists',
       },
       {
+        target: 'mine-tabs',
+        title: 'Your history',
+        body: 'Drafts, awaiting the OM, returned for changes, and completed inspections.',
+      },
+      {
         target: 'mine-table',
         title: 'Your checklists',
         body: 'Drafts save as you go. Submitted checklists are locked and stay on file.',
@@ -188,11 +193,16 @@ export const TOURS = [
 
   {
     id: 'checklists-all',
-    version: 1,
+    version: 2,
     title: 'All Checklists',
     path: '/checklists/all',
     screen: 'checklistsAll',
     steps: [
+      {
+        target: 'all-tabs',
+        title: 'Forms and records',
+        body: 'Open a form to start one, or switch to filed records to find a completed checklist.',
+      },
       {
         target: 'all-kpis',
         title: 'Programme status',

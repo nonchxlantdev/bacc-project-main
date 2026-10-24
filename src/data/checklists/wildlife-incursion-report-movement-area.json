@@ -25,14 +25,14 @@
     {
       "key": "date",
       "label": "Date: _bn",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date"
     },
     {
       "key": "time",
       "label": "Time",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "time"
     },

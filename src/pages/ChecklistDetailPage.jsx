@@ -31,10 +31,13 @@ import { getRepos } from '../data/repositories/index.js';
 import { baseFormUrl } from '../lib/baseForms.js';
 import { ROLE_TITLES } from '../lib/roleStaffing.js';
 import { signatureImages } from '../lib/signoffFields.js';
+import { requestChecklistPdf, savePdfBlob } from '../lib/exportPdf.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
 import { applyStoredSignature, selfSignoffRole } from '../lib/storedSignature.js';
 import { isD1Data } from '../lib/dataMode.js';
+import { isRowSignoffRole } from '../config/approverRoles.js';
+import { setUnsavedChecklist } from '../lib/unsavedChecklist.js';
 
 // Who sees the acknowledge block. On D1 the Worker allows only OM/admin to
 // sign the OM acknowledgment (spec 3a §3), so the button follows that rule.
@@ -136,11 +139,18 @@ export default function ChecklistDetailPage() {
   const readOnly = isReference || record?.status === 'submitted' || record?.locked;
 
   useEffect(() => {
-    if (!record || readOnly) return undefined;
+    if (!record || readOnly) {
+      setUnsavedChecklist(false);
+      return undefined;
+    }
+    setUnsavedChecklist(true);
     autosaveRef.current = setTimeout(() => {
       autosaveRef.current = null;
       persistSubmission(record)
-        .then(() => setLastSavedAt(new Date()))
+        .then(() => {
+          setLastSavedAt(new Date());
+          setUnsavedChecklist(false);
+        })
         .catch(() => {});
     }, 500);
     return () => {
@@ -148,6 +158,8 @@ export default function ChecklistDetailPage() {
       autosaveRef.current = null;
     };
   }, [record, readOnly]);
+
+  useEffect(() => () => setUnsavedChecklist(false), []);
 
   async function persistHideSignaturePrompt(hide) {
     if (!hide) return;
@@ -276,7 +288,7 @@ export default function ChecklistDetailPage() {
     // server happened to save it.
     const otherSignoffs = (record.signoffs ?? [])
       .filter((s) => s.role !== selfRole)
-      .map((s) => (s.sign_date ? s : { ...s, sign_date: record.header?.date || null }));
+      .map((s) => (isRowSignoffRole(s.role) || s.sign_date ? s : { ...s, sign_date: record.header?.date || null }));
     const next = {
       ...record,
       status: 'submitted',
@@ -388,30 +400,13 @@ export default function ChecklistDetailPage() {
         });
       }
     }
-    const { apiFetch } = await import('../lib/apiFetch.js');
-    const res = await apiFetch('/api/export-checklist-pdf', {
-      method: 'POST',
-      body: JSON.stringify({
-        templateKey: current.print_template_key || 'annex-d-drainage',
-        templateVersion: current.template_version || 'ed01',
-        submission: current,
-        images,
-        photos,
-      }),
+    return requestChecklistPdf({
+      templateKey: current.print_template_key,
+      templateVersion: current.template_version,
+      submission: current,
+      images,
+      photos,
     });
-    const contentType = res.headers.get('content-type') || '';
-    if (!res.ok || !contentType.includes('pdf')) {
-      let message = `Export failed (${res.status})`;
-      try {
-        const payload = await res.clone().json();
-        if (payload?.error) message = payload.error;
-      } catch {
-        const text = await res.text();
-        if (text) message = text.slice(0, 280);
-      }
-      throw new Error(message);
-    }
-    return res.blob();
   }
 
   function scrollToPreview() {
@@ -467,14 +462,7 @@ export default function ChecklistDetailPage() {
       await save(record);
       const blob = await buildOverlayBlob(record);
       const filename = `${schema.code}-${record.template_version || 'ed01'}-${record.inspection_date || 'draft'}.pdf`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      savePdfBlob(blob, filename);
       setBanner({ type: 'ok', text: 'PDF downloaded.' });
     } catch (err) {
       setBanner({
@@ -761,7 +749,7 @@ export default function ChecklistDetailPage() {
         header={record.header}
         items={record.items}
         deficiencies={record.deficiencies_summary}
-        signoffs={record.signoffs}
+        signoffs={(record.signoffs ?? []).filter((s) => !isRowSignoffRole(s.role))}
         readOnly={readOnly}
         selectedCode={selectedCode}
         photoPreviewByCode={photoPreview}

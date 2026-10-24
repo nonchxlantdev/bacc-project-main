@@ -114,13 +114,23 @@ export function createApiHandler({ routes, forms, authenticate }) {
       if (route.kind === 'response') return finalize(result, authCtx);
       return finalize(json(200, result), authCtx);
     } catch (err) {
+      const message = err?.message || String(err);
+      if (message.includes('D1_')) {
+        const ref = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+        const op = pathname.startsWith('/api/data/') ? pathname.slice('/api/data/'.length) : null;
+        console.error(JSON.stringify({ level: 'error', source: 'd1', route: pathname, op, message, ref }));
+        return finalize(
+          json(503, { error: 'The records service is busy. Please try again.', code: 'DB_UNAVAILABLE', ref }),
+          authCtx,
+        );
+      }
       const status = Number.isInteger(err?.status) ? err.status : 500;
       if (status >= 500) {
         console.error(
-          JSON.stringify({ level: 'error', path: pathname, msg: err?.message || String(err), stack: err?.stack }),
+          JSON.stringify({ level: 'error', path: pathname, msg: message, stack: err?.stack }),
         );
       }
-      const payload = { error: err?.message || 'Request failed' };
+      const payload = { error: message || 'Request failed' };
       if (err?.code && typeof err.code === 'string') payload.code = err.code;
       return finalize(json(status, payload), authCtx);
     }

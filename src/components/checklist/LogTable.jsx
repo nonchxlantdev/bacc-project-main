@@ -1,5 +1,21 @@
 import { Plus, Trash2 } from 'lucide-react';
+import { isPickerValue, normalizeFieldValue } from '../../lib/dateValues.js';
 import SignaturePad from './SignaturePad.jsx';
+
+const COLUMN_INPUT = { date: 'date', time: 'time', datetime: 'datetime-local' };
+
+function columnInputType(col, value) {
+  const native = COLUMN_INPUT[col.type];
+  if (!native) return 'text';
+  return isPickerValue(value, col.type) || value == null || value === '' ? native : 'text';
+}
+
+function columnDisplay(col, value) {
+  if (value == null || value === '') return '';
+  if (!COLUMN_INPUT[col.type]) return value;
+  const normalized = normalizeFieldValue(value, col.type);
+  return isPickerValue(normalized, col.type) ? normalized : String(value);
+}
 
 /**
  * A log sheet's grid — one row per sighting, attendee or incursion.
@@ -73,11 +89,12 @@ export default function LogTable({ field, value, disabled, onChange }) {
                         />
                       ) : (
                         <input
-                          value={row?.[col.key] ?? ''}
+                          type={columnInputType(col, row?.[col.key])}
+                          value={columnDisplay(col, row?.[col.key])}
                           disabled={disabled}
                           aria-label={`${col.label}, row ${i + 1}`}
                           onChange={(e) => setCell(i, col.key, e.target.value)}
-                          className="min-h-10 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9"
+                          className="min-h-11 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9"
                         />
                       )}
                     </td>

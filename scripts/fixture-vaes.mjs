@@ -15,6 +15,7 @@ import { verifyPlacement } from './verify-placement.mjs';
 const SAMPLE = {
   date: '2026-05-22',
   time: '08:15',
+  datetime: '2026-05-22T16:30',
   text: 'Clear, light NE wind 8 kt, visibility 10 km',
   yes_no: 'no',
 };

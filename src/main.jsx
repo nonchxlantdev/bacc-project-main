@@ -5,9 +5,10 @@ import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { prepareRepos } from './data/repositories/index.js';
 import { loadSettings } from './lib/settingsStore.js';
+import { notifyPortalUpdate } from './lib/portalUpdate.js';
 import './index.css';
 
-registerSW({ immediate: true });
+registerSW({ immediate: true, onNeedRefresh: notifyPortalUpdate });
 
 // Settings are read synchronously by the deficiency-level and notification
 // helpers, so they must be in memory before the first render — not fetched

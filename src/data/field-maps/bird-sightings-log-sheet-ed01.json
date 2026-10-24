@@ -36,6 +36,16 @@
       "maxLines": 1,
       "overflow": "continuation"
     },
+    "date": {
+      "page": 0,
+      "x": 100,
+      "y": 369,
+      "size": 7,
+      "width": 60,
+      "wrap": true,
+      "maxLines": 1,
+      "overflow": "continuation"
+    },
     "location": {
       "page": 0,
       "x": 170,

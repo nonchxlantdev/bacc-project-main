@@ -32,7 +32,7 @@
     {
       "key": "date",
       "label": "Date",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date"
     },
@@ -46,7 +46,7 @@
     {
       "key": "startTime",
       "label": "Start Time",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "start_time"
     },
@@ -67,7 +67,7 @@
     {
       "key": "endTime",
       "label": "End Time",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "end_time"
     }
@@ -118,6 +118,6 @@
   "notes": [
     "Activity Codes: P - Perching, V - Flying, F - Foraging, C - Singing, O \u2013 Other",
     "The approved grid prints 11 rows. More may be recorded \u2014 the first 11 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does.",
-    "The approved sheet prints its date as 'Date:  /  /' with roughly three points between the slashes \u2014 space for a hand-written figure, far too narrow to stamp legibly. The date is recorded on the record and shown in the portal, and the printed sheet keeps its hand-written slot rather than having type driven through BACC's artwork. Raised with BACC as a source-document question."
+    "The date prints in the clear band above the printed Date: / / slot (x 100, y 369, size 7, width 60), so the approved artwork is left untouched. Decided 2026-10-24."
   ]
 }

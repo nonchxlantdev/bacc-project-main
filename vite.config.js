@@ -1,14 +1,28 @@
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { cloudflare } from '@cloudflare/vite-plugin';
 
+function buildId() {
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    if (sha) return sha;
+  } catch {
+    /* a checkout without git still needs a label */
+  }
+  return new Date().toISOString();
+}
+
 // Cloudflare Workers is the deploy target (wrangler.jsonc). The Cloudflare
 // plugin runs the real Worker — including /api/* PDF export — inside
 // `vite dev`, so dev and production share one code path.
 export default defineConfig({
   base: '/',
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId()),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -47,6 +61,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg,jpg,json,woff2}'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//],

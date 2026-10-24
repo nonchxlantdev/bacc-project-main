@@ -1,12 +1,15 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Download, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import NewInspectionPicker from '../components/checklist/NewInspectionPicker.jsx';
 import StatusPill from '../components/checklist/StatusPill.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { startInspection } from '../lib/startInspection.js';
-import { deleteDraft, canDeleteDraft, listMineSubmissions } from '../lib/submissions.js';
+import { deleteDraft, canDeleteDraft, canRecallSubmissions, listMineSubmissions, recallSubmission } from '../lib/submissions.js';
 import { listTemplates } from '../lib/templates.js';
+import { filterMyChecklists, myChecklistTab, recordDate } from '../lib/checklistCatalogue.js';
+import { downloadChecklistPdf } from '../lib/exportPdf.js';
+import RecordsNotice from '../components/RecordsNotice.jsx';
 
 const TYPE_LABELS = {
   monthly_routine: 'Monthly Routine',
@@ -23,28 +26,58 @@ export default function MyChecklistsPage() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [recordsDown, setRecordsDown] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [deletingId, setDeletingId] = useState(null);
   const [startingId, setStartingId] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const tab = ['drafts', 'awaiting', 'returned', 'completed'].includes(params.get('tab')) ? params.get('tab') : 'drafts';
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [recallingId, setRecallingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  function setTab(next) {
+    const nextParams = new URLSearchParams(params);
+    if (next === 'drafts') nextParams.delete('tab');
+    else nextParams.set('tab', next);
+    setParams(nextParams, { replace: true });
+  }
+
+  const counts = useMemo(() => {
+    const tally = { drafts: 0, awaiting: 0, returned: 0, completed: 0 };
+    for (const row of rows) tally[myChecklistTab(row)] += 1;
+    return tally;
+  }, [rows]);
+  const visible = useMemo(() => filterMyChecklists(rows, { tab, from, to }), [rows, tab, from, to]);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listTemplates(profile), listMineSubmissions(user?.id).catch(() => [])])
+    let recordsFailed = false;
+    Promise.all([
+      listTemplates(profile),
+      listMineSubmissions(user?.id).catch(() => {
+        recordsFailed = true;
+        return [];
+      }),
+    ])
       .then(([tpls, list]) => {
         if (cancelled) return;
-        setTemplates(tpls);
+        setTemplates(tpls ?? []);
         setRows(list);
+        setRecordsDown(recordsFailed);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         if (cancelled) return;
-        setError(err.message || 'Could not load checklists.');
+        setRecordsDown(true);
         setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [profile, user?.id]);
+  }, [profile, user?.id, reloadKey]);
 
   async function startNew(templateId) {
     setStartingId(templateId);
@@ -98,9 +131,37 @@ export default function MyChecklistsPage() {
         </button>
       </header>
 
+      {recordsDown && <RecordsNotice onRetry={() => setReloadKey((n) => n + 1)} />}
+
       {error && (
         <p className="rounded-md border border-alert bg-alert-soft px-4 py-2 text-sm text-alert">{error}</p>
       )}
+
+      <div data-tour="mine-tabs" className="flex flex-wrap gap-2">
+        {[
+          ['drafts', 'Drafts'],
+          ['awaiting', 'Awaiting OM'],
+          ['returned', 'Returned'],
+          ['completed', 'Completed'],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold desk:min-h-10 ${
+              tab === key ? 'bg-navy text-white' : 'border border-line/20 bg-surface text-ink hover:bg-surface-2'
+            }`}
+          >
+            {label}
+            <span className={tab === key ? 'text-white/80' : 'text-muted'}>{counts[key]}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <input type="date" aria-label="From date" value={from} onChange={(e) => setFrom(e.target.value)} className="min-h-11 rounded border border-line/20 bg-surface px-3 text-sm text-ink desk:min-h-10" />
+        <input type="date" aria-label="To date" value={to} onChange={(e) => setTo(e.target.value)} className="min-h-11 rounded border border-line/20 bg-surface px-3 text-sm text-ink desk:min-h-10" />
+      </div>
 
       <div data-tour="mine-table" className="overflow-x-auto rounded-lg border border-line/12 bg-surface shadow-card">
         <table className="table-stack w-full text-left text-sm">
@@ -121,14 +182,14 @@ export default function MyChecklistsPage() {
                 </td>
               </tr>
             )}
-            {!loading && rows.length === 0 && (
+            {!loading && visible.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-muted">
-                  No checklists yet. Use New Inspection to start one.
+                  Nothing in this tab{from || to ? ' for those dates' : ''}.
                 </td>
               </tr>
             )}
-            {rows.map((row, i) => (
+            {visible.map((row, i) => (
               <tr key={row.id} className={i % 2 === 0 ? 'bg-stripe' : 'bg-surface'}>
                 <td data-label="Form" className="px-4 py-2">
                   <Link to={`/checklists/${row.id}`} className="font-medium text-primary hover:underline">
@@ -136,7 +197,7 @@ export default function MyChecklistsPage() {
                   </Link>
                 </td>
                 <td data-label="Date" className="px-4 py-2">
-                  {row.inspection_date || row.header?.date}
+                  {recordDate(row)}
                 </td>
                 <td data-label="Type" className="px-4 py-2">
                   {TYPE_LABELS[row.inspection_type || row.header?.inspectionType] ||
@@ -147,19 +208,61 @@ export default function MyChecklistsPage() {
                   <StatusPill status={row.pending_sync ? 'pending_sync' : row.status} />
                 </td>
                 <td data-label="" className="px-4 py-2 max-lg:pb-3 lg:text-right">
-                  {canDeleteDraft(row, profile, user?.id) ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(row)}
-                      disabled={deletingId === row.id}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 desk:min-h-0 desk:w-auto desk:border-0"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      {deletingId === row.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  ) : (
-                    <span className="text-xs text-muted">Locked</span>
-                  )}
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {(tab === 'drafts' || tab === 'returned') && canDeleteDraft(row, profile, user?.id) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(row)}
+                        disabled={deletingId === row.id}
+                        className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-alert/40 px-2 py-1 text-sm font-medium text-alert hover:bg-alert-soft disabled:opacity-50 desk:min-h-10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deletingId === row.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    )}
+                    {tab === 'awaiting' && row.inspector_id === user?.id && canRecallSubmissions() && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setRecallingId(row.id);
+                          setError(null);
+                          try {
+                            await recallSubmission(row.id);
+                            setRows((prev) => prev.map((item) => (item.id === row.id ? { ...item, status: 'draft', locked: false } : item)));
+                          } catch (err) {
+                            setError(err.message || 'Could not recall this checklist.');
+                          } finally {
+                            setRecallingId(null);
+                          }
+                        }}
+                        disabled={recallingId === row.id}
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary disabled:opacity-50 desk:min-h-10"
+                      >
+                        {recallingId === row.id ? 'Recalling…' : 'Recall'}
+                      </button>
+                    )}
+                    {tab === 'completed' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setDownloadingId(row.id);
+                          setError(null);
+                          try {
+                            await downloadChecklistPdf(row);
+                          } catch (err) {
+                            setError(err.message || 'Could not download that PDF.');
+                          } finally {
+                            setDownloadingId(null);
+                          }
+                        }}
+                        disabled={downloadingId === row.id}
+                        className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-primary/40 px-2 py-1 text-sm font-medium text-primary disabled:opacity-50 desk:min-h-10"
+                      >
+                        <Download className="h-4 w-4" />
+                        {downloadingId === row.id ? 'Downloading…' : 'Download PDF'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

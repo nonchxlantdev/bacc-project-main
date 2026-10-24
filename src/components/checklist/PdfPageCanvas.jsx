@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { loadWithReload } from '../../lib/lazyWithReload.js';
 
 /**
  * Draws a PDF's pages to <canvas> with pdf.js.
@@ -24,10 +25,10 @@ export default function PdfPageCanvas({ source, className = '' }) {
     (async () => {
       try {
         setState({ status: 'loading', error: null });
-        const [pdfjs, { default: workerUrl }] = await Promise.all([
+        const [pdfjs, { default: workerUrl }] = await loadWithReload('pdfjs', () => Promise.all([
           import('pdfjs-dist'),
           import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-        ]);
+        ]));
         pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
         const bytes =

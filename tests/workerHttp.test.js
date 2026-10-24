@@ -14,6 +14,14 @@ const routes = {
     build: async (body, ctx) => ({ echo: body, role: ctx.user.profile.role, hasForms: Boolean(ctx.forms) }),
   },
   '/api/boom': { kind: 'json', build: async () => { throw new Error('kaboom'); } },
+  '/api/data/checklists.listAll': {
+    kind: 'json',
+    methods: ['GET'],
+    auth: { mode: 'public' },
+    build: async () => {
+      throw new Error('D1_ERROR: internal error; reference = secret-ref');
+    },
+  },
   '/api/teapot': { kind: 'json', build: async () => { throw new HttpError(418, 'short and stout'); } },
   '/api/limited': { kind: 'json', limit: 2, build: async () => ({ ok: true }) },
 };
@@ -96,6 +104,33 @@ test('JSON route gets body, user and forms in ctx', async () => {
   const res = await handle(req('/api/json', { body: '{"a":1}' }), {});
   assert.deepEqual(await res.json(), { echo: { a: 1 }, role: 'admin', hasForms: true });
   assert.equal(res.headers.get('x-frame-options'), 'DENY');
+});
+
+test('a D1 error becomes a busy message and the raw text stays in the log', async () => {
+  const lines = [];
+  const orig = console.error;
+  console.error = (line) => lines.push(String(line));
+  try {
+    const res = await handle(req('/api/data/checklists.listAll', { method: 'GET', auth: false }), {});
+    assert.equal(res.status, 503);
+    const body = await res.json();
+    assert.deepEqual(body, {
+      error: 'The records service is busy. Please try again.',
+      code: 'DB_UNAVAILABLE',
+      ref: body.ref,
+    });
+    assert.equal(JSON.stringify(body).includes('D1_'), false);
+    assert.equal(JSON.stringify(body).includes('secret-ref'), false);
+    const logged = JSON.parse(lines.at(-1));
+    assert.equal(logged.level, 'error');
+    assert.equal(logged.source, 'd1');
+    assert.equal(logged.route, '/api/data/checklists.listAll');
+    assert.equal(logged.op, 'checklists.listAll');
+    assert.match(logged.message, /D1_ERROR/);
+    assert.equal(logged.ref, body.ref);
+  } finally {
+    console.error = orig;
+  }
 });
 
 test('unexpected errors become 500 { error }', async () => {

@@ -10,6 +10,7 @@ import OfflineModal from '../offline/OfflineModal.jsx';
 import { TourProvider } from '../tour/TourProvider.jsx';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
+import ErrorBoundary from '../ErrorBoundary.jsx';
 
 const SIDEBAR_COLLAPSED_KEY = 'bacc-sidebar-collapsed';
 const OFFLINE_DEBOUNCE_MS = 3000;
@@ -235,7 +236,9 @@ function AppShellInner() {
         <div className="flex min-h-screen min-w-0 flex-1 flex-col md:min-h-0">
           <TopBar online={online} onMenuClick={() => setNavOpen(true)} />
           <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain bg-stripe px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5">
-            <Outlet context={{ online }} />
+            <ErrorBoundary key={location.pathname} variant="route">
+              <Outlet context={{ online }} />
+            </ErrorBoundary>
           </main>
         </div>
         <OfflineModal open={offlineModalOpen} onDismiss={() => setOfflineModalOpen(false)} />

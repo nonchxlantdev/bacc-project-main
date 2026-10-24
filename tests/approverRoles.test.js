@@ -35,3 +35,11 @@ test('the stored OM role always counts as the approver box', () => {
   assert.equal(isApproverSignoffRole('PGIA-CL-VAES-08', 'supervisor'), true);
   assert.equal(isApproverSignoffRole('PGIA-CL-VAES-08', 'responsible'), false);
 });
+
+test('a row signature is never the approver box', () => {
+  for (const role of ['row:rows:1:signature', 'row:rows:13:signature', `row:${'a'.repeat(40)}:2:${'b'.repeat(40)}`]) {
+    assert.equal(isApproverSignoffRole('PGIA-PMM-F04', role), false, role);
+    assert.equal(isApproverSignoffRole('PGIA-CL-VAES-08', role), false, role);
+    assert.equal(isApproverSignoffRole({ code: 'PGIA-AOM-A5-04' }, role), false, role);
+  }
+});

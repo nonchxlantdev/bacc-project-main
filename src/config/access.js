@@ -43,6 +43,8 @@ export const CAPABILITIES = Object.freeze({
   seeAll: SUPERVISORS,
   /** Acknowledge a submitted checklist from Approvals. */
   acknowledge: MANAGERS,
+  /** Every filed checklist, not only the ones this person started. */
+  seeAllRecords: MANAGERS,
 });
 
 function roleOf(subject) {

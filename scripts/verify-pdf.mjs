@@ -17,9 +17,11 @@
  * are included: VAES (Appendix C) and PMM (Annexes A–J).
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PNG } from 'pngjs';
+import { overlayChecklistPdf } from '../server/overlayChecklistPdf.js';
 import { verifyPlacement } from './verify-placement.mjs';
 import { buildAndVerify as buildVaes } from './fixture-vaes.mjs';
 import { buildAndVerify as buildPmm } from './fixture-pmm.mjs';
@@ -27,6 +29,7 @@ import { buildBlanks } from './smoke-overlay.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const node = process.execPath;
+const only = process.env.VERIFY_PDF_ONLY ?? '';
 
 function run(script, args = []) {
   const result = spawnSync(node, [path.join(root, script), ...args], { cwd: root, stdio: 'inherit' });
@@ -34,15 +37,15 @@ function run(script, args = []) {
 }
 
 // ---- Layer 1: base integrity -----------------------------------------------
-for (const item of await buildBlanks()) {
+if (!only) for (const item of await buildBlanks()) {
   run('scripts/pdf-diff.mjs', [`tmp-pdf-diff/${item.out}`, item.approved]);
 }
 
 let failed = [];
 
 // ---- Layer 2a: Annex D (hand-built fixture, PMM layout) --------------------
-run('scripts/fixture-annex-d.mjs');
-{
+if (!only) run('scripts/fixture-annex-d.mjs');
+if (!only) {
   const fieldMap = JSON.parse(
     readFileSync(path.join(root, 'src/data/field-maps/annex-d-drainage-ed01.json'), 'utf8'),
   );
@@ -69,6 +72,7 @@ const generated = readdirSync(mapDir)
   .sort();
 
 for (const file of generated) {
+  if (only) break;
   const fieldMap = JSON.parse(readFileSync(path.join(mapDir, file), 'utf8'));
   const key = fieldMap.templateKey;
   const family = fieldMap.documentFamily ?? (file.startsWith('appendix-c') ? 'VAES' : 'PMM');
@@ -93,6 +97,114 @@ for (const file of generated) {
     label: `${key} (${family})`,
   });
   if (!res.ok) failed.push(key);
+}
+
+// ---- Layer 3: worst-case fill — long tokens must stay inside each box ------
+const WORST_TEXT =
+  'TROGLODYTIDAE-SUPERCALIFRAGILISTIC The inspector recorded a long observation that must stay inside the printed cell and never cross a rule.';
+
+function snakeKey(key) {
+  return String(key).replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
+function typesByMapKey(schema) {
+  const types = new Map();
+  for (const field of schema?.headerFields ?? []) types.set(field.mapKey ?? snakeKey(field.key), field.type);
+  for (const field of schema?.summaryFields ?? []) {
+    if (field.type === 'table') {
+      const prefix = field.mapKey ?? snakeKey(field.key);
+      for (const col of field.columns ?? []) types.set(`${prefix}\0${col.key}`, col.type ?? 'text');
+    } else types.set(field.mapKey ?? snakeKey(field.key), field.type);
+  }
+  return types;
+}
+
+function worstValue(key, field, types) {
+  if (field.type === 'mark') return true;
+  if (field.type === 'image') return null;
+  const cell = String(key).match(/^(.*)_(\d{2})_(.+)$/);
+  const type = cell ? types.get(`${cell[1]}\0${cell[3]}`) : types.get(key);
+  if (type === 'date') return '2026-12-28';
+  if (type === 'time') return '23:59';
+  if (type === 'datetime') return '28/12/2026 23:59';
+  return WORST_TEXT;
+}
+
+function worstSignature() {
+  const png = new PNG({ width: 80, height: 24 });
+  for (let y = 0; y < png.height; y++) {
+    for (let x = 0; x < png.width; x++) {
+      const i = (png.width * y + x) << 2;
+      const ink = y > 8 && y < 14;
+      png.data[i] = ink ? 10 : 255;
+      png.data[i + 1] = ink ? 10 : 255;
+      png.data[i + 2] = ink ? 10 : 255;
+      png.data[i + 3] = 255;
+    }
+  }
+  return PNG.sync.write(png);
+}
+
+async function verifyWorstCase(schema, fieldMap) {
+  const types = typesByMapKey(schema);
+  const values = {};
+  const images = {};
+  const signature = worstSignature();
+  for (const [key, field] of Object.entries(fieldMap.fields ?? {})) {
+    if (field.type === 'image') images[key] = signature;
+    else {
+      const value = worstValue(key, field, types);
+      if (value != null && value !== '') values[key] = value;
+    }
+  }
+  const dir = path.join(root, 'tmp-pdf-diff');
+  mkdirSync(dir, { recursive: true });
+  const populated = await overlayChecklistPdf({
+    basePdfBytes: readFileSync(path.join(root, 'src/assets/forms', fieldMap.basePdf)),
+    fieldMap,
+    values,
+    images,
+  });
+  const blank = await overlayChecklistPdf({
+    basePdfBytes: readFileSync(path.join(root, 'src/assets/forms', fieldMap.basePdf)),
+    fieldMap,
+    values: {},
+    images: {},
+  });
+  const popPath = path.join(dir, `${fieldMap.templateKey}-worst.pdf`);
+  const blankPath = path.join(dir, `${fieldMap.templateKey}-worst-blank.pdf`);
+  writeFileSync(popPath, populated);
+  writeFileSync(blankPath, blank);
+  return verifyPlacement({
+    populatedPdf: popPath,
+    blankPdf: blankPath,
+    fieldMap,
+    label: `${fieldMap.templateKey} worst-case`,
+    pad: 0.5,
+    dpi: 220,
+    checkOverprint: false,
+  });
+}
+
+const worstTargets = [
+  {
+    file: 'annex-d-drainage-ed01.json',
+    schema: 'annex-d-drainage.json',
+  },
+  ...generated.map((file) => ({ file, schema: null })),
+];
+
+for (const target of worstTargets) {
+  const fieldMap = JSON.parse(readFileSync(path.join(mapDir, target.file), 'utf8'));
+  if (only && fieldMap.templateKey !== only) continue;
+  const schemaPath = path.join(root, 'src/data/checklists', target.schema ?? `${fieldMap.templateKey}.json`);
+  if (!existsSync(schemaPath)) {
+    console.error(`SKIP worst-case ${fieldMap.templateKey}: no schema`);
+    failed.push(`${fieldMap.templateKey} worst-case`);
+    continue;
+  }
+  const res = await verifyWorstCase(JSON.parse(readFileSync(schemaPath, 'utf8')), fieldMap);
+  if (!res.ok) failed.push(`${fieldMap.templateKey} worst-case`);
 }
 
 console.log(`\nTemplates verified: ${1 + generated.length}, failures: ${failed.length}`);

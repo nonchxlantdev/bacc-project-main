@@ -33,6 +33,7 @@ export default function HelpPage() {
         <p className="mt-1 text-sm text-muted">
           Guidance on using the portal. If anything here does not match what you see on screen, contact the Operations Manager.
         </p>
+        <p className="mt-1 text-xs text-muted">Build {typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev'}</p>
       </div>
 
       <GuidedTours />

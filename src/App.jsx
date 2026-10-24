@@ -1,5 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazyWithReload } from './lib/lazyWithReload.js';
+import PortalUpdateNotice from './components/PortalUpdateNotice.jsx';
 import AppShell from './components/layout/AppShell.jsx';
 import { DisplayPrefsProvider, useDisplayPrefs } from './context/DisplayPrefsContext.jsx';
 import { SettingsProvider } from './context/SettingsContext.jsx';
@@ -8,19 +10,19 @@ import { can } from './config/access.js';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 
-const ApprovalsPage = lazy(() => import('./pages/ApprovalsPage.jsx'));
-const ChecklistDetailPage = lazy(() => import('./pages/ChecklistDetailPage.jsx'));
-const ChecklistCataloguePage = lazy(() => import('./pages/ChecklistCataloguePage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const HelpPage = lazy(() => import('./pages/HelpPage.jsx'));
-const IncidentDetailPage = lazy(() => import('./pages/IncidentDetailPage.jsx'));
-const IncidentListPage = lazy(() => import('./pages/IncidentListPage.jsx'));
-const LocationsPage = lazy(() => import('./pages/LocationsPage.jsx'));
-const MyChecklistsPage = lazy(() => import('./pages/MyChecklistsPage.jsx'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage.jsx'));
-const ReportsPage = lazy(() => import('./pages/ReportsPage.jsx'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
-const UsersPage = lazy(() => import('./pages/UsersPage.jsx'));
+const ApprovalsPage = lazyWithReload('approvals', () => import('./pages/ApprovalsPage.jsx'));
+const ChecklistDetailPage = lazyWithReload('checklist-detail', () => import('./pages/ChecklistDetailPage.jsx'));
+const ChecklistCataloguePage = lazyWithReload('checklists-all', () => import('./pages/ChecklistCataloguePage.jsx'));
+const DashboardPage = lazyWithReload('dashboard', () => import('./pages/DashboardPage.jsx'));
+const HelpPage = lazyWithReload('help', () => import('./pages/HelpPage.jsx'));
+const IncidentDetailPage = lazyWithReload('incident-detail', () => import('./pages/IncidentDetailPage.jsx'));
+const IncidentListPage = lazyWithReload('incidents', () => import('./pages/IncidentListPage.jsx'));
+const LocationsPage = lazyWithReload('locations', () => import('./pages/LocationsPage.jsx'));
+const MyChecklistsPage = lazyWithReload('checklists-mine', () => import('./pages/MyChecklistsPage.jsx'));
+const NotificationsPage = lazyWithReload('notifications', () => import('./pages/NotificationsPage.jsx'));
+const ReportsPage = lazyWithReload('reports', () => import('./pages/ReportsPage.jsx'));
+const SettingsPage = lazyWithReload('settings', () => import('./pages/SettingsPage.jsx'));
+const UsersPage = lazyWithReload('users', () => import('./pages/UsersPage.jsx'));
 
 function LandingRedirect() {
   const { landingPage } = useDisplayPrefs();
@@ -48,6 +50,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <ThemeProvider>
+      <PortalUpdateNotice />
       <DisplayPrefsProvider>
         <SettingsProvider>
           <AuthProvider>

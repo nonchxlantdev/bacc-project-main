@@ -105,6 +105,84 @@ export function groupTemplates(templates) {
  * marked submitted records that it was closed out. Using only the first left
  * every form but Annex D reading "Never" despite a full completion history.
  */
+export function recordDate(row) {
+  return row?.inspection_date || row?.header?.date || '';
+}
+
+export function omSignedDate(row) {
+  const om = (row?.signoffs ?? []).find((s) => s?.role === 'om_acknowledgment');
+  if (!om) return '';
+  return om.sign_date || (om.signed_at ? String(om.signed_at).slice(0, 10) : '');
+}
+
+/** Drafts · Awaiting OM · Returned · Completed. */
+export function myChecklistTab(row) {
+  if (row?.status === 'acknowledged') return 'completed';
+  if (row?.status === 'submitted') return 'awaiting';
+  if (row?.status === 'draft' && row?.returned) return 'returned';
+  return 'drafts';
+}
+
+function templateForRecord(row, templates) {
+  return templates.find((t) => t.id === row.template_id || t.code === row.template_code) ?? null;
+}
+
+function inDateRange(row, from, to) {
+  const date = recordDate(row);
+  if (from && (!date || date < from)) return false;
+  if (to && (!date || date > to)) return false;
+  return true;
+}
+
+/**
+ * Filed records: every non-draft the actor may see. Returned drafts stay out
+ * of that list until the Returned filter is chosen (OM and admin).
+ */
+export function filterFiledRecords(submissions, {
+  userId,
+  seeAll = false,
+  status = '',
+  query = '',
+  form = '',
+  team = '',
+  inspector = '',
+  from = '',
+  to = '',
+  templates = [],
+} = {}) {
+  const q = query.trim().toLowerCase();
+  return submissions
+    .filter((row) => {
+      if (!seeAll && row.inspector_id !== userId) return false;
+      const returned = row.status === 'draft' && Boolean(row.returned);
+      if (status === 'returned') {
+        if (!returned) return false;
+      } else if (status) {
+        if (row.status !== status) return false;
+      } else if (row.status === 'draft') {
+        return false;
+      }
+      const tpl = templateForRecord(row, templates);
+      if (form && tpl?.id !== form && row.template_id !== form && tpl?.code !== form) return false;
+      if (team && (tpl?.group || 'Other') !== team) return false;
+      if (inspector && row.inspector_id !== inspector) return false;
+      if (!inDateRange(row, from, to)) return false;
+      if (!q) return true;
+      const hay = [tpl?.title, tpl?.annex_label, tpl?.code, row.template_code, row.inspector_name, tpl?.group]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    })
+    .sort((a, b) => recordDate(b).localeCompare(recordDate(a)) || String(b.created_at || '').localeCompare(String(a.created_at || '')));
+}
+
+export function filterMyChecklists(submissions, { tab = 'drafts', from = '', to = '' } = {}) {
+  return submissions
+    .filter((row) => myChecklistTab(row) === tab && inDateRange(row, from, to))
+    .sort((a, b) => recordDate(b).localeCompare(recordDate(a)));
+}
+
 export function lastCompletedByCode(submissions, instances = [], templates = []) {
   const map = new Map();
   const keep = (code, date) => {

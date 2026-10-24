@@ -12,6 +12,8 @@
  *   - adds the owning team to incidents and hides work-order approvals while
  *     the work-order screens are switched off.
  */
+import { isRowSignoffRole } from '../../../config/approverRoles.js';
+import { normalizeRecordDates } from '../../../lib/dateValues.js';
 import { WORK_ORDERS_ENABLED, isQualifyingReinspection } from '../../../lib/incidentLifecycle.js';
 import { groupForCode } from '../../templates/templateMeta.js';
 import { createReportAggregations } from '../reportAggregations.js';
@@ -54,6 +56,81 @@ export function templateFromEntry(entry, rules = []) {
   };
 }
 
+function signatureColumns(field) {
+  return (field?.columns ?? []).filter((col) => col?.type === 'signature');
+}
+
+/**
+ * Pull drawn row signatures out of summary tables before a save. The server
+ * rejects images in form data, so each signature cell becomes a `row:*`
+ * sign-off and the cell is marked signed (`true`) or left blank.
+ */
+function moveRowSignatures(record) {
+  const schema = record?.schema ?? record?.content_schema;
+  const summary = record?.summary;
+  if (!schema || !summary || typeof summary !== 'object' || Array.isArray(summary)) return null;
+  const tables = (schema.summaryFields ?? []).filter((field) => field?.type === 'table' && signatureColumns(field).length);
+  if (!tables.length) return null;
+  const next = structuredClone(summary);
+  const blocks = [];
+  for (const field of tables) {
+    const tableRows = next[field.key];
+    if (!Array.isArray(tableRows)) continue;
+    const columns = signatureColumns(field);
+    tableRows.forEach((row, index) => {
+      if (!row || typeof row !== 'object') return;
+      const n = index + 1;
+      const rawName = typeof row.name === 'string' ? row.name.trim() : '';
+      const name = rawName || `Attendee ${n}`;
+      for (const col of columns) {
+        const cell = row[col.key];
+        const role = `row:${field.key}:${n}:${col.key}`;
+        if (typeof cell === 'string' && cell.startsWith('data:image')) {
+          blocks.push({ role, name, position: null, signature_data_uri: cell });
+          row[col.key] = true;
+        } else if (cell === true) {
+          blocks.push({ role, name, position: null, has_signature: true });
+        }
+      }
+    });
+  }
+  return { summary: next, blocks };
+}
+
+/** Put stored row signatures back into the cells the log sheet draws. */
+function restoreRowSignatures(record) {
+  const signoffs = record?.signoffs;
+  if (!Array.isArray(signoffs) || !signoffs.some((sg) => isRowSignoffRole(sg?.role))) return record;
+  const summary = record.summary;
+  if (!summary || typeof summary !== 'object' || Array.isArray(summary)) return record;
+  const next = { ...summary };
+  const cloned = new Map();
+  let changed = false;
+  for (const sg of signoffs) {
+    if (!isRowSignoffRole(sg?.role)) continue;
+    const match = sg.role.match(/^row:([A-Za-z0-9_]+):(\d+):([A-Za-z0-9_]+)$/);
+    if (!match) continue;
+    const [, tableKey, nStr, colKey] = match;
+    const n = Number(nStr);
+    const source = cloned.get(tableKey) ?? next[tableKey];
+    if (!Array.isArray(source) || n < 1 || n > source.length) continue;
+    if (!cloned.has(tableKey)) {
+      cloned.set(tableKey, source.map((row) => (row && typeof row === 'object' ? { ...row } : row)));
+      next[tableKey] = cloned.get(tableKey);
+    }
+    const row = cloned.get(tableKey)[n - 1];
+    if (!row || typeof row !== 'object') continue;
+    if (typeof sg.signature_data_uri === 'string' && sg.signature_data_uri.startsWith('data:image')) {
+      row[colKey] = sg.signature_data_uri;
+      changed = true;
+    } else if (sg.has_signature === true) {
+      row[colKey] = true;
+      changed = true;
+    }
+  }
+  return changed ? { ...record, summary: next } : record;
+}
+
 export function createD1Adapter({ call, registry }) {
   const { entries, getEntry } = registry;
   const drawingsSeen = new Map();
@@ -62,14 +139,14 @@ export function createD1Adapter({ call, registry }) {
     if (!record) return record;
     const entry = getEntry(record.template_id);
     if (record.attachments !== undefined) drawingsSeen.set(record.id, drawingsFingerprint(record.attachments));
-    return {
+    return normalizeRecordDates(restoreRowSignatures({
       ...record,
       template_code: entry?.code ?? null,
       schema: entry?.schema ?? null,
       content_schema: entry?.schema ?? null,
       field_map: entry?.fieldMap ?? null,
       print_template_key: entry?.fieldMap?.templateKey ?? record.template_id,
-    };
+    }));
   }
 
   function enrichApproval(row) {
@@ -93,6 +170,12 @@ export function createD1Adapter({ call, registry }) {
   /** What actually goes over the wire for a save. */
   function outgoing(record) {
     const body = { ...record };
+    const moved = moveRowSignatures(record);
+    if (moved) {
+      body.summary = moved.summary;
+      const rest = (body.signoffs ?? []).filter((sg) => !isRowSignoffRole(sg?.role));
+      body.signoffs = [...rest, ...moved.blocks];
+    }
     for (const key of REGISTRY_FIELDS) delete body[key];
     if (body.attachments !== undefined) {
       if (drawingsSeen.get(body.id) === drawingsFingerprint(body.attachments)) delete body.attachments;
@@ -102,7 +185,11 @@ export function createD1Adapter({ call, registry }) {
   }
 
   async function listRules() {
-    return (await call('instances.rules')) ?? [];
+    try {
+      return (await call('instances.rules')) ?? [];
+    } catch {
+      return [];
+    }
   }
 
   /** The team that owns the form an incident came from (derived, as Supabase did). */

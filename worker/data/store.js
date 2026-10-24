@@ -251,7 +251,15 @@ function createCoreStore(db) {
         amendmentRows: amend.get(id) ?? [],
       };
     },
-    /** Every checklist (or one inspector's), newest first, without drawing data. */
+    /**
+     * Every checklist (or one inspector's), newest first, without drawing data.
+     *
+     * Still `SELECT s.*`. Catalogue, reports and the dashboard do not read
+     * `form_json` or `items_json`, but a listed record can be saved back
+     * (the `has_signature` path). Dropping those columns would wipe summary
+     * and item results on that save. Leave the full row until that path
+     * loads the record first.
+     */
     async listSubmissions({ inspectorId = null } = {}) {
       const rows = inspectorId
         ? await all(

@@ -6,6 +6,7 @@
  * spec's tables (docs/superpowers/specs/2026-10-09-d1-core-checklists-design.md §3).
  */
 import { HttpError } from '../../api/_shared.js';
+import { isRowSignoffRole } from '../../src/config/approverRoles.js';
 import { ATTACHMENTS_UNAVAILABLE, PROFILE_PHOTOS_UNAVAILABLE } from '../../src/lib/unavailable.js';
 
 export const MANAGERS = Object.freeze(['om', 'admin']);
@@ -15,7 +16,7 @@ export const LIMITS = Object.freeze({
   drawingsPerChecklist: 6,
   drawingChars: 820_000,
   signatureChars: 200_000,
-  signoffsPerChecklist: 40,
+  signoffsPerChecklist: 80,
   itemsPerChecklist: 2000,
   remarksChars: 5000,
   recordJsonChars: 1_500_000,
@@ -216,7 +217,10 @@ function validateSignoffs(raw) {
   const byRole = new Map();
   for (const sg of raw) {
     if (!sg || typeof sg !== 'object') continue;
-    const role = optionalText(sg.role, 'Sign-off role', 64);
+    if (typeof sg.role === 'string' && sg.role.startsWith('row:') && !isRowSignoffRole(sg.role)) {
+      throw bad('Sign-off role is not a valid row signature');
+    }
+    const role = optionalText(sg.role, 'Sign-off role', isRowSignoffRole(sg.role) ? 100 : 64);
     if (!role || role === 'om_acknowledgment') continue;
     const signature = validateSignature(sg.signature_data_uri ?? sg.signature_image_path, `Signature for ${role}`);
     const name = optionalText(sg.name, 'Sign-off name', 200);

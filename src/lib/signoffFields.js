@@ -79,10 +79,9 @@ export function signatureImages(record, fieldMap) {
 /**
  * Signatures drawn inside a log sheet's grid.
  *
- * The Attendance List asks every attendee to sign their own row, which is a
- * signature like any other and is captured the same way — drawn, not typed. It
- * simply does not arrive through `signoffs`, because it belongs to a row rather
- * than to the sheet.
+ * The Attendance List asks every attendee to sign their own row. Those marks
+ * are stored as `row:*` sign-offs; the D1 adapter copies each one back onto
+ * its cell before this runs, so the field-map key still comes from the cell.
  *
  * Only cells the field map declares as an image are returned, so a signature
  * captured against a column the approved form has no space for is kept on the

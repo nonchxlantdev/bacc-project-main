@@ -5,9 +5,14 @@ import { createD1DataStore } from '../worker/data/store.js';
 import { createDataService } from '../worker/data/service.js';
 
 const TEMPLATE = 'annex-d-drainage';
+const ATTENDANCE = 'attendance-list-wildlife-attractant-inspection';
 const forms = {
-  templateKeys: new Set([TEMPLATE]),
-  loadSchema: (key) => (key === TEMPLATE ? { title: 'Drainage Inspection' } : null),
+  templateKeys: new Set([TEMPLATE, ATTENDANCE]),
+  loadSchema: (key) => {
+    if (key === TEMPLATE) return { title: 'Drainage Inspection' };
+    if (key === ATTENDANCE) return { code: 'PGIA-AOM-A5-04', title: 'Attendance List' };
+    return null;
+  },
 };
 const SIG = 'data:image/png;base64,iVBORw0KGgo=';
 const IMG = (n = 10) => `data:image/jpeg;base64,${'A'.repeat(n)}`;
@@ -437,6 +442,96 @@ test('free form fields cannot smuggle images or photos, and are size-capped', as
   assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ photos: [{ photo_url: 'https://x/y.jpg' }] }) })), 400);
   assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ summary: { note: 'x'.repeat(200_001) } }) })), 400);
   assert.equal(await status(call('checklists.persist', users.insp, { record: draftRecord({ summary: { note: 'fine', photo_url: null } }) })), 200);
+});
+
+const rowSig = (n) => `data:image/png;base64,${String(n).padStart(4, '0')}`;
+
+function attendanceRecord(over = {}) {
+  const signoffs = Array.from({ length: 13 }, (_, i) => ({
+    role: `row:rows:${i + 1}:signature`,
+    name: i === 1 ? 'Attendee 2' : `Person ${i + 1}`,
+    position: null,
+    signature_data_uri: rowSig(i + 1),
+  }));
+  return {
+    id: '22222222-2222-4222-8222-222222222222',
+    template_id: ATTENDANCE,
+    template_version: 'ed01',
+    status: 'draft',
+    header: { date: '2026-10-24' },
+    items: {},
+    signoffs,
+    summary: {
+      rows: signoffs.map((s, i) => ({ name: s.name, signature: true, no: String(i + 1) })),
+    },
+    ...over,
+  };
+}
+
+test('a 13-row attendance draft saves, lists without images, and keeps them on resave', async () => {
+  const { users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, { record: attendanceRecord() });
+  assert.equal(saved.signoffs.length, 13);
+  assert.equal(saved.signoffs.find((s) => s.role === 'row:rows:2:signature').signature_data_uri, rowSig(2));
+  assert.equal(saved.summary.rows[0].signature, true);
+
+  const [listed] = await call('checklists.listMine', users.insp);
+  assert.equal(listed.signoffs.every((s) => s.signature_data_uri === undefined && s.has_signature === true), true);
+  assert.equal(JSON.stringify(listed).includes('data:image'), false);
+
+  await call('checklists.persist', users.insp, { record: { ...listed, header: { date: '2026-10-24' } } });
+  const full = await call('checklists.get', users.insp, { id: saved.id });
+  assert.equal(full.signoffs.find((s) => s.role === 'row:rows:13:signature').signature_data_uri, rowSig(13));
+});
+
+test('deleting attendance row 2 drops that sign-off block and the old last role', async () => {
+  const { db, users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, { record: attendanceRecord() });
+  const byRow = (role) => Number(role.split(':')[2]);
+  const kept = saved.signoffs
+    .filter((s) => s.role !== 'row:rows:2:signature')
+    .sort((a, b) => byRow(a.role) - byRow(b.role));
+  const renumbered = kept.map((s, i) => ({
+    ...s,
+    role: `row:rows:${i + 1}:signature`,
+  }));
+  await call('checklists.persist', users.insp, {
+    record: {
+      ...saved,
+      signoffs: renumbered,
+      summary: { rows: saved.summary.rows.filter((_, i) => i !== 1) },
+    },
+  });
+  const after = await call('checklists.get', users.insp, { id: saved.id });
+  const roles = after.signoffs.map((s) => s.role);
+  assert.equal(roles.includes('row:rows:13:signature'), false);
+  assert.equal(roles.length, 12);
+  assert.equal(after.signoffs.find((s) => s.role === 'row:rows:2:signature').signature_data_uri, rowSig(3));
+  const stored = await db.prepare('SELECT role FROM checklist_signoffs WHERE submission_id = ?1').bind(saved.id).all();
+  assert.equal(stored.results.some((r) => r.role === 'row:rows:13:signature'), false);
+});
+
+test('submitting freezes attendance row signatures', async () => {
+  const { db, users, call } = await setup();
+  const saved = await call('checklists.persist', users.insp, { record: attendanceRecord() });
+  const submitted = await call('checklists.persist', users.insp, { record: { ...saved, status: 'submitted' } });
+  assert.equal(submitted.locked, true);
+  await assert.rejects(
+    db.prepare(
+      `UPDATE checklist_signoffs SET name = 'Hacked' WHERE submission_id = ?1 AND role = 'row:rows:1:signature'`,
+    ).bind(saved.id).run(),
+    /Sign-offs on a locked checklist cannot change/,
+  );
+});
+
+test('an image left in an attendance row is still rejected', async () => {
+  const { users, call } = await setup();
+  const rec = attendanceRecord();
+  rec.summary.rows[0].signature = rowSig(1);
+  assert.equal(
+    await status(call('checklists.persist', users.insp, { record: rec })),
+    400,
+  );
 });
 
 test('a save that loses the race with a submit is a 409, never a silent 200', async () => {

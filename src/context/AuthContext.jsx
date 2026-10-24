@@ -4,6 +4,7 @@ import { isLiveSupabase, isSupabaseConfigured, supabase } from '../lib/supabase.
 import { authClient } from '../lib/authClient.js';
 import { isD1Auth } from '../lib/authMode.js';
 import { loadSettings } from '../lib/settingsStore.js';
+import { setClientRole } from '../lib/clientRole.js';
 
 const AuthContext = createContext(null);
 const AUTH_KEY = 'bacc-local-auth';
@@ -24,6 +25,10 @@ export function AuthProvider({ children }) {
   const [demoUsers, setDemoUsers] = useState([]);
   const live = isLiveSupabase();
   const d1 = isD1Auth();
+
+  useEffect(() => {
+    setClientRole(profile?.role ?? '');
+  }, [profile?.role]);
 
   useEffect(() => {
     let cancelled = false;

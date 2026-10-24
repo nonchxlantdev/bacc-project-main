@@ -1,66 +1,139 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { signoffFieldKeys, signoffsOmLast } from '../src/lib/signoffFields.js';
 import { airportYmd } from '../src/lib/belizeTime.js';
+import { formatForPrint } from '../src/lib/dateValues.js';
 
-const CONTINUATION_MARKER = '— see continuation p.';
+const CONTINUATION_MARKER = '- see continuation p.';
 
-function wrapLine(font, text, size, maxWidth) {
-  if (!text) return [];
-  const words = String(text).split(/\s+/);
+function roundQuarter(n) {
+  return Math.round(n * 4) / 4;
+}
+
+function isTableCell(key) {
+  return /_\d{2}_/.test(String(key ?? ''));
+}
+
+/** Baseline-to-baseline distance to the same column on the next printed row. */
+function rowPitch(key, fields) {
+  const match = String(key ?? '').match(/^(.*?)(\d{2})(.*)$/);
+  if (!match || !fields) return null;
+  const nextKey = `${match[1]}${String(Number(match[2]) + 1).padStart(2, '0')}${match[3]}`;
+  const here = fields[key];
+  const next = fields[nextKey];
+  if (!here || !next || typeof here.y !== 'number' || typeof next.y !== 'number') return null;
+  return Math.abs(here.y - next.y);
+}
+
+function piecesThatFit(font, word, size, maxWidth) {
+  if (font.widthOfTextAtSize(word, size) <= maxWidth) return [word];
+  const parts = [];
+  let chunk = '';
+  for (const ch of word) {
+    const next = chunk + ch;
+    if (chunk && font.widthOfTextAtSize(next, size) > maxWidth) {
+      parts.push(chunk);
+      chunk = ch;
+    } else {
+      chunk = next;
+    }
+  }
+  if (chunk) parts.push(chunk);
+  return parts;
+}
+
+function wrapToWidth(font, text, size, maxWidth) {
   const lines = [];
   let current = '';
+  const words = String(text).split(/\s+/).filter(Boolean);
   for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (font.widthOfTextAtSize(next, size) <= maxWidth) {
-      current = next;
-    } else {
-      if (current) lines.push(current);
-      current = word;
+    for (const piece of piecesThatFit(font, word, size, maxWidth)) {
+      const next = current ? `${current} ${piece}` : piece;
+      if (current && font.widthOfTextAtSize(next, size) > maxWidth) {
+        lines.push(current);
+        current = piece;
+      } else {
+        current = next;
+      }
     }
   }
   if (current) lines.push(current);
   return lines;
 }
 
-function drawWrapped(page, font, text, field) {
-  const size = field.size ?? 9;
-  const width = field.width ?? 120;
-  // A ruled multi-line box (e.g. the five lines under "Description of
-  // Wildlife Incursion") sets lineHeight to the printed rule pitch so each
-  // wrapped line lands on its own rule.
-  const lineHeight = field.lineHeight ?? size + 2;
-  const maxLines = field.maxLines ?? Math.max(1, Math.floor((field.height ?? lineHeight) / lineHeight));
-  const lines = wrapLine(font, text, size, width);
-  const overflow = lines.length > maxLines;
-  const pageRef = field._continuationPage ?? 'N';
-  let visible;
-  if (!overflow) {
-    visible = lines;
-  } else if (maxLines <= 1) {
-    // Single-line cell: truncate to fit and append a compact reference so the
-    // total drawn lines never exceed maxLines. BACC §10 — an approved field is
-    // never resized and never spills into the row below.
-    const shortMarker = `…p.${pageRef}`;
-    let t = String(text);
-    while (t.length > 1 && font.widthOfTextAtSize(`${t} ${shortMarker}`, size) > width) {
-      t = t.slice(0, -1);
-    }
-    visible = [`${t.trimEnd()} ${shortMarker}`];
-  } else {
-    visible = lines.slice(0, maxLines - 1);
-    visible.push(`${CONTINUATION_MARKER}${pageRef}`);
+function lineBudget(field, size) {
+  // maxLines is the box the field map measured. A cell marked 1 stays on one
+  // line — a second line would leave that declared box. Row pitch is only a
+  // stand-in when the map did not say how many lines the box holds.
+  if (field.maxLines != null) return field.maxLines;
+  if (field._rowPitch != null && field._rowPitch >= 2 * size + 1) return 2;
+  if (field.height != null && field.height >= 2 * size + 1) {
+    const lineHeight = field.lineHeight ?? size + 1;
+    return Math.max(1, Math.floor(field.height / lineHeight));
   }
-  // y is the first-line baseline (PDF bottom-left). Subsequent lines go down (smaller y).
-  visible.forEach((line, i) => {
+  return 1;
+}
+
+function clipToWidth(font, text, size, maxWidth) {
+  let t = String(text);
+  while (t.length > 1 && font.widthOfTextAtSize(t, size) > maxWidth) t = t.slice(0, -1);
+  return t;
+}
+
+/**
+ * Lines that stay inside the field's width. Shrinks toward `minSize` before
+ * wrapping, and breaks a word the box cannot hold. Nothing returned is wider
+ * than `field.width`.
+ */
+export function layoutFittedText(font, text, field) {
+  const raw = String(text ?? '');
+  const start = field.size ?? 9;
+  // Keep the last glyph a fraction inside the box. A glyph drawn flush with
+  // the edge rasterises a pixel past it, which is outside a 0.5 pt tolerance.
+  const width = Math.max(4, (field.width ?? 120) - 1.5);
+  const minSize = field.minSize ?? (isTableCell(field._key) ? 5 : Math.max(5.5, start - 2));
+  let size = start;
+  const fitsOne = (s) => font.widthOfTextAtSize(raw, s) <= width + 0.01;
+  if (!fitsOne(size)) {
+    while (size - 0.25 >= minSize - 0.001) {
+      size = roundQuarter(size - 0.25);
+      if (fitsOne(size)) break;
+    }
+    if (size < minSize) size = minSize;
+  }
+  if (fitsOne(size)) return { size, lines: raw ? [raw] : [], overflow: false };
+
+  const maxLines = lineBudget(field, size);
+  const wrapped = wrapToWidth(font, raw, size, width);
+  const pageRef = field._continuationPage ?? 'N';
+  if (maxLines >= 2) {
+    if (wrapped.length <= maxLines) return { size, lines: wrapped, overflow: false };
+    const marker = `${CONTINUATION_MARKER}${pageRef}`;
+    const head = wrapped.slice(0, maxLines - 1);
+    const last = clipToWidth(font, marker, size, width);
+    return { size, lines: [...head, last], overflow: true };
+  }
+  const shortMarker = `...p.${pageRef}`;
+  let body = raw;
+  while (body.length > 1 && font.widthOfTextAtSize(`${body} ${shortMarker}`, size) > width) {
+    body = body.slice(0, -1);
+  }
+  const line = clipToWidth(font, `${body.trimEnd()} ${shortMarker}`, size, width);
+  return { size, lines: [line], overflow: true };
+}
+
+function drawFitted(page, font, text, field) {
+  const laid = layoutFittedText(font, text, field);
+  const lineHeight = field.lineHeight ?? laid.size + 1;
+  laid.lines.forEach((line, i) => {
     page.drawText(line, {
       x: field.x,
       y: field.y - i * lineHeight,
-      size,
+      size: laid.size,
       font,
       color: rgb(0, 0, 0),
     });
   });
-  return overflow ? { key: field._key, text } : null;
+  return laid.overflow ? { key: field._key, text } : null;
 }
 
 /**
@@ -116,12 +189,16 @@ export async function overlayChecklistPdf({
     const text = values[key];
     if (text == null || text === '') continue;
     if (field.wrap) {
-      const over = drawWrapped(page, font, String(text), spec);
+      const over = drawFitted(page, font, String(text), {
+        ...spec,
+        _rowPitch: spec._rowPitch ?? rowPitch(key, fieldMap.fields),
+      });
       if (over) overflow.push(over);
     } else {
       let drawn = String(text);
-      if (field.width) {
-        while (drawn.length > 1 && font.widthOfTextAtSize(drawn, field.size ?? 9) > field.width) {
+      const limit = field.width ? Math.max(4, field.width - 1.5) : null;
+      if (limit) {
+        while (drawn.length > 1 && font.widthOfTextAtSize(drawn, field.size ?? 9) > limit) {
           drawn = drawn.slice(0, -1);
         }
       }
@@ -166,7 +243,7 @@ async function appendContinuationPages(pdfDoc, font, bold, overflow, meta) {
     ensureSpace(60);
     page.drawText(item.key, { x: 72, y, size: 10, font: bold });
     y -= 14;
-    const lines = wrapLine(font, item.text, 9, width - 144);
+    const lines = wrapToWidth(font, item.text, 9, width - 144);
     for (const line of lines) {
       ensureSpace(14);
       page.drawText(line, { x: 72, y, size: 9, font });
@@ -241,13 +318,14 @@ function signatureBox(field, key, fieldMap, png) {
     field.x < name.x + (name.width ?? 0);
   const lift = stacked ? (name.size ?? 9) + 1 : 0;
 
-  const boxW = field.width ?? png.width;
-  const boxH = Math.max((field.height ?? png.height) - lift, 6);
+  const inset = 0.75;
+  const boxW = Math.max(4, (field.width ?? png.width) - inset * 2);
+  const boxH = Math.max(4, (field.height ?? png.height) - lift - inset * 2);
   const scale = Math.min(boxW / png.width, boxH / png.height);
 
   return {
-    x: field.x,
-    y: field.y + lift,
+    x: field.x + inset,
+    y: field.y + lift + inset,
     width: png.width * scale,
     height: png.height * scale,
   };
@@ -292,7 +370,7 @@ export function submissionToOverlayValues(record) {
       if (field.markPrefix) {
         values[`${field.markPrefix}.${raw}`] = true;
       } else {
-        values[field.mapKey ?? snake(field.key)] = raw;
+        values[field.mapKey ?? snake(field.key)] = formatForPrint(raw, field.type);
       }
     }
   } else {
@@ -339,7 +417,7 @@ export function submissionToOverlayValues(record) {
           if (col.type === 'signature') continue;
           const cell = row?.[col.key];
           if (cell === undefined || cell === null || cell === '') continue;
-          values[`${prefix}_${String(i + 1).padStart(2, '0')}_${col.key}`] = cell;
+          values[`${prefix}_${String(i + 1).padStart(2, '0')}_${col.key}`] = formatForPrint(cell, col.type);
         }
       });
 
@@ -358,7 +436,7 @@ export function submissionToOverlayValues(record) {
     }
 
     if (field.markPrefix) values[`${field.markPrefix}.${raw}`] = true;
-    else values[field.mapKey ?? snake(field.key)] = raw;
+    else values[field.mapKey ?? snake(field.key)] = formatForPrint(raw, field.type);
   }
   // Carried on `values` because that is the one thing every caller already
   // passes to the overlay. The renderer lifts it straight back out; no field
@@ -381,7 +459,10 @@ export function submissionToOverlayValues(record) {
     // The date the signer chose. Older sign-offs have none, so they fall back
     // to the airport-time day they were signed (never the UTC day, which is
     // tomorrow for anything signed after 6 pm in Belize).
-    values[keys.date] = s.sign_date || (s.signed_at ? airportYmd(Date.parse(s.signed_at)) : '');
+    values[keys.date] = formatForPrint(
+      s.sign_date || (s.signed_at ? airportYmd(Date.parse(s.signed_at)) : ''),
+      'date',
+    );
   }
   return values;
 }

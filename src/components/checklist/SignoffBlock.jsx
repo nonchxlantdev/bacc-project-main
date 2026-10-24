@@ -17,6 +17,7 @@ export default function SignoffBlock({
   // checklist's own date, so the bottom of the form matches the top unless
   // the signer changes it.
   defaultSignDate,
+  signatureDataUri,
   storedSignatureUri,
   readOnly,
   // Set only for the form's own signer (see ChecklistForm's `isSelf`).

@@ -29,9 +29,9 @@ const PAD = Number(process.env.PLACEMENT_PAD_PT || 3); // tolerance in PDF point
 // through the padded box. Anything more is a value sitting on the artwork.
 const OVERPRINT_TOLERANCE = Number(process.env.OVERPRINT_TOLERANCE || 40);
 
-export function rasterise(pdfPath, prefix) {
+export function rasterise(pdfPath, prefix, dpi = DPI) {
   try {
-    execFileSync('pdftoppm', ['-png', '-r', String(DPI), pdfPath, prefix], { stdio: 'pipe' });
+    execFileSync('pdftoppm', ['-png', '-r', String(dpi), pdfPath, prefix], { stdio: 'pipe' });
   } catch {
     console.error('pdftoppm (Poppler) not found on PATH — cannot verify placement.');
     console.error('Windows: install poppler and add its bin/ to PATH, or run this in CI/WSL.');
@@ -68,13 +68,21 @@ export function fieldBox(field) {
   };
 }
 
-export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'overlay' }) {
+export function verifyPlacement({
+  populatedPdf,
+  blankPdf,
+  fieldMap,
+  label = 'overlay',
+  pad = PAD,
+  checkOverprint = true,
+  dpi = DPI,
+}) {
   const outDir = path.resolve('tmp-pdf-diff');
   mkdirSync(outDir, { recursive: true });
   const aDir = mkdtempSync(path.join(tmpdir(), 'plc-a-'));
   const bDir = mkdtempSync(path.join(tmpdir(), 'plc-b-'));
-  rasterise(populatedPdf, path.join(aDir, 'p'));
-  rasterise(blankPdf, path.join(bDir, 'p'));
+  rasterise(populatedPdf, path.join(aDir, 'p'), dpi);
+  rasterise(blankPdf, path.join(bDir, 'p'), dpi);
 
   const A = pages(aDir);
   const B = pages(bDir);
@@ -114,18 +122,18 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
     const pxPerPtY = a.height / pageH;
     const boxes = (boxesByPage.get(p) ?? []).map((bx) => ({
       key: bx.key,
-      px0: (bx.x0 - PAD) * pxPerPtX,
-      px1: (bx.x1 + PAD) * pxPerPtX,
+      px0: (bx.x0 - pad) * pxPerPtX,
+      px1: (bx.x1 + pad) * pxPerPtX,
       // PDF y is bottom-up; raster y is top-down
-      py0: (pageH - (bx.y1 + PAD)) * pxPerPtY,
-      py1: (pageH - (bx.y0 - PAD)) * pxPerPtY,
+      py0: (pageH - (bx.y1 + pad)) * pxPerPtY,
+      py1: (pageH - (bx.y0 - pad)) * pxPerPtY,
     }));
 
     const inkOk = (inkOkByPage.get(p) ?? []).map((bx) => ({
-      px0: (bx.x0 - PAD) * pxPerPtX,
-      px1: (bx.x1 + PAD) * pxPerPtX,
-      py0: (pageH - (bx.y1 + PAD)) * pxPerPtY,
-      py1: (pageH - (bx.y0 - PAD)) * pxPerPtY,
+      px0: (bx.x0 - pad) * pxPerPtX,
+      px1: (bx.x1 + pad) * pxPerPtX,
+      py0: (pageH - (bx.y1 + pad)) * pxPerPtY,
+      py1: (pageH - (bx.y0 - pad)) * pxPerPtY,
     }));
 
     const stray = new Map();
@@ -157,7 +165,7 @@ export function verifyPlacement({ populatedPdf, blankPdf, fieldMap, label = 'ove
     }
 
     const overTotal = [...over.values()].reduce((s, n) => s + n, 0);
-    if (overTotal > OVERPRINT_TOLERANCE) {
+    if (checkOverprint && overTotal > OVERPRINT_TOLERANCE) {
       const worst = [...over.entries()].sort((m, n) => n[1] - m[1]).slice(0, 6);
       overprints.push({
         page: p + 1,

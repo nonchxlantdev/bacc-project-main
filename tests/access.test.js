@@ -30,6 +30,7 @@ test('every role: org settings match the settings-write rule, seeAll matches SUP
     assert.equal(can(role, 'orgSettings'), isManager({ role }), `orgSettings ${role}`);
     assert.equal(can(role, 'acknowledge'), isManager({ role }), `acknowledge ${role}`);
     assert.equal(can(role, 'seeAll'), isSupervisor({ role }), `seeAll ${role}`);
+    assert.equal(can(role, 'seeAllRecords'), isManager({ role }), `seeAllRecords ${role}`);
   }
 });
 

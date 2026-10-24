@@ -50,7 +50,7 @@
     {
       "key": "timeAndDateObserved",
       "label": "Time and date the hazard was observed",
-      "type": "text",
+      "type": "datetime",
       "required": false,
       "mapKey": "time_and_date_observed"
     },

@@ -32,14 +32,14 @@
     {
       "key": "date",
       "label": "Date",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date"
     },
     {
       "key": "time",
       "label": "Time",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "time"
     },
@@ -70,7 +70,7 @@
     {
       "key": "dateOfReportSubmission",
       "label": "Date of Report Submission",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date_of_report_submission"
     }

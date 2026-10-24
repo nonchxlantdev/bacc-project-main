@@ -159,6 +159,73 @@ test('payload: om_acknowledgment and empty stubs are never written by a save', (
   );
 });
 
+test('payload: row signature roles are sign-offs, including ones longer than 64 characters', () => {
+  const img = 'data:image/png;base64,AA';
+  const role = `row:${'a'.repeat(40)}:12:${'b'.repeat(40)}`;
+  assert.ok(role.length > 64 && role.length <= 100);
+  const v = validateRecordPayload({
+    ...baseRecord(),
+    signoffs: [{ role, name: 'Ada', position: null, signature_data_uri: img }],
+    summary: { rows: [{ name: 'Ada', signature: true }] },
+  });
+  assert.equal(v.signoffs.length, 1);
+  assert.equal(v.signoffs[0].role, role);
+  assert.equal(v.signoffs[0].signature_data_uri, img);
+  assert.equal(v.signoffs[0].position, null);
+  assert.equal(JSON.parse(v.form_json).summary.rows[0].signature, true);
+
+  const rows = Array.from({ length: 13 }, (_, i) => ({
+    role: `row:rows:${i + 1}:signature`,
+    name: i === 1 ? 'Attendee 2' : `Person ${i + 1}`,
+    signature_data_uri: img,
+  }));
+  assert.equal(validateRecordPayload({ ...baseRecord(), signoffs: rows }).signoffs.length, 13);
+});
+
+test('payload: at most 80 sign-off blocks, and a row role must match the row pattern', () => {
+  assert.equal(LIMITS.signoffsPerChecklist, 80);
+  const img = 'data:image/png;base64,AA';
+  const eighty = Array.from({ length: 80 }, (_, i) => ({
+    role: `row:rows:${i + 1}:signature`,
+    name: `Person ${i + 1}`,
+    signature_data_uri: img,
+  }));
+  assert.equal(validateRecordPayload({ ...baseRecord(), signoffs: eighty }).signoffs.length, 80);
+  assert.throws(
+    () => validateRecordPayload({
+      ...baseRecord(),
+      signoffs: [...eighty, { role: 'inspector', name: 'A', signature_data_uri: img }],
+    }),
+    (e) => e.status === 400 && /Too many sign-off/.test(e.message),
+  );
+  assert.throws(
+    () => validateRecordPayload({
+      ...baseRecord(),
+      signoffs: [{ role: 'x'.repeat(65), name: 'A', signature_data_uri: img }],
+    }),
+    (e) => e.status === 400,
+  );
+  assert.throws(
+    () => validateRecordPayload({
+      ...baseRecord(),
+      signoffs: [{ role: 'row:has space:1:signature', name: 'A', signature_data_uri: img }],
+    }),
+    (e) => e.status === 400,
+  );
+});
+
+test('payload: an image in any form field is still rejected', () => {
+  const img = 'data:image/png;base64,AA';
+  assert.throws(
+    () => validateRecordPayload({ ...baseRecord(), summary: { rows: [{ signature: img }] } }),
+    (e) => e.status === 400 && /Images can only be attached as drawings/.test(e.message),
+  );
+  assert.throws(
+    () => validateRecordPayload({ ...baseRecord(), header: { date: img } }),
+    (e) => e.status === 400 && /Images can only be attached as drawings/.test(e.message),
+  );
+});
+
 test('payload: oversize signature is rejected', () => {
   const r = baseRecord();
   r.signoffs = [{ role: 'inspector', name: 'A', signature_data_uri: `data:image/png;base64,${'A'.repeat(LIMITS.signatureChars)}` }];

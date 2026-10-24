@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { airportHm, airportYmd } from '../../lib/belizeTime.js';
+import { isPickerValue, normalizeFieldValue } from '../../lib/dateValues.js';
 import {
   missingRequiredHeaderKeys,
   startTimeField,
@@ -24,7 +25,7 @@ import {
 } from '../../lib/checklistSchema.js';
 import { itemResolutionState } from '../../lib/incidentLifecycle.js';
 import { selfSignoffRole } from '../../lib/storedSignature.js';
-import { OM_SIGNOFF_ROLE, approverRole } from '../../config/approverRoles.js';
+import { OM_SIGNOFF_ROLE, approverRole, isRowSignoffRole } from '../../config/approverRoles.js';
 import ChecklistItemRow from './ChecklistItemRow.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import SectionHeader, { ColumnHead } from './SectionHeader.jsx';
@@ -334,7 +335,7 @@ export default function ChecklistForm({
         ))}
 
         <div data-tour="cl-signoffs" className="grid gap-4 md:grid-cols-2">
-          {(schema.signoffs ?? []).map((def) => {
+          {(schema.signoffs ?? []).filter((def) => !isRowSignoffRole(def.role)).map((def) => {
             // The OM's box is filled only by the OM's approval (stored as
             // om_acknowledgment whatever this form calls the box) and is
             // locked to everyone while the checklist is being filled in.
@@ -530,6 +531,14 @@ function SummaryBlock({ field, value, disabled, onChange, drawings, drawingRoom 
       {field.hint && <p className="mt-1 text-xs italic text-muted">{field.hint}</p>}
       {isTable ? (
         <LogTable field={field} value={value} disabled={disabled} onChange={onChange} />
+      ) : field.type === 'date' || field.type === 'time' || field.type === 'datetime' ? (
+        <input
+          type={inputTypeFor(field.type, value)}
+          disabled={disabled}
+          value={pickerDisplay(field.type, value)}
+          onChange={(e) => onChange(e.target.value)}
+          className="mt-2 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink desk:min-h-10"
+        />
       ) : isChoice ? (
         <div className="mt-2 flex flex-wrap gap-2">
           {(field.options ?? []).map((opt) => {
@@ -608,7 +617,7 @@ const YES_NO_OPTIONS = [
 // the generic "text" fields, and anything unmatched gets a plain document
 // icon rather than guessing wrong.
 function fieldIcon(field) {
-  if (field.type === 'date') return Calendar;
+  if (field.type === 'date' || field.type === 'datetime') return Calendar;
   if (field.type === 'time') return Clock;
   const label = (field.label ?? '').toLowerCase();
   if (/rain|weather|wind|visibility/.test(label)) return CloudRain;
@@ -735,14 +744,16 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
                         worst on a narrow tablet column. Every other field
                         type keeps it: it's the only cue of what the field is
                         before anything has been typed into it. */}
-                    {field.type !== 'date' && field.type !== 'time' && <FieldIcon Icon={Icon} />}
+                    {field.type !== 'date' && field.type !== 'time' && field.type !== 'datetime' && (
+                      <FieldIcon Icon={Icon} />
+                    )}
                     <input
-                      type={INPUT_TYPES[field.type] ?? 'text'}
+                      type={inputTypeFor(field.type, header[field.key])}
                       disabled={disabled}
-                      value={header[field.key] ?? ''}
+                      value={pickerDisplay(field.type, header[field.key])}
                       onChange={(e) => onChange({ [field.key]: e.target.value })}
-                      className={`min-h-10 w-full rounded border border-line/20 bg-surface py-2 pr-3 text-sm text-ink read-only:bg-stripe ${
-                        field.type === 'date' || field.type === 'time' ? 'pl-3' : 'pl-9'
+                      className={`min-h-11 w-full rounded border border-line/20 bg-surface py-2 pr-3 text-sm text-ink read-only:bg-stripe desk:min-h-10 ${
+                        field.type === 'date' || field.type === 'time' || field.type === 'datetime' ? 'pl-3' : 'pl-9'
                       }`}
                     />
                   </div>
@@ -769,7 +780,22 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
   );
 }
 
-const INPUT_TYPES = { date: 'date', time: 'time', number: 'number' };
+const INPUT_TYPES = { date: 'date', time: 'time', datetime: 'datetime-local', number: 'number' };
+
+function inputTypeFor(type, value) {
+  const native = INPUT_TYPES[type];
+  if (!native || native === 'number') return native ?? 'text';
+  return isPickerValue(value, type) || value == null || value === '' ? native : 'text';
+}
+
+function pickerDisplay(type, value) {
+  if (value == null || value === '') return '';
+  const normalized = normalizeFieldValue(value, type);
+  if (type === 'date' || type === 'time' || type === 'datetime') {
+    return isPickerValue(normalized, type) ? normalized : String(value);
+  }
+  return value;
+}
 
 /** The approved forms name this field the same way whatever key carries it. */
 function isConductedBy(field) {

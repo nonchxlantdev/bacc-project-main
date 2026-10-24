@@ -32,21 +32,21 @@
     {
       "key": "date",
       "label": "Date",
-      "type": "text",
+      "type": "date",
       "required": false,
       "mapKey": "date"
     },
     {
       "key": "timeStart",
       "label": "Time Start",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "time_start"
     },
     {
       "key": "timeEnd",
       "label": "Time End",
-      "type": "text",
+      "type": "time",
       "required": false,
       "mapKey": "time_end"
     }

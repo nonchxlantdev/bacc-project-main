@@ -11,6 +11,7 @@ import { fmtDate } from '../lib/airportFormat.js';
 import { incidentStatusLabel } from '../lib/incidentLifecycle.js';
 import { listIncidents } from '../lib/incidents.js';
 import Select from '../components/ui/Select.jsx';
+import { isRowSignoffRole } from '../config/approverRoles.js';
 
 const ROLE_LABEL = {
   om_acknowledgment: 'OM acknowledgment',
@@ -237,7 +238,9 @@ export default function ApprovalsPage() {
                     {ageDays(row.created_at)}d
                   </p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <Tag tone="role">{ROLE_LABEL[row.approval_role] || row.approval_role}</Tag>
+                    {!isRowSignoffRole(row.approval_role) && (
+                      <Tag tone="role">{ROLE_LABEL[row.approval_role] || row.approval_role}</Tag>
+                    )}
                     {row.entity?.department && <Tag>{row.entity.department}</Tag>}
                     {row.entity?.filed_by && <Tag>Filed by {row.entity.filed_by}</Tag>}
                     <Tag tone="assignee">

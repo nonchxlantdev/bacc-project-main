@@ -1,4 +1,5 @@
 import { createSupabaseRepositories } from './supabase/index.js';
+import { loadWithReload } from '../../lib/lazyWithReload.js';
 
 export function getDataSource() {
   const env =
@@ -20,12 +21,12 @@ let d1Module = null;
  */
 export async function prepareRepos() {
   if (getDataSource() === 'mock' && !mockModule) {
-    mockModule = await import('./mock/index.js');
+    mockModule = await loadWithReload('repos-mock', () => import('./mock/index.js'));
   }
   // d1 mode reads templates from the bundled registry (a large chunk), so it
   // loads on demand too and Supabase production never pays for it.
   if (getDataSource() === 'd1' && !d1Module) {
-    d1Module = await import('./d1/index.js');
+    d1Module = await loadWithReload('repos-d1', () => import('./d1/index.js'));
   }
   getRepos();
 }

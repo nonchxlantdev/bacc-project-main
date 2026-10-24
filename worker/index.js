@@ -15,6 +15,7 @@ import { buildWorkOrderExport } from '../api/export-work-order.js';
 import { buildReportExport } from '../api/export-report-pdf.js';
 import { buildGenerateInstances } from '../api/generate-checklist-instances.js';
 import { buildCreateUser } from '../api/create-user.js';
+import { CLIENT_ERROR_ROUTE } from './clientError.js';
 
 export const ROUTES = {
   '/api/export-checklist-pdf': { kind: 'pdf', build: buildExport },
@@ -33,6 +34,7 @@ export const ROUTES = {
     limit: 10,
     build: buildCreateUser,
   },
+  '/api/client-error': CLIENT_ERROR_ROUTE,
 };
 
 Object.assign(ROUTES, AUTH_ROUTES, DATA_ROUTES);
