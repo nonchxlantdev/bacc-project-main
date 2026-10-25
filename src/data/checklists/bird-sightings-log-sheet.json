@@ -123,6 +123,6 @@
   "notes": [
     "Activity Codes: P - Perching, V - Flying, F - Foraging, C - Singing, O \u2013 Other",
     "The approved grid prints 11 rows. More may be recorded \u2014 the first 11 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does.",
-    "The date prints on the Date: line, just after the Location label (x 172, y 357.2, size 8), and the location value starts after it. Family and species wrap onto a second line inside the cell when the name is wider than the column."
+    "The date prints on the Date: line, just after the Location label (x 172, y 357.2, size 8), and the location value starts after it. Family and species print at 5pt inside their own ruled columns. A name that does not fit wraps onto a second line that stays above the row's bottom rule."
   ]
 }
