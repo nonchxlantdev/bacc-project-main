@@ -10,6 +10,38 @@ function columnInputType(col, value) {
   return isPickerValue(value, col.type) || value == null || value === '' ? native : 'text';
 }
 
+function wideText(col) {
+  return col.key === 'family' || col.key === 'species';
+}
+
+function columnOptions(col) {
+  return (col.options ?? []).map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option,
+  );
+}
+
+function ColumnSelect({ col, rowIndex, value, disabled, onChange }) {
+  const options = columnOptions(col);
+  const known = options.some((option) => option.value === value);
+  return (
+    <select
+      aria-label={`${col.label}, row ${rowIndex + 1}`}
+      disabled={disabled}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="min-h-11 w-full min-w-[4.5rem] rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9"
+    >
+      <option value="">—</option>
+      {value && !known ? <option value={value}>{value}</option> : null}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function columnDisplay(col, value) {
   if (value == null || value === '') return '';
   if (!COLUMN_INPUT[col.type]) return value;
@@ -87,14 +119,25 @@ export default function LogTable({ field, value, disabled, onChange }) {
                           label={`${col.label}, row ${i + 1}`}
                           onChange={(uri) => setCell(i, col.key, uri)}
                         />
+                      ) : col.type === 'select' ? (
+                        <ColumnSelect
+                          col={col}
+                          rowIndex={i}
+                          value={row?.[col.key] ?? ''}
+                          disabled={disabled}
+                          onChange={(next) => setCell(i, col.key, next)}
+                        />
                       ) : (
                         <input
                           type={columnInputType(col, row?.[col.key])}
+                          inputMode={col.type === 'number' ? 'numeric' : undefined}
+                          min={col.type === 'number' ? 0 : undefined}
+                          step={col.type === 'number' ? 1 : undefined}
                           value={columnDisplay(col, row?.[col.key])}
                           disabled={disabled}
                           aria-label={`${col.label}, row ${i + 1}`}
                           onChange={(e) => setCell(i, col.key, e.target.value)}
-                          className="min-h-11 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9"
+                          className={`min-h-11 w-full min-w-0 rounded border border-line/15 bg-surface px-2 text-sm text-ink desk:min-h-9 ${wideText(col) ? 'min-w-[9rem]' : ''}`}
                         />
                       )}
                     </td>

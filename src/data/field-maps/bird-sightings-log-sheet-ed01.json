@@ -38,20 +38,20 @@
     },
     "date": {
       "page": 0,
-      "x": 100,
-      "y": 369,
-      "size": 7,
-      "width": 60,
+      "x": 172,
+      "y": 357.2,
+      "size": 8,
+      "width": 52,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
     },
     "location": {
       "page": 0,
-      "x": 170,
+      "x": 228,
       "y": 356.5,
       "size": 8,
-      "width": 326,
+      "width": 260,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -101,10 +101,12 @@
       "x": 75.42,
       "y": 277.26,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_01_species": {
       "page": 0,
@@ -113,8 +115,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_01_individuals": {
       "page": 0,
@@ -151,7 +155,7 @@
       "x": 454.86,
       "y": 277.26,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -171,10 +175,12 @@
       "x": 75.42,
       "y": 264.54,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_02_species": {
       "page": 0,
@@ -183,8 +189,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_02_individuals": {
       "page": 0,
@@ -221,7 +229,7 @@
       "x": 454.86,
       "y": 264.54,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -241,10 +249,12 @@
       "x": 75.42,
       "y": 251.76,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_03_species": {
       "page": 0,
@@ -253,8 +263,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_03_individuals": {
       "page": 0,
@@ -291,7 +303,7 @@
       "x": 454.86,
       "y": 251.76,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -311,10 +323,12 @@
       "x": 75.42,
       "y": 239.04,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_04_species": {
       "page": 0,
@@ -323,8 +337,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_04_individuals": {
       "page": 0,
@@ -361,7 +377,7 @@
       "x": 454.86,
       "y": 239.04,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -381,10 +397,12 @@
       "x": 75.42,
       "y": 226.26,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_05_species": {
       "page": 0,
@@ -393,8 +411,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_05_individuals": {
       "page": 0,
@@ -431,7 +451,7 @@
       "x": 454.86,
       "y": 226.26,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -451,10 +471,12 @@
       "x": 75.42,
       "y": 213.54,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_06_species": {
       "page": 0,
@@ -463,8 +485,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_06_individuals": {
       "page": 0,
@@ -501,7 +525,7 @@
       "x": 454.86,
       "y": 213.54,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -521,10 +545,12 @@
       "x": 75.42,
       "y": 200.76,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_07_species": {
       "page": 0,
@@ -533,8 +559,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_07_individuals": {
       "page": 0,
@@ -571,7 +599,7 @@
       "x": 454.86,
       "y": 200.76,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -591,10 +619,12 @@
       "x": 75.42,
       "y": 188.04,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_08_species": {
       "page": 0,
@@ -603,8 +633,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_08_individuals": {
       "page": 0,
@@ -641,7 +673,7 @@
       "x": 454.86,
       "y": 188.04,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -661,10 +693,12 @@
       "x": 75.42,
       "y": 175.26,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_09_species": {
       "page": 0,
@@ -673,8 +707,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_09_individuals": {
       "page": 0,
@@ -711,7 +747,7 @@
       "x": 454.86,
       "y": 175.26,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -731,10 +767,12 @@
       "x": 75.42,
       "y": 162.54,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_10_species": {
       "page": 0,
@@ -743,8 +781,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_10_individuals": {
       "page": 0,
@@ -781,7 +821,7 @@
       "x": 454.86,
       "y": 162.54,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"
@@ -801,10 +841,12 @@
       "x": 75.42,
       "y": 149.76,
       "size": 7,
-      "width": 42.0,
+      "width": 46,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_11_species": {
       "page": 0,
@@ -813,8 +855,10 @@
       "size": 7,
       "width": 43.32,
       "wrap": true,
-      "maxLines": 1,
-      "overflow": "continuation"
+      "maxLines": 2,
+      "overflow": "continuation",
+      "lineHeight": 6,
+      "minSize": 5
     },
     "row_11_individuals": {
       "page": 0,
@@ -851,7 +895,7 @@
       "x": 454.86,
       "y": 149.76,
       "size": 7,
-      "width": 123.0,
+      "width": 123,
       "wrap": true,
       "maxLines": 1,
       "overflow": "continuation"

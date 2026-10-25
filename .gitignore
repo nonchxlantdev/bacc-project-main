@@ -45,6 +45,7 @@ tmp-annex-*-coords.json
 tmp-qa/
 qa-artifacts/
 qa-parity/
+qa-prod-tail.jsonl
 
 # Cloudflare
 .wrangler

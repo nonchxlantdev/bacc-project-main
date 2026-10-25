@@ -169,8 +169,15 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    settingsAudit().then(setAudit).catch(() => {});
-  }, [settings]);
+    if (!isAdmin) return undefined;
+    let cancelled = false;
+    settingsAudit().then((rows) => {
+      if (!cancelled) setAudit(rows);
+    }).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [settings, isAdmin]);
 
   const dirty = useMemo(
     () => Boolean(draft && committed) && JSON.stringify(draft) !== JSON.stringify(committed),

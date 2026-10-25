@@ -92,15 +92,20 @@
         },
         {
           "key": "individuals",
-          "label": "# Individuals"
+          "label": "# Individuals",
+          "type": "number"
         },
         {
           "key": "adult_juvenile",
-          "label": "Adult/Juvenile"
+          "label": "Adult/Juvenile",
+          "type": "select",
+          "options": ["A", "J"]
         },
         {
           "key": "30m_30m_radius",
-          "label": "<30m; >30m Radius"
+          "label": "<30m; >30m Radius",
+          "type": "select",
+          "options": ["<30m", ">30m"]
         },
         {
           "key": "activity_p_v_f_c_o",
@@ -118,6 +123,6 @@
   "notes": [
     "Activity Codes: P - Perching, V - Flying, F - Foraging, C - Singing, O \u2013 Other",
     "The approved grid prints 11 rows. More may be recorded \u2014 the first 11 fill the printed grid and the rest are carried onto a continuation page, which is what the paper form's own 'attach additional pages' convention does.",
-    "The date prints in the clear band above the printed Date: / / slot (x 100, y 369, size 7, width 60), so the approved artwork is left untouched. Decided 2026-10-24."
+    "The date prints on the Date: line, just after the Location label (x 172, y 357.2, size 8), and the location value starts after it. Family and species wrap onto a second line inside the cell when the name is wider than the column."
   ]
 }
