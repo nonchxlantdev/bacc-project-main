@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { signoffFieldKeys, signoffsOmLast } from '../src/lib/signoffFields.js';
 import { airportYmd } from '../src/lib/belizeTime.js';
 import { formatForPrint } from '../src/lib/dateValues.js';
+import { cropSignatureToInk } from './signatureImage.js';
 
 const CONTINUATION_MARKER = '- see continuation p.';
 
@@ -121,6 +122,45 @@ export function layoutFittedText(font, text, field) {
   return { size, lines: [line], overflow: true };
 }
 
+/** SAT / NO SAT / N/A boxes. Other marks (yes/no) keep their own placement. */
+function isCheckMark(key) {
+  return /\.(sat|no_sat|na)$/.test(key);
+}
+
+/**
+ * Draw an X centred in the printed checkbox.
+ *
+ * The field point is the checkbox glyph's origin, not the middle of the
+ * square. The two form families print different squares; both were measured
+ * from the approved PDF. A Helvetica-Bold X at size 9 is taller than the
+ * annex square and, drawn from that origin, crosses the top and left edges.
+ * Size 7 leaves a margin inside either square.
+ *
+ * Ink centre of that X at size 9, relative to the draw origin, is (2.78, 3.48).
+ */
+function checkMarkCentre(fieldMap) {
+  // Appendix C-05 prints an 11pt checkbox; the visible square sits higher
+  // and further right inside that glyph than the other VAES forms.
+  if (fieldMap.templateKey === 'appendix-c05-papi-inspection') return { dx: 5.31, dy: 4.48 };
+  if (fieldMap.documentFamily === 'VAES') return { dx: 4.35, dy: 2.2 };
+  return { dx: 3.6, dy: 3.5 };
+}
+
+function drawCheckMark(page, font, field, fieldMap) {
+  const size = 7;
+  const scale = size / 9;
+  const { dx, dy } = checkMarkCentre(fieldMap);
+  const boxCx = field.x + dx;
+  const boxCy = field.y + dy;
+  page.drawText('X', {
+    x: boxCx - 2.78 * scale,
+    y: boxCy - 3.48 * scale,
+    size,
+    font,
+    color: rgb(0, 0, 0),
+  });
+}
+
 function drawFitted(page, font, text, field) {
   const laid = layoutFittedText(font, text, field);
   const lineHeight = field.lineHeight ?? laid.size + 1;
@@ -167,13 +207,16 @@ export async function overlayChecklistPdf({
 
     if (type === 'mark') {
       if (values[key]) {
-        page.drawText('X', {
-          x: field.x,
-          y: field.y,
-          size: field.size ?? 9,
-          font: bold,
-          color: rgb(0, 0, 0),
-        });
+        if (isCheckMark(key)) drawCheckMark(page, bold, field, fieldMap);
+        else {
+          page.drawText('X', {
+            x: field.x,
+            y: field.y,
+            size: field.size ?? 9,
+            font: bold,
+            color: rgb(0, 0, 0),
+          });
+        }
       }
       continue;
     }
@@ -181,7 +224,7 @@ export async function overlayChecklistPdf({
     if (type === 'image') {
       const bytes = images[key];
       if (!bytes) continue;
-      const png = await pdfDoc.embedPng(bytes);
+      const png = await pdfDoc.embedPng(await cropSignatureToInk(bytes));
       page.drawImage(png, signatureBox(field, key, fieldMap, png));
       continue;
     }
@@ -293,10 +336,12 @@ async function appendContinuationPages(pdfDoc, font, bold, overflow, meta) {
  *     takes the remaining space in the box — the top of the box is unchanged,
  *     which is what keeps the placement gate honest.
  *
- *  2. Forcing both width and height stretched every signature to the box's
- *     aspect ratio. A signature is handwriting; distorting it is closer to
- *     altering it than to reproducing it. It now scales to fit and keeps its
- *     shape, sitting at the left of the box the way a signature meets a line.
+ *  2. Forcing both width and height to the box stretched every signature into
+ *     the box's shape. The image passed in is already cropped to its ink, so
+ *     it is scaled to sit on the rule in its own proportions. A short stroke
+ *     is then eased along the line — at most 1.7 times its natural width —
+ *     so the handwriting occupies the signature rule the way a signed form
+ *     does, without ironing a tall mark flat.
  */
 function signatureBox(field, key, fieldMap, png) {
   const name = key.endsWith('_signature')
@@ -321,13 +366,16 @@ function signatureBox(field, key, fieldMap, png) {
   const inset = 0.75;
   const boxW = Math.max(4, (field.width ?? png.width) - inset * 2);
   const boxH = Math.max(4, (field.height ?? png.height) - lift - inset * 2);
-  const scale = Math.min(boxW / png.width, boxH / png.height);
+  const contain = Math.min(boxW / png.width, boxH / png.height);
+  let width = png.width * contain;
+  const height = png.height * contain;
+  if (width < boxW) width = Math.min(boxW, width * 1.7);
 
   return {
     x: field.x + inset,
     y: field.y + lift + inset,
-    width: png.width * scale,
-    height: png.height * scale,
+    width,
+    height,
   };
 }
 
