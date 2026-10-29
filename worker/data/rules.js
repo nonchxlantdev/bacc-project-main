@@ -7,6 +7,7 @@
  */
 import { HttpError } from '../../api/_shared.js';
 import { isRowSignoffRole } from '../../src/config/approverRoles.js';
+import { isEdairUser } from '../../src/lib/countersigner.js';
 import { ATTACHMENTS_UNAVAILABLE, PROFILE_PHOTOS_UNAVAILABLE } from '../../src/lib/unavailable.js';
 
 export const MANAGERS = Object.freeze(['om', 'admin']);
@@ -48,6 +49,14 @@ const bad = (message) => new HttpError(400, message);
 export const isManager = (actor) => MANAGERS.includes(actor?.role);
 export const isSupervisor = (actor) => SUPERVISORS.includes(actor?.role);
 export const canSeeOthersSignatures = isSupervisor;
+
+/** Own signature, a supervisor reading a colleague, or an Apron Supervisor reading Edair. */
+export function canReadStoredSignature(actor, user) {
+  if (!actor?.id || !user?.id) return false;
+  if (actor.id === user.id) return true;
+  if (canSeeOthersSignatures(actor)) return true;
+  return actor.role === 'apron_supervisor' && isEdairUser(user);
+}
 
 // ── Permission guards ──────────────────────────────────────────────────────
 

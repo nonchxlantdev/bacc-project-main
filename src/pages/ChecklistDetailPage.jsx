@@ -35,6 +35,14 @@ import { requestChecklistPdf, savePdfBlob } from '../lib/exportPdf.js';
 import { compressImageFile, blobToDataUri } from '../utils/compressImage.js';
 import { enqueue, getPhotoRecord, putPhotoBlob } from '../utils/offlineQueue.js';
 import { applyStoredSignature, selfSignoffRole } from '../lib/storedSignature.js';
+import {
+  COUNTERSIGN_MESSAGES,
+  applyCountersignerSignature,
+  apronCountersignApplies,
+  conductedByName,
+  countersignerSubmitMessage,
+  loadEdair,
+} from '../lib/countersigner.js';
 import { isD1Data } from '../lib/dataMode.js';
 import { isRowSignoffRole } from '../config/approverRoles.js';
 import { setUnsavedChecklist } from '../lib/unsavedChecklist.js';
@@ -137,6 +145,29 @@ export default function ChecklistDetailPage() {
   // approved PDF. Treating it as read-only keeps the autosave loop off it too.
   const isReference = Boolean(schema?.referenceGroups?.length) || schema?.documentType === 'reference';
   const readOnly = isReference || record?.status === 'submitted' || record?.locked;
+  const templateCode = schema?.code ?? null;
+  const countersign = apronCountersignApplies(profile?.role, templateCode);
+  const pairedName = conductedByName({ role: profile?.role, templateCode, displayName });
+  const countersignPosition = ROLE_TITLES.apron_supervisor || 'Apron Supervisor';
+  const [edairLoad, setEdairLoad] = useState({ state: 'idle', signatureUri: null });
+  const [edairAttempt, setEdairAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!countersign || readOnly) return undefined;
+    let cancelled = false;
+    setEdairLoad({ state: 'loading', signatureUri: null });
+    const users = getRepos().users;
+    loadEdair({
+      getByEmail: (email) => users.getByEmail(email),
+      list: () => users.list(),
+      getById: (userId) => users.getById(userId),
+    }).then((result) => {
+      if (!cancelled) setEdairLoad({ state: result.state, signatureUri: result.signatureUri ?? null });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [countersign, readOnly, edairAttempt]);
 
   useEffect(() => {
     if (!record || readOnly) {
@@ -268,16 +299,24 @@ export default function ChecklistDetailPage() {
     // stamped here; every other collected sign-off passes through as-is.
     const selfRole = selfSignoffRole(schema);
     const existingSelf = record.signoffs?.find((s) => s.role === selfRole);
+    const countersignBlock = countersignerSubmitMessage({
+      applies: countersign,
+      signatureDataUri: existingSelf?.signature_data_uri,
+      loadState: edairLoad.state,
+    });
+    if (countersignBlock) {
+      setBanner({ type: 'error', text: countersignBlock });
+      return;
+    }
     const selfSignoff = selfRole
       ? {
           role: selfRole,
           // Name/Position are locked to the signed-in account throughout
-          // editing (ChecklistForm keeps them synced), so this always
-          // matches what's already on the block — never a colleague's name
-          // on their behalf, which the old on-behalf-of design here used to
-          // preserve.
-          name: displayName,
-          position,
+          // editing (ChecklistForm keeps them synced). On an Apron Supervisor
+          // form the name is that person beside Edair de la Cruz, and the
+          // position is the role title.
+          name: pairedName,
+          position: countersign ? countersignPosition : position,
           signature_data_uri: existingSelf?.signature_data_uri,
           sign_date: existingSelf?.sign_date || record.header?.date || null,
           signed_at: signedAt,
@@ -813,6 +852,7 @@ export default function ChecklistDetailPage() {
             };
           });
           if (
+            !countersign &&
             role === selfRole &&
             patch.signature_data_uri &&
             !prevSig &&
@@ -825,13 +865,36 @@ export default function ChecklistDetailPage() {
         }}
         storedSignatureUri={profile?.stored_signature_data_uri ?? null}
         onApplySelfStoredSignature={applySelfStoredSignature}
+        lockInspectionConductedBy={countersign}
+        countersignSignatureUri={edairLoad.signatureUri}
+        countersignMessage={
+          edairLoad.state === 'missing-signature'
+            ? COUNTERSIGN_MESSAGES.missingSignature
+            : edairLoad.state === 'missing-account'
+              ? COUNTERSIGN_MESSAGES.missingAccount
+              : edairLoad.state === 'error'
+                ? COUNTERSIGN_MESSAGES.loadFailed
+                : null
+        }
+        onApplyCountersign={() => {
+          if (!edairLoad.signatureUri) return;
+          patchRecord((prev) =>
+            applyCountersignerSignature({
+              record: prev,
+              signatureDataUri: edairLoad.signatureUri,
+              name: pairedName,
+              position: countersignPosition,
+            }),
+          );
+        }}
+        onRetryCountersign={edairLoad.state === 'error' ? () => setEdairAttempt((n) => n + 1) : null}
         // Whoever is signed in right now, for the locked Conducted-by field
         // and the self sign-off block — never the account that created or
-        // last saved this draft. See ChecklistForm's signerName/signerTitle
-        // handling.
-        signerName={displayName}
+        // last saved this draft. On an Apron Supervisor form the name is
+        // that person beside Edair de la Cruz.
+        signerName={pairedName}
         signerTitle={ROLE_TITLES[profile?.role] || position}
-        signerPosition={position}
+        signerPosition={countersign ? countersignPosition : position}
       />
       )}
 

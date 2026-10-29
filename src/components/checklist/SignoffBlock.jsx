@@ -25,17 +25,22 @@ export default function SignoffBlock({
   // this block as someone else — while the signature pad and "use my saved
   // signature" stay governed by `readOnly` alone, same as always.
   nameLocked = false,
+  nameLockedHint = null,
   // A short line under the label (e.g. "Signed by the OM when they approve").
   hint = null,
   onChange,
   onApplyStored,
+  applyStoredLabel = null,
+  applyStoredMessage = null,
+  onRetryApplyStored = null,
+  padDisabled = false,
 }) {
   const [confirmReplace, setConfirmReplace] = useState(false);
   // Which role (if any) gets this button is decided by the caller — see
   // ChecklistForm's `isSelf` check, which passes onApplyStored only for the
   // form's own signer, whatever that role is named on this annex. This
   // block doesn't need to know the role name at all.
-  const canUseStored = !readOnly && storedSignatureUri && typeof onApplyStored === 'function';
+  const canUseStored = !readOnly && typeof onApplyStored === 'function' && (storedSignatureUri || applyStoredLabel);
   // While editing, an unchosen date shows the checklist's date (signed_at moves
   // on every keystroke, so it says nothing about the day being signed for).
   // A filed block with no chosen date predates the picker: show the
@@ -44,6 +49,7 @@ export default function SignoffBlock({
   const shownDate = signDate || (readOnly ? signedDay : defaultSignDate || signedDay || '');
 
   function handleApplyStored() {
+    if (!storedSignatureUri) return;
     if (signatureDataUri && signatureDataUri !== storedSignatureUri && !confirmReplace) {
       setConfirmReplace(true);
       return;
@@ -63,10 +69,24 @@ export default function SignoffBlock({
           <button
             type="button"
             onClick={handleApplyStored}
-            className="min-h-10 w-full rounded-md border border-primary bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/10"
+            disabled={!storedSignatureUri}
+            className="min-h-11 w-full rounded-md border border-primary bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60 desk:min-h-10"
           >
-            Use my saved signature
+            {applyStoredLabel || 'Use my saved signature'}
           </button>
+          {applyStoredMessage && (
+            <p className="mt-2 text-xs text-muted">
+              {applyStoredMessage}
+              {typeof onRetryApplyStored === 'function' && (
+                <>
+                  {' '}
+                  <button type="button" onClick={onRetryApplyStored} className="font-semibold text-primary underline">
+                    Try again
+                  </button>
+                </>
+              )}
+            </p>
+          )}
           {confirmReplace && (
             <p className="mt-2 text-xs text-alert">
               This will replace the signature already on this block.{' '}
@@ -100,14 +120,16 @@ export default function SignoffBlock({
         className="mb-3 min-h-11 w-full rounded border border-line/20 bg-surface px-3 py-2 text-sm text-ink read-only:bg-stripe"
       />
       {nameLocked && !readOnly && (
-        <p className="-mt-2 mb-3 text-[11px] text-muted">Locked to your account — nobody signs as someone else.</p>
+        <p className="-mt-2 mb-3 text-[11px] text-muted">
+          {nameLockedHint || 'Locked to your account — nobody signs as someone else.'}
+        </p>
       )}
       <p className="mb-2 font-display text-[11px] font-semibold uppercase tracking-wide text-muted">
         Drawn signature
       </p>
       <SignaturePad
         value={signatureDataUri}
-        disabled={readOnly}
+        disabled={readOnly || padDisabled}
         onChange={(signature_data_uri) => {
           setConfirmReplace(false);
           // Signing pins the date shown in the picker, so what the person saw

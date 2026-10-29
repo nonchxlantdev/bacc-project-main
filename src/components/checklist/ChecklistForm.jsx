@@ -75,6 +75,14 @@ export default function ChecklistForm({
   signerName,
   signerTitle,
   signerPosition,
+  // Apron Supervisor forms: the header "Inspection conducted by" line and the
+  // self sign-off are filled with Edair de la Cruz's saved signature. Other
+  // forms leave these unset.
+  lockInspectionConductedBy = false,
+  countersignSignatureUri = null,
+  countersignMessage = null,
+  onApplyCountersign = null,
+  onRetryCountersign = null,
 }) {
   const unresolved = useMemo(() => unresolvedNoSatCodes(schema, items), [schema, items]);
   const missingHeader = useMemo(() => missingRequiredHeaderKeys(schema, header), [schema, header]);
@@ -225,6 +233,7 @@ export default function ChecklistForm({
             onChange={onHeaderChange}
             signerName={signerName}
             signerTitle={signerTitle}
+            lockInspectionConductedBy={lockInspectionConductedBy}
           />
         </div>
 
@@ -348,6 +357,7 @@ export default function ChecklistForm({
             // "use my saved signature"; a colleague's or approver's block
             // never gets stamped with the current account's signature.
             const isSelf = def.role === selfSignoffRole(schema);
+            const countersignBlock = lockInspectionConductedBy && isSelf && !isApproverBox;
             return (
               <SignoffBlock
                 key={def.role}
@@ -357,15 +367,28 @@ export default function ChecklistForm({
                 name={isSelf ? signerName ?? signed?.name ?? '' : signed?.name ?? ''}
                 position={isSelf ? signerPosition ?? signed?.position ?? '' : signed?.position ?? ''}
                 nameLocked={isSelf}
+                nameLockedHint={
+                  countersignBlock ? 'Your name and Edair de la Cruz. His signature is inserted below.' : null
+                }
                 signedAt={signed?.signed_at}
                 signDate={signed?.sign_date}
                 defaultSignDate={header?.date || ''}
                 signatureDataUri={signed?.signature_data_uri}
-                storedSignatureUri={storedSignatureUri}
+                storedSignatureUri={countersignBlock ? countersignSignatureUri : storedSignatureUri}
                 readOnly={readOnly || isApproverBox}
                 hint={isApproverBox && !signed ? 'Signed by the Operations Manager when they approve this checklist.' : null}
                 onChange={isApproverBox ? undefined : (patch) => onSignoffChange?.(def.role, patch)}
-                onApplyStored={isSelf && !isApproverBox ? onApplySelfStoredSignature : undefined}
+                onApplyStored={
+                  countersignBlock
+                    ? onApplyCountersign
+                    : isSelf && !isApproverBox
+                      ? onApplySelfStoredSignature
+                      : undefined
+                }
+                applyStoredLabel={countersignBlock ? "Insert Edair de la Cruz's signature" : null}
+                applyStoredMessage={countersignBlock ? countersignMessage : null}
+                onRetryApplyStored={countersignBlock ? onRetryCountersign : null}
+                padDisabled={countersignBlock}
               />
             );
           })}
@@ -631,7 +654,7 @@ function FieldIcon({ Icon }) {
   return <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />;
 }
 
-function HeaderFields({ schema, header, disabled, onChange, signerName, signerTitle }) {
+function HeaderFields({ schema, header, disabled, onChange, signerName, signerTitle, lockInspectionConductedBy = false }) {
   const fields = schema.headerFields ?? [];
   if (!fields.length) return null;
   // Most forms head with a handful of short entries (Date, Time, Vehicle No.),
@@ -677,6 +700,7 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
             // position half is a post with a fixed name. Two keys carry it
             // (conductedBy, conductedByNamePosition), so it is found by its label.
             const composed = isConductedBy(field);
+            const inspectionBy = lockInspectionConductedBy && isInspectionConductedBy(field);
             const Wrapper = composed ? 'div' : 'label';
             const Icon = fieldIcon(field);
             // A radio field's 2-4 option pills wrap onto as many rows as they
@@ -685,7 +709,7 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
             // pills stack one per row and tower over the short fields beside
             // them. Same fix as the composed name/title pair below — give it
             // the width its content needs so the pills sit two-plus to a row.
-            const wide = composed || field.type === 'radio';
+            const wide = composed || inspectionBy || field.type === 'radio';
             return (
               // The name/title pair needs real width to keep the position title
               // ("Electrical Maintenance Technician", "Civil Engineering
@@ -696,7 +720,15 @@ function HeaderFields({ schema, header, disabled, onChange, signerName, signerTi
                   {field.label}
                   {field.required ? ' *' : ''}
                 </span>
-                {composed ? (
+                {inspectionBy ? (
+                  <LockedLineField
+                    field={field}
+                    value={header[field.key] ?? ''}
+                    locked={signerName ?? ''}
+                    disabled={disabled}
+                    onChange={onChange}
+                  />
+                ) : composed ? (
                   <ConductedByField
                     field={field}
                     value={header[field.key] ?? ''}
@@ -802,6 +834,30 @@ function isConductedBy(field) {
   return /^conducted by/i.test(field?.label ?? '');
 }
 
+/** F10 names this line "Inspection conducted by" — a single text field, not the name/title pair. */
+function isInspectionConductedBy(field) {
+  return field?.key === 'inspectionConductedBy' || /^inspection conducted by/i.test(field?.label ?? '');
+}
+
+function LockedLineField({ field, value, locked, disabled, onChange }) {
+  useEffect(() => {
+    if (disabled || !locked) return;
+    if ((value ?? '') === locked) return;
+    onChange({ [field.key]: locked });
+  }, [disabled, locked, value, field.key, onChange]);
+
+  return (
+    <input
+      type="text"
+      readOnly
+      disabled
+      aria-label={field.label}
+      value={locked}
+      className="min-h-11 w-full rounded border border-line/20 bg-stripe px-3 py-2 text-sm text-ink desk:min-h-10"
+    />
+  );
+}
+
 /**
  * Split "Name / Position" the way a person wrote it.
  *
@@ -849,7 +905,7 @@ function ConductedByField({ field, value, disabled, signerName, signerTitle, onC
     // split still truncated the longest titles even after the wrapper above
     // was widened to span two header columns.
     <div>
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
+      <div className={`grid gap-2 ${(signerName ?? '').includes('/') ? 'sm:grid-cols-2' : 'sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]'}`}>
         <div className="relative">
           <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input

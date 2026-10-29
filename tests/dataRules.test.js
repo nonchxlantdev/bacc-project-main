@@ -12,6 +12,7 @@ import {
   assertCanSubmit,
   assertCanWriteSettings,
   assertSelf,
+  canReadStoredSignature,
   canSeeOthersSignatures,
   foldAmendments,
   validateDrawings,
@@ -109,6 +110,20 @@ test('generate: supervisors; settings writes: managers; profile: self', () => {
   assert.equal(status(() => assertSelf(inspector, 'other')), 403);
   assert.equal(canSeeOthersSignatures(coo), true);
   assert.equal(canSeeOthersSignatures(inspector), false);
+});
+
+test('stored signature: supervisors see colleagues; an Apron Supervisor sees only Edair', () => {
+  const edair = { id: 'edair', email: 'edelacruz@pgiabelize.com', full_name: 'Edair de la Cruz', is_active: true };
+  const andy = { id: 'andy', email: 'achable@pgiabelize.com', full_name: 'Andy Chable', is_active: true };
+  const apron = who('apron_supervisor', 'andy');
+  assert.equal(canReadStoredSignature(apron, edair), true);
+  assert.equal(canReadStoredSignature(apron, andy), true);
+  assert.equal(canReadStoredSignature(apron, { id: 'kareem', email: 'kareemnunez24@gmail.com', full_name: 'Kareem Nunez', is_active: true }), false);
+  assert.equal(canReadStoredSignature(om, andy), true);
+  assert.equal(canReadStoredSignature(coo, andy), true);
+  assert.equal(canReadStoredSignature(admin, andy), true);
+  assert.equal(canReadStoredSignature(inspector, edair), false);
+  assert.equal(canReadStoredSignature(apron, { ...edair, is_active: false }), false);
 });
 
 const baseRecord = () => ({
